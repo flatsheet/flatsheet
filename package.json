@@ -11,5 +11,9 @@
     "start": ""
   },
   "dependencies": {},
-  "devDependencies": {}
+  "devDependencies": {
+    "browserify": "^4.2.0",
+    "tape": "^2.13.3",
+    "watchify": "^0.10.2"
+  }
 }
