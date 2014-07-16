@@ -17,13 +17,11 @@ db.get('sheet', function (err, value) {
   }
 });
 
-domready(function () {
   editor.on('change', function (change, data) {
     db.put('sheet', data, function (error) {
       if (error) console.error(error);
     });
   });
-});
 
 var addRow = document.getElementById('add-row');
 addRow.addEventListener('click', function (e) {

@@ -18,13 +18,11 @@ db.get('sheet', function (err, value) {
   }
 });
 
-domready(function () {
   editor.on('change', function (change, data) {
     db.put('sheet', data, function (error) {
       if (error) console.error(error);
     });
   });
-});
 
 var addRow = document.getElementById('add-row');
 addRow.addEventListener('click', function (e) {
@@ -9041,7 +9039,7 @@ TableEditor.prototype.update = function () {
 };
 
 TableEditor.prototype.reset = function (data) {
-  this.tableView.set(data || { headers: [], rows: [] });
+  this.set(data || { headers: [], rows: [] });
 };
 },{"component-emitter":3,"extend":4,"flat":5,"json-2-csv":6,"ractive":11}],2:[function(_dereq_,module,exports){
 // shim for using process in browser
