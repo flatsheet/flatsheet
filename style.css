@@ -174,7 +174,7 @@ a.button:hover {
 textarea {
   resize: none;
   height: 23px;
-  padding: 4px 5px;
+  padding: 0px;
 }
 
 #code-box {

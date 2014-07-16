@@ -17,8 +17,11 @@
     "start": "serve & npm run watch"
   },
   "dependencies": {
+    "domready": "^1.0.5",
     "element-class": "^0.1.1",
     "jsonpretty": "0.0.1",
+    "level-js": "^2.1.6",
+    "levelup": "^0.18.5",
     "normalize-css": "^2.3.1",
     "remove-element": "0.0.0",
     "table-editor": "^0.2.0"

@@ -1,14 +1,29 @@
 var TableEditor = require('table-editor');
 var prettify = require('jsonpretty');
 var elClass = require('element-class');
-var remove = require('remove-element');
+var domready = require('domready');
+var levelup = require('levelup');
+var leveljs = require('level-js');
 
-var data = {
-  headers: [],
-  rows: []
-};
+window.editor = new TableEditor('main-content');
+var hello = document.getElementById('hello-message');
+window.db = levelup('sheet', { db: leveljs, valueEncoding: 'json' });
 
-var editor = new TableEditor('main-content', data);
+db.get('sheet', function (err, value) {
+  if (err) return console.error(err);
+  if (value.headers.length > 0) {
+    elClass(hello).add('hidden');
+    editor.set(value);
+  }
+});
+
+domready(function () {
+  editor.on('change', function (change, data) {
+    db.put('sheet', data, function (error) {
+      if (error) console.error(error);
+    });
+  });
+});
 
 var addRow = document.getElementById('add-row');
 addRow.addEventListener('click', function (e) {
@@ -17,7 +32,7 @@ addRow.addEventListener('click', function (e) {
 
 var addColumn = document.getElementById('add-column');
 addColumn.addEventListener('click', function (e) {
-  if (editor.data.headers.length < 1) remove(document.getElementById('hello-message'));
+  if (editor.data.headers.length < 1) elClass(hello).add('hidden');
   if (editor.data.rows < 1) editor.addRow();
   var name = window.prompt('New column name');
   editor.addColumn({ name: name, type: 'string' });
@@ -46,4 +61,13 @@ var close = document.getElementById('close');
 close.addEventListener('click', function (e) {
   textarea.value = '';
   elClass(codeBox).add('hidden');
+});
+
+var reset = document.getElementById('reset');
+reset.addEventListener('click', function (e) {
+  var msg = 'Are you sure you want to reset this project? You will start over with an empty workspace.';
+  if (window.confirm(msg)) {
+    editor.reset();
+    elClass(hello).remove('hidden');   
+  };
 });
