@@ -8,4 +8,7 @@ Allow multiple users to edit tabular data in real time, and get a json file that
 ## Early!
 This is a rewrite of the editor in use at app.flatsheet.io.
 
-It will likely be based on this table-editor module: https://github.com/sethvincent/table-editor
+It is based in part on this table-editor module: https://github.com/sethvincent/table-editor
+
+## License
+MIT
