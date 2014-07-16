@@ -21,7 +21,6 @@ textarea {
   box-sizing: border-box;
 }
 
-
 h1,
 h2,
 h3,
@@ -33,28 +32,23 @@ h6 {
   line-height: 1.5;
 }
 
-
 a {
   color: #2A8782;
   text-decoration: none;
 }
 
-
 a:hover {
   color: #000;
 }
-
 
 a:active,
 a:focus {
   color: #000;
 }
 
-
 b {
   font-weight: 400;
 }
-
 
 pre,
 code {
@@ -76,7 +70,6 @@ pre code {
   padding: 0px;
 }
 
-
 hr {
   border-top: 1px solid #e2e2e2;
   border-right: none;
@@ -84,7 +77,6 @@ hr {
   border-left: none;
   margin: 10px 0 30px 0;
 }
-
 
 img {
   max-width: 100%;
@@ -104,18 +96,6 @@ img.headshot {
   font-family: Baskerville, sans-serif;
 }
 
-
-.user-form {
-  width: 300px;
-  margin: 0px auto;
-}
-
-.user-form input[type=submit] {
-  margin-top: 20px;
-  margin-bottom: 15px;
-}
-
-
 input[type=text],
 input[type=email],
 input[type=password] {
@@ -126,7 +106,6 @@ input[type=password] {
   width: 300px;
   height: 30px;
 }
-
 
 .icon,
 button,
@@ -148,7 +127,6 @@ input[type="submit"] {
   -webkit-border-radius: 0;
 }
 
-
 .icon:hover,
 button:hover,
 button:focus,
@@ -161,11 +139,9 @@ input[type="submit"]:focus {
   color: #fff;
 }
 
-
 a.button {
   padding: 11px 10px 10px 10px;
 }
-
 
 a.button:hover {
   text-decoration: none;
@@ -199,7 +175,7 @@ a.button:hover {
   border: 0px;
 }
 
-#close {
+#code-box #close {
   position: fixed;
   right: 50px;
 }
