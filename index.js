@@ -3,14 +3,8 @@ var prettify = require('jsonpretty');
 var elClass = require('element-class');
 
 var data = {
-  headers: [
-    { name: 'example', type: 'string' }
-  ],
-  rows: [
-    { example: null },
-    { example: null },
-    { example: null }
-  ]
+  headers: [],
+  rows: []
 };
 
 var editor = new TableEditor('main-content', data);
