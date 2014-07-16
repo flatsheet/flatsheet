@@ -171,10 +171,16 @@ a.button:hover {
   text-decoration: none;
 }
 
-textarea {
+#table-editor {
+  margin-top: 30px;
+}
+
+#table-editor textarea {
   resize: none;
-  height: 23px;
-  padding: 0px;
+  height: 28px;
+  line-height: 26px;
+  padding: 0px 0px 0px 5px;
+  border: 1px solid #ccc;
 }
 
 #code-box {
@@ -189,6 +195,13 @@ textarea {
 #code-box textarea {
   width: 100%;
   height: 100%;
+  padding: 50px;
+  border: 0px;
+}
+
+#close {
+  position: fixed;
+  right: 50px;
 }
 
 .hidden {
