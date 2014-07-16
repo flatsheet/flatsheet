@@ -8,21 +8,31 @@
   "main": "index.js",
   "scripts": {
     "test": "tape test.js",
-    "watch-js": "watchify -d index.js -o bundle.js -t brfs",
-    "bundle": "browserify -t brfs index.js -o bundle.js",
-    "start": "serve & npm run watch-js"
+    "bundle-css": "rework-npm style.css | myth | cleancss -o bundle/app.css",
+    "watch-css": "gazer -p 'style.css' 'rework-npm style.css | myth > bundle/app.css'",
+    "watch-js": "watchify -d index.js -o bundle/app.js -t brfs",
+    "bundle-js": "browserify -t brfs index.js -o bundle/app.js",
+    "bundle": "npm run bundle-js & npm run bundle-css",
+    "watch": "npm run watch-js & npm run watch-css",
+    "start": "serve & npm run watch"
   },
   "dependencies": {
     "element-class": "^0.1.1",
     "jsonpretty": "0.0.1",
+    "normalize-css": "^2.3.1",
+    "remove-element": "0.0.0",
     "table-editor": "^0.2.0"
   },
   "devDependencies": {
-    "tape": "^2.13.3",
-    "uglify-js": "^2.4.13",
     "brfs": "^1.1.1",
     "browserify": "^4.1.6",
+    "clean-css": "^2.2.8",
+    "gazer": "0.0.3",
+    "myth": "^1.1.0",
+    "rework-npm-cli": "^0.1.1",
     "serve": "^1.4.0",
+    "tape": "^2.13.3",
+    "uglify-js": "^2.4.13",
     "watchify": "^0.10.1"
   }
 }

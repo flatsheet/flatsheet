@@ -1,6 +1,7 @@
 var TableEditor = require('table-editor');
 var prettify = require('jsonpretty');
 var elClass = require('element-class');
+var remove = require('remove-element');
 
 var data = {
   headers: [],
@@ -16,6 +17,8 @@ addRow.addEventListener('click', function (e) {
 
 var addColumn = document.getElementById('add-column');
 addColumn.addEventListener('click', function (e) {
+  if (editor.data.headers.length < 1) remove(document.getElementById('hello-message'));
+  if (editor.data.rows < 1) editor.addRow();
   var name = window.prompt('New column name');
   editor.addColumn({ name: name, type: 'string' });
 });
