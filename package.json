@@ -7,13 +7,22 @@
   },
   "main": "index.js",
   "scripts": {
-    "test": "",
-    "start": ""
+    "test": "tape test.js",
+    "watch-js": "watchify -d index.js -o bundle.js -t brfs",
+    "bundle": "browserify -t brfs index.js -o bundle.js",
+    "start": "serve & npm run watch-js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "element-class": "^0.1.1",
+    "jsonpretty": "0.0.1",
+    "table-editor": "^0.2.0"
+  },
   "devDependencies": {
-    "browserify": "^4.2.0",
     "tape": "^2.13.3",
-    "watchify": "^0.10.2"
+    "uglify-js": "^2.4.13",
+    "brfs": "^1.1.1",
+    "browserify": "^4.1.6",
+    "serve": "^1.4.0",
+    "watchify": "^0.10.1"
   }
 }

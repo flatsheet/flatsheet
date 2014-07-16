@@ -1,0 +1,43 @@
+<!doctype>
+<html>
+<head>
+<style>
+  textarea {
+    resize: none;
+    height: 23px;
+    padding: 4px 5px;
+  }
+
+  #code-box {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: rgba(255, 255, 255, 0.9);
+  }
+
+  #code-box textarea {
+    width: 100%;
+    height: 100%;
+  }
+
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+  <button id="add-row">add row</button>
+  <button id="add-column">add column</button>
+  <button id="show-json">json</button>
+  <button id="show-csv">csv</button>
+
+  <div id="main-content"></div>
+
+  <div id="code-box" class="hidden">
+    <button id="close">close</button>
+    <textarea readonly></textarea>
+  </div>
+
+  <script src="bundle.js"></script>
+</body>
+</html>
