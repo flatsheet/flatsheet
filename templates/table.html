@@ -14,16 +14,13 @@
       {{/headers}}
     </tr>
   </thead>
-  <tbody>
+  <tbody id="table-body">
     {{#rows:i}}
     <tr class="{{ i }}">
-      <button class="row-settings-toggle"><i class="fa fa-bars"></i></button>
-      <ul class="row-settings hidden">
-        <li><button><i class="fa fa-trash-o"></i> Delete</button></li>
-      </ul>
+      <button class="delete-row"><i class="fa fa-trash-o delete-btn-icon"></i></button>
       {{#this:value}}
       <td class="{{value}}">
-        <textarea chooser="cell" value="{{this}}"></textarea>
+        <textarea value="{{this}}"></textarea>
       </td>
       {{/.}}
     </tr>

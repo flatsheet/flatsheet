@@ -5,10 +5,11 @@ var elClass = require('element-class');
 var domready = require('domready');
 var levelup = require('levelup');
 var leveljs = require('level-js');
-var closest = require('discore-closest');
-var siblings = require('siblings');
 var on = require('dom-event');
 var remove = require('remove-element');
+var closest = require('discore-closest');
+
+var menuToggle = require('./lib/menu-toggle');
 
 /* get the table template */
 var tableTemplate = fs.readFileSync('./templates/table.html', 'utf8');
@@ -113,34 +114,28 @@ on(tableHeader, 'click', function (e) {
 
     if (btn[0] === 'rename') {
       var newName = window.prompt('Choose a new column name:')
-      editor.renameColumn(btn[1], newName);
+      if (newName) editor.renameColumn(btn[1], newName);
     }
   }
 
   else menuToggle('header', e.target)
 });
 
-/* helper function for toggling a menu open/closed */
-function menuToggle (prefix, target) {
-  var menuClass = prefix + '-settings';
-  var toggleClass = menuClass + '-toggle';
-  var btn, menu;
+/* element and listener for the table body */
+var tableBody = document.getElementById('table-body');
 
-  if (elClass(target).has('settings-icon')) {
-    btn = closest(target, '.' + toggleClass);
-  }
-  else if (elClass(target).has(toggleClass)) {
-    btn = target;
-  }
+on(tableBody, 'click', function (e) {
+  var btn;
 
-  var menu = siblings(btn, '.' + menuClass)[0];
+  if (elClass(e.target).has('delete-row')) btn = e.target;
+  else if (elClass(e.target).has('delete-btn-icon')) btn = closest(e.target, '.delete-row');
+  else return;
+  
+  console.log(btn);
 
-  if (elClass(btn).has('active')) {
-    elClass(menu).add('hidden');
-    elClass(btn).remove('active');
+  if (window.confirm('Sure you want to delete this row and its contents?')) {
+    var row = closest(btn, 'tr');
+    console.log(row.className, row, btn)
+    editor.deleteRow(row.className);
   }
-  else {
-    elClass(menu).remove('hidden');
-    elClass(btn).add('active');
-  }
-}
+});
