@@ -1,15 +1,29 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+
 var TableEditor = require('table-editor');
 var prettify = require('jsonpretty');
 var elClass = require('element-class');
 var domready = require('domready');
 var levelup = require('levelup');
 var leveljs = require('level-js');
+var closest = require('discore-closest');
+var siblings = require('siblings');
+var on = require('dom-event');
+var remove = require('remove-element');
 
-window.editor = new TableEditor('main-content');
+/* get the table template */
+var tableTemplate = "<table id=\"table-editor\">\n  <thead id=\"table-header\">\n    <tr>\n      <span class=\"spacer\"></span>\n      {{#headers:key}}\n        <th id={{name}}>\n          <span class=\"header-name\">{{name}}</span>\n          <button class=\"header-settings-toggle\"><i class=\"fa fa-gear settings-icon\"></i></button>\n          <ul class=\"header-settings hidden\">\n            <li><button id=\"rename-{{name}}\" class=\"setting\"><i class=\"fa fa-edit\"></i> Rename</button></li>\n            <li><button id=\"delete-{{name}}\" class=\"setting\"><i class=\"fa fa-trash-o\"></i> Delete</button></li>\n          </ul>\n        </th>\n      {{/headers}}\n    </tr>\n  </thead>\n  <tbody>\n    {{#rows:i}}\n    <tr class=\"{{ i }}\">\n      <button class=\"row-settings-toggle\"><i class=\"fa fa-bars\"></i></button>\n      <ul class=\"row-settings hidden\">\n        <li><button><i class=\"fa fa-trash-o\"></i> Delete</button></li>\n      </ul>\n      {{#this:value}}\n      <td class=\"{{value}}\">\n        <textarea chooser=\"cell\" value=\"{{this}}\"></textarea>\n      </td>\n      {{/.}}\n    </tr>\n    {{/rows}}\n  </tbody>\n</table>";
+
+/* create the table editor */
+window.editor = new TableEditor('main-content', { headers: [], rows: [] }, tableTemplate);
+
+/* get the help message */
 var hello = document.getElementById('hello-message');
+
+/* created the db */
 window.db = levelup('sheet', { db: leveljs, valueEncoding: 'json' });
 
+/* check to see if the sheet has has been added to the db already */
 db.get('sheet', function (err, value) {
   if (err) return console.error(err);
   if (value.headers.length > 0) {
@@ -18,52 +32,66 @@ db.get('sheet', function (err, value) {
   }
 });
 
-  editor.on('change', function (change, data) {
-    db.put('sheet', data, function (error) {
-      if (error) console.error(error);
-    });
+/* listen for changes to the data and save the object to the db */
+editor.on('change', function (change, data) {
+  db.put('sheet', data, function (error) {
+    if (error) console.error(error);
   });
+});
 
+/* button element and listener for adding a row */
 var addRow = document.getElementById('add-row');
-addRow.addEventListener('click', function (e) {
+
+on(addRow, 'click', function (e) {
   editor.addRow();
 });
 
+/* button element and listener for adding a column */
 var addColumn = document.getElementById('add-column');
-addColumn.addEventListener('click', function (e) {
+
+on(addColumn, 'click', function (e) {
   if (editor.data.headers.length < 1) elClass(hello).add('hidden');
   if (editor.data.rows < 1) editor.addRow();
   var name = window.prompt('New column name');
   editor.addColumn({ name: name, type: 'string' });
 });
 
+/* get elements for codebox and its textarea */
 var codeBox = document.getElementById('code-box');
 var textarea = codeBox.querySelector('textarea');
 
+/* button element and listener for showing the data as json */
 var showJSON = document.getElementById('show-json');
-showJSON.addEventListener('click', function (e) {
+
+on(showJSON, 'click', function (e) {
   editor.getJSON(function (data) {
     textarea.value = prettify(data);
     elClass(codeBox).remove('hidden');
   });
 });
 
+/* button element and listener for showing the data as csv */
 var showCSV = document.getElementById('show-csv');
-showCSV.addEventListener('click', function (e) {
+
+on(showCSV, 'click', function (e) {
   editor.getCSV(function (data) {
     textarea.value = data;
     elClass(codeBox).remove('hidden');
   });
 });
 
+/* button element and listener for closing the codebox */
 var close = document.getElementById('close');
-close.addEventListener('click', function (e) {
+
+on(close, 'click', function (e) {
   textarea.value = '';
   elClass(codeBox).add('hidden');
 });
 
+/* button element and listener for clearing the db */
 var reset = document.getElementById('reset');
-reset.addEventListener('click', function (e) {
+
+on(reset, 'click', function (e) {
   var msg = 'Are you sure you want to reset this project? You will start over with an empty workspace.';
   if (window.confirm(msg)) {
     editor.reset();
@@ -71,7 +99,53 @@ reset.addEventListener('click', function (e) {
   };
 });
 
-},{"domready":25,"element-class":26,"jsonpretty":27,"level-js":28,"levelup":46,"table-editor":70}],2:[function(require,module,exports){
+/* element and listener for the table header */
+var tableHeader = document.getElementById('table-header');
+
+on(tableHeader, 'click', function (e) {
+  if (elClass(e.target).has('setting')) {
+    var btn = e.target.id.split('-');
+
+    if (btn[0] === 'delete') {
+      if (window.confirm('Sure you want to delete this column and its contents?')) {
+        editor.deleteColumn(btn[1]);
+      }
+    }
+
+    if (btn[0] === 'rename') {
+      var newName = window.prompt('Choose a new column name:')
+      editor.renameColumn(btn[1], newName);
+    }
+  }
+
+  else menuToggle('header', e.target)
+});
+
+/* helper function for toggling a menu open/closed */
+function menuToggle (prefix, target) {
+  var menuClass = prefix + '-settings';
+  var toggleClass = menuClass + '-toggle';
+  var btn, menu;
+
+  if (elClass(target).has('settings-icon')) {
+    btn = closest(target, '.' + toggleClass);
+  }
+  else if (elClass(target).has(toggleClass)) {
+    btn = target;
+  }
+
+  var menu = siblings(btn, '.' + menuClass)[0];
+
+  if (elClass(btn).has('active')) {
+    elClass(menu).add('hidden');
+    elClass(btn).remove('active');
+  }
+  else {
+    elClass(menu).remove('hidden');
+    elClass(btn).add('active');
+  }
+}
+},{"discore-closest":25,"dom-event":28,"domready":29,"element-class":30,"jsonpretty":31,"level-js":32,"levelup":50,"remove-element":74,"siblings":75,"table-editor":77}],2:[function(require,module,exports){
 
 },{}],3:[function(require,module,exports){
 /*!
@@ -4605,6 +4679,111 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this,require("FWaASH"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./support/isBuffer":23,"FWaASH":8,"inherits":7}],25:[function(require,module,exports){
+var matches = require('matches-selector')
+
+module.exports = function (element, selector, checkYoSelf, root) {
+  element = checkYoSelf ? {parentNode: element} : element
+
+  root = root || document
+
+  // Make sure `element !== document` and `element != null`
+  // otherwise we get an illegal invocation
+  while ((element = element.parentNode) && element !== document) {
+    if (matches(element, selector))
+      return element
+    // After `matches` on the edge case that
+    // the selector matches the root
+    // (when the root is not the document)
+    if (element === root)
+      return  
+  }
+}
+},{"matches-selector":26}],26:[function(require,module,exports){
+/**
+ * Module dependencies.
+ */
+
+var query = require('query');
+
+/**
+ * Element prototype.
+ */
+
+var proto = Element.prototype;
+
+/**
+ * Vendor function.
+ */
+
+var vendor = proto.matches
+  || proto.webkitMatchesSelector
+  || proto.mozMatchesSelector
+  || proto.msMatchesSelector
+  || proto.oMatchesSelector;
+
+/**
+ * Expose `match()`.
+ */
+
+module.exports = match;
+
+/**
+ * Match `el` to `selector`.
+ *
+ * @param {Element} el
+ * @param {String} selector
+ * @return {Boolean}
+ * @api public
+ */
+
+function match(el, selector) {
+  if (vendor) return vendor.call(el, selector);
+  var nodes = query.all(selector, el.parentNode);
+  for (var i = 0; i < nodes.length; ++i) {
+    if (nodes[i] == el) return true;
+  }
+  return false;
+}
+
+},{"query":27}],27:[function(require,module,exports){
+function one(selector, el) {
+  return el.querySelector(selector);
+}
+
+exports = module.exports = function(selector, el){
+  el = el || document;
+  return one(selector, el);
+};
+
+exports.all = function(selector, el){
+  el = el || document;
+  return el.querySelectorAll(selector);
+};
+
+exports.engine = function(obj){
+  if (!obj.one) throw new Error('.one callback required');
+  if (!obj.all) throw new Error('.all callback required');
+  one = obj.one;
+  exports.all = obj.all;
+  return exports;
+};
+
+},{}],28:[function(require,module,exports){
+module.exports = on;
+module.exports.on = on;
+module.exports.off = off;
+
+function on (element, event, callback, capture) {
+  (element.addEventListener || element.attachEvent).call(element, event, callback, capture);
+  return callback;
+}
+
+function off (element, event, callback, capture) {
+  (element.removeEventListener || element.detachEvent).call(element, event, callback, capture);
+  return callback;
+}
+
+},{}],29:[function(require,module,exports){
 /*!
   * domready (c) Dustin Diaz 2014 - License MIT
   */
@@ -4634,7 +4813,7 @@ function hasOwnProperty(obj, prop) {
 
 });
 
-},{}],26:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 module.exports = function(opts) {
   return new ElementClass(opts)
 }
@@ -4681,7 +4860,7 @@ ElementClass.prototype.has = function(className) {
   return classes.indexOf(className) > -1
 }
 
-},{}],27:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 module.exports = prettyPrint;
 function prettyPrint(o, indent) {
   indent = indent || '';
@@ -4742,7 +4921,7 @@ function printVal(o, indent) {
   return ret;
 }
 
-},{}],28:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 (function (Buffer){
 module.exports = Level
 
@@ -4916,7 +5095,7 @@ var checkKeyValue = Level.prototype._checkKeyValue = function (obj, type) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./iterator":29,"abstract-leveldown":32,"buffer":3,"idb-wrapper":34,"isbuffer":35,"typedarray-to-buffer":37,"util":24,"xtend":39}],29:[function(require,module,exports){
+},{"./iterator":33,"abstract-leveldown":36,"buffer":3,"idb-wrapper":38,"isbuffer":39,"typedarray-to-buffer":41,"util":24,"xtend":43}],33:[function(require,module,exports){
 var util = require('util')
 var AbstractIterator  = require('abstract-leveldown').AbstractIterator
 var ltgt = require('ltgt')
@@ -4983,7 +5162,7 @@ Iterator.prototype._next = function (callback) {
   this.callback = callback
 }
 
-},{"abstract-leveldown":32,"ltgt":36,"util":24}],30:[function(require,module,exports){
+},{"abstract-leveldown":36,"ltgt":40,"util":24}],34:[function(require,module,exports){
 (function (process){
 /* Copyright (c) 2013 Rod Vagg, MIT License */
 
@@ -5067,7 +5246,7 @@ AbstractChainedBatch.prototype.write = function (options, callback) {
 
 module.exports = AbstractChainedBatch
 }).call(this,require("FWaASH"))
-},{"FWaASH":8}],31:[function(require,module,exports){
+},{"FWaASH":8}],35:[function(require,module,exports){
 (function (process){
 /* Copyright (c) 2013 Rod Vagg, MIT License */
 
@@ -5120,7 +5299,7 @@ AbstractIterator.prototype.end = function (callback) {
 module.exports = AbstractIterator
 
 }).call(this,require("FWaASH"))
-},{"FWaASH":8}],32:[function(require,module,exports){
+},{"FWaASH":8}],36:[function(require,module,exports){
 (function (process,Buffer){
 /* Copyright (c) 2013 Rod Vagg, MIT License */
 
@@ -5382,7 +5561,7 @@ module.exports.AbstractIterator     = AbstractIterator
 module.exports.AbstractChainedBatch = AbstractChainedBatch
 
 }).call(this,require("FWaASH"),require("buffer").Buffer)
-},{"./abstract-chained-batch":30,"./abstract-iterator":31,"FWaASH":8,"buffer":3,"xtend":33}],33:[function(require,module,exports){
+},{"./abstract-chained-batch":34,"./abstract-iterator":35,"FWaASH":8,"buffer":3,"xtend":37}],37:[function(require,module,exports){
 module.exports = extend
 
 function extend() {
@@ -5401,7 +5580,7 @@ function extend() {
     return target
 }
 
-},{}],34:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 /*global window:false, self:false, define:false, module:false */
 
 /**
@@ -6621,7 +6800,7 @@ function extend() {
 
 }, this);
 
-},{}],35:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 var Buffer = require('buffer').Buffer;
 
 module.exports = isBuffer;
@@ -6631,7 +6810,7 @@ function isBuffer (o) {
     || /\[object (.+Array|Array.+)\]/.test(Object.prototype.toString.call(o));
 }
 
-},{"buffer":3}],36:[function(require,module,exports){
+},{"buffer":3}],40:[function(require,module,exports){
 (function (Buffer){
 
 exports.compare = function (a, b) {
@@ -6730,7 +6909,7 @@ exports.filter = function (range, compare) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":3}],37:[function(require,module,exports){
+},{"buffer":3}],41:[function(require,module,exports){
 (function (Buffer){
 /**
  * Convert a typed array to a Buffer without a copy
@@ -6752,7 +6931,7 @@ module.exports = function (arr) {
   }
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":3}],38:[function(require,module,exports){
+},{"buffer":3}],42:[function(require,module,exports){
 module.exports = hasKeys
 
 function hasKeys(source) {
@@ -6761,7 +6940,7 @@ function hasKeys(source) {
         typeof source === "function")
 }
 
-},{}],39:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 var Keys = require("object-keys")
 var hasKeys = require("./has-keys")
 
@@ -6788,7 +6967,7 @@ function extend() {
     return target
 }
 
-},{"./has-keys":38,"object-keys":41}],40:[function(require,module,exports){
+},{"./has-keys":42,"object-keys":45}],44:[function(require,module,exports){
 var hasOwn = Object.prototype.hasOwnProperty;
 var toString = Object.prototype.toString;
 
@@ -6830,11 +7009,11 @@ module.exports = function forEach(obj, fn) {
 };
 
 
-},{}],41:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 module.exports = Object.keys || require('./shim');
 
 
-},{"./shim":43}],42:[function(require,module,exports){
+},{"./shim":47}],46:[function(require,module,exports){
 var toString = Object.prototype.toString;
 
 module.exports = function isArguments(value) {
@@ -6852,7 +7031,7 @@ module.exports = function isArguments(value) {
 };
 
 
-},{}],43:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 (function () {
 	"use strict";
 
@@ -6916,7 +7095,7 @@ module.exports = function isArguments(value) {
 }());
 
 
-},{"./foreach":40,"./isArguments":42}],44:[function(require,module,exports){
+},{"./foreach":44,"./isArguments":46}],48:[function(require,module,exports){
 /* Copyright (c) 2012-2013 LevelUP contributors
  * See list at <https://github.com/rvagg/node-levelup#contributing>
  * MIT +no-false-attribs License
@@ -6996,7 +7175,7 @@ Batch.prototype.write = function (callback) {
 
 module.exports = Batch
 
-},{"./errors":45,"./util":48}],45:[function(require,module,exports){
+},{"./errors":49,"./util":52}],49:[function(require,module,exports){
 /* Copyright (c) 2012-2013 LevelUP contributors
  * See list at <https://github.com/rvagg/node-levelup#contributing>
  * MIT +no-false-attribs License
@@ -7019,7 +7198,7 @@ module.exports = {
   , NotFoundError       : NotFoundError
   , EncodingError       : createError('EncodingError', LevelUPError)
 }
-},{"errno":56}],46:[function(require,module,exports){
+},{"errno":60}],50:[function(require,module,exports){
 (function (process){
 /* Copyright (c) 2012-2013 LevelUP contributors
  * See list at <https://github.com/rvagg/node-levelup#contributing>
@@ -7458,7 +7637,7 @@ module.exports.destroy = utilStatic('destroy')
 module.exports.repair  = utilStatic('repair')
 
 }).call(this,require("FWaASH"))
-},{"./batch":44,"./errors":45,"./read-stream":47,"./util":48,"./write-stream":49,"FWaASH":8,"deferred-leveldown":51,"events":6,"prr":57,"util":24,"xtend":68}],47:[function(require,module,exports){
+},{"./batch":48,"./errors":49,"./read-stream":51,"./util":52,"./write-stream":53,"FWaASH":8,"deferred-leveldown":55,"events":6,"prr":61,"util":24,"xtend":72}],51:[function(require,module,exports){
 /* Copyright (c) 2012-2013 LevelUP contributors
  * See list at <https://github.com/rvagg/node-levelup#contributing>
  * MIT +no-false-attribs License <https://github.com/rvagg/node-levelup/blob/master/LICENSE>
@@ -7586,7 +7765,7 @@ ReadStream.prototype.toString = function () {
 
 module.exports = ReadStream
 
-},{"./errors":45,"./util":48,"readable-stream":67,"util":24,"xtend":68}],48:[function(require,module,exports){
+},{"./errors":49,"./util":52,"readable-stream":71,"util":24,"xtend":72}],52:[function(require,module,exports){
 (function (process,Buffer){
 /* Copyright (c) 2012-2013 LevelUP contributors
  * See list at <https://github.com/rvagg/node-levelup#contributing>
@@ -7772,7 +7951,7 @@ module.exports = {
 }
 
 }).call(this,require("FWaASH"),require("buffer").Buffer)
-},{"../package.json":69,"./errors":45,"FWaASH":8,"buffer":3,"leveldown":2,"leveldown/package":2,"semver":2,"xtend":68}],49:[function(require,module,exports){
+},{"../package.json":73,"./errors":49,"FWaASH":8,"buffer":3,"leveldown":2,"leveldown/package":2,"semver":2,"xtend":72}],53:[function(require,module,exports){
 (function (process,global){
 /* Copyright (c) 2012-2013 LevelUP contributors
  * See list at <https://github.com/rvagg/node-levelup#contributing>
@@ -7954,7 +8133,7 @@ WriteStream.prototype.toString = function () {
 module.exports = WriteStream
 
 }).call(this,require("FWaASH"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./util":48,"FWaASH":8,"bl":50,"stream":22,"util":24,"xtend":68}],50:[function(require,module,exports){
+},{"./util":52,"FWaASH":8,"bl":54,"stream":22,"util":24,"xtend":72}],54:[function(require,module,exports){
 (function (Buffer){
 var DuplexStream = require('readable-stream').Duplex
   , util         = require('util')
@@ -8171,7 +8350,7 @@ BufferList.prototype.destroy = function () {
 module.exports = BufferList
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":3,"readable-stream":67,"util":24}],51:[function(require,module,exports){
+},{"buffer":3,"readable-stream":71,"util":24}],55:[function(require,module,exports){
 (function (process,Buffer){
 var util              = require('util')
   , AbstractLevelDOWN = require('abstract-leveldown').AbstractLevelDOWN
@@ -8222,13 +8401,13 @@ DeferredLevelDOWN.prototype._iterator = function () {
 module.exports = DeferredLevelDOWN
 
 }).call(this,require("FWaASH"),require("buffer").Buffer)
-},{"FWaASH":8,"abstract-leveldown":54,"buffer":3,"util":24}],52:[function(require,module,exports){
-module.exports=require(30)
-},{"FWaASH":8}],53:[function(require,module,exports){
-module.exports=require(31)
-},{"FWaASH":8}],54:[function(require,module,exports){
-module.exports=require(32)
-},{"./abstract-chained-batch":52,"./abstract-iterator":53,"FWaASH":8,"buffer":3,"xtend":68}],55:[function(require,module,exports){
+},{"FWaASH":8,"abstract-leveldown":58,"buffer":3,"util":24}],56:[function(require,module,exports){
+module.exports=require(34)
+},{"FWaASH":8}],57:[function(require,module,exports){
+module.exports=require(35)
+},{"FWaASH":8}],58:[function(require,module,exports){
+module.exports=require(36)
+},{"./abstract-chained-batch":56,"./abstract-iterator":57,"FWaASH":8,"buffer":3,"xtend":72}],59:[function(require,module,exports){
 var prr = require('prr')
 
 function init (type, message, cause) {
@@ -8285,7 +8464,7 @@ module.exports = function (errno) {
   }
 }
 
-},{"prr":57}],56:[function(require,module,exports){
+},{"prr":61}],60:[function(require,module,exports){
 var all = module.exports.all = [
  {
   "errno": -1,
@@ -8713,7 +8892,7 @@ module.exports.code = {
 
 module.exports.custom = require("./custom")(module.exports)
 module.exports.create = module.exports.custom.createError
-},{"./custom":55}],57:[function(require,module,exports){
+},{"./custom":59}],61:[function(require,module,exports){
 /*!
   * prr
   * (c) 2013 Rod Vagg <rod@vagg.org>
@@ -8777,29 +8956,29 @@ module.exports.create = module.exports.custom.createError
 
   return prr
 })
-},{}],58:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 module.exports=require(10)
-},{"./_stream_readable":60,"./_stream_writable":62,"FWaASH":8,"core-util-is":63,"inherits":64}],59:[function(require,module,exports){
+},{"./_stream_readable":64,"./_stream_writable":66,"FWaASH":8,"core-util-is":67,"inherits":68}],63:[function(require,module,exports){
 module.exports=require(11)
-},{"./_stream_transform":61,"core-util-is":63,"inherits":64}],60:[function(require,module,exports){
+},{"./_stream_transform":65,"core-util-is":67,"inherits":68}],64:[function(require,module,exports){
 module.exports=require(12)
-},{"FWaASH":8,"buffer":3,"core-util-is":63,"events":6,"inherits":64,"isarray":65,"stream":22,"string_decoder/":66}],61:[function(require,module,exports){
+},{"FWaASH":8,"buffer":3,"core-util-is":67,"events":6,"inherits":68,"isarray":69,"stream":22,"string_decoder/":70}],65:[function(require,module,exports){
 module.exports=require(13)
-},{"./_stream_duplex":58,"core-util-is":63,"inherits":64}],62:[function(require,module,exports){
+},{"./_stream_duplex":62,"core-util-is":67,"inherits":68}],66:[function(require,module,exports){
 module.exports=require(14)
-},{"./_stream_duplex":58,"FWaASH":8,"buffer":3,"core-util-is":63,"inherits":64,"stream":22}],63:[function(require,module,exports){
+},{"./_stream_duplex":62,"FWaASH":8,"buffer":3,"core-util-is":67,"inherits":68,"stream":22}],67:[function(require,module,exports){
 module.exports=require(15)
-},{"buffer":3}],64:[function(require,module,exports){
+},{"buffer":3}],68:[function(require,module,exports){
 module.exports=require(7)
-},{}],65:[function(require,module,exports){
-module.exports=require(16)
-},{}],66:[function(require,module,exports){
-module.exports=require(17)
-},{"buffer":3}],67:[function(require,module,exports){
-module.exports=require(19)
-},{"./lib/_stream_duplex.js":58,"./lib/_stream_passthrough.js":59,"./lib/_stream_readable.js":60,"./lib/_stream_transform.js":61,"./lib/_stream_writable.js":62}],68:[function(require,module,exports){
-module.exports=require(33)
 },{}],69:[function(require,module,exports){
+module.exports=require(16)
+},{}],70:[function(require,module,exports){
+module.exports=require(17)
+},{"buffer":3}],71:[function(require,module,exports){
+module.exports=require(19)
+},{"./lib/_stream_duplex.js":62,"./lib/_stream_passthrough.js":63,"./lib/_stream_readable.js":64,"./lib/_stream_transform.js":65,"./lib/_stream_writable.js":66}],72:[function(require,module,exports){
+module.exports=require(37)
+},{}],73:[function(require,module,exports){
 module.exports={
   "name": "levelup",
   "description": "Fast & simple storage - a Node.js-style LevelDB wrapper",
@@ -8949,7 +9128,66 @@ module.exports={
   "_resolved": "https://registry.npmjs.org/levelup/-/levelup-0.18.5.tgz"
 }
 
-},{}],70:[function(require,module,exports){
+},{}],74:[function(require,module,exports){
+module.exports = remove
+
+function remove(element) {
+  if (
+    element &&
+    element.parentNode
+  ) element.parentNode.removeChild(element)
+
+  return element
+}
+
+},{}],75:[function(require,module,exports){
+var matches = require('matches-selector')
+
+module.exports = function(el, selector) {
+  var node = el.parentNode.firstChild
+  var siblings = []
+  
+  for ( ; node; node = node.nextSibling ) {
+    if ( node.nodeType === 1 && node !== el ) {
+      if (!selector) siblings.push(node)
+      else if (matches(node, selector)) siblings.push(node)
+    }
+  }
+  
+  return siblings
+}
+
+},{"matches-selector":76}],76:[function(require,module,exports){
+'use strict';
+
+var proto = Element.prototype;
+var vendor = proto.matches
+  || proto.matchesSelector
+  || proto.webkitMatchesSelector
+  || proto.mozMatchesSelector
+  || proto.msMatchesSelector
+  || proto.oMatchesSelector;
+
+module.exports = match;
+
+/**
+ * Match `el` to `selector`.
+ *
+ * @param {Element} el
+ * @param {String} selector
+ * @return {Boolean}
+ * @api public
+ */
+
+function match(el, selector) {
+  if (vendor) return vendor.call(el, selector);
+  var nodes = el.parentNode.querySelectorAll(selector);
+  for (var i = 0; i < nodes.length; i++) {
+    if (nodes[i] == el) return true;
+  }
+  return false;
+}
+},{}],77:[function(require,module,exports){
 (function (global){
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.TableEditor=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 
@@ -8962,20 +9200,20 @@ var convert = _dereq_('json-2-csv').json2csv;
 module.exports = TableEditor;
 Emitter(TableEditor.prototype);
 
-function TableEditor (id, data, tableTemplate, rowTemplate) {
+function TableEditor (id, data, tableTemplate) {
   if (!(this instanceof TableEditor)) return new TableEditor(id, data, tableTemplate, rowTemplate);
   var self = this;
 
   this.data = data || { headers: [], rows: [] };
   this.tableTemplate = tableTemplate || "<table id=\"table-editor\">\n  <thead>\n    <tr>\n      {{#headers:key}}\n        <th>{{name}}</th>\n      {{/headers}}\n    </tr>\n  </thead>\n  <tbody>\n    {{#rows:i}}\n    <tr class=\"{{ i }}\">\n      {{#this:value}}\n      <td class=\"{{value}}\">\n        <textarea chooser=\"cell\" value=\"{{this}}\"></textarea>\n      </td>\n      {{/.}}\n    </tr>\n    {{/rows}}\n  </tbody>\n</table>\n";
 
-  this.tableView = new View({
+  this.view = new View({
     el: id,
     template: View.parse(this.tableTemplate),
     data: this.data
   });
 
-  this.tableView.on('change', function (value) {
+  this.view.on('change', function (value) {
     var change = flatten.unflatten(value);
     self.data = extend(true, self.data, change);
     self.emit('change', change, self.data);
@@ -8983,11 +9221,11 @@ function TableEditor (id, data, tableTemplate, rowTemplate) {
 }
 
 TableEditor.prototype.get = function (key) {
-  return this.tableView.get(key);
+  return this.view.get(key);
 };
 
 TableEditor.prototype.set = function (key, value) {
-  return this.tableView.set(key, value);
+  return this.view.set(key, value);
 };
 
 TableEditor.prototype.getJSON = function (cb) {
@@ -9017,7 +9255,36 @@ TableEditor.prototype.addColumn = function (header) {
     row[header.name] = null;
   });
   this.data.headers.push(header);
-  this.tableView.update();
+  this.update();
+};
+
+TableEditor.prototype.deleteColumn = function (name) {
+  var self = this;
+
+  this.data.rows.forEach(function(row, i) {
+    delete self.data.rows[i][name];
+  });
+
+  this.data.headers.forEach(function(header, i) {
+    if (header.name === name) self.data.headers.splice(i, 1);
+  });
+
+  this.update();
+};
+
+TableEditor.prototype.renameColumn = function (oldKey, newKey) {
+  var self = this;
+
+  this.data.headers.forEach(function(header, i) {
+    if (header.name === oldKey) header.name = newKey;
+  });
+
+  this.data.rows.forEach(function(row, i) {
+    row[newKey] = row[oldKey];
+    delete row[oldKey];
+  });
+
+  this.update();
 };
 
 TableEditor.prototype.emptyRow = function () {
@@ -9028,14 +9295,9 @@ TableEditor.prototype.emptyRow = function () {
   return obj;
 };
 
-TableEditor.prototype.changeColumnName = function (oldKey, newKey) {
-  this.data.headers[newKey] = this.data.headers[oldKey];
-  delete this.data.headers[oldKey];
-  this.tableView.update();
-};
-
 TableEditor.prototype.update = function () {
-  this.tableView.update();
+  this.emit('change', '', this.data);
+  this.view.update();
 };
 
 TableEditor.prototype.reset = function (data) {

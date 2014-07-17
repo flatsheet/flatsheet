@@ -151,12 +151,24 @@ a.button:hover {
   margin-top: 30px;
 }
 
+#table-editor thead th {
+  text-align: left;
+  padding-top: 10px;
+  padding-left: 10px;
+}
+
+#table-editor thead th span.header-name {
+  padding-top: 5px;
+  display: inline-block;
+}
+
 #table-editor textarea {
   resize: none;
   height: 28px;
   line-height: 26px;
   padding: 0px 0px 0px 5px;
   border: 1px solid #ccc;
+  width: 150px;
 }
 
 #code-box {
@@ -178,6 +190,27 @@ a.button:hover {
 #code-box #close {
   position: fixed;
   right: 50px;
+}
+
+.header-settings-toggle {
+  float: right;
+}
+
+.header-settings {
+  margin: 5px 0px 0px -9px;
+  padding: 0px;
+  position: absolute;
+  width: 150px;
+}
+
+.header-settings li {
+  display: block;
+  width: 100%;
+}
+
+.header-settings li button {
+  width: 100%;
+  text-align: left;
 }
 
 .hidden {

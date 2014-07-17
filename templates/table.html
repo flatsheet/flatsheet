@@ -1,0 +1,32 @@
+<table id="table-editor">
+  <thead id="table-header">
+    <tr>
+      <span class="spacer"></span>
+      {{#headers:key}}
+        <th id={{name}}>
+          <span class="header-name">{{name}}</span>
+          <button class="header-settings-toggle"><i class="fa fa-gear settings-icon"></i></button>
+          <ul class="header-settings hidden">
+            <li><button id="rename-{{name}}" class="setting"><i class="fa fa-edit"></i> Rename</button></li>
+            <li><button id="delete-{{name}}" class="setting"><i class="fa fa-trash-o"></i> Delete</button></li>
+          </ul>
+        </th>
+      {{/headers}}
+    </tr>
+  </thead>
+  <tbody>
+    {{#rows:i}}
+    <tr class="{{ i }}">
+      <button class="row-settings-toggle"><i class="fa fa-bars"></i></button>
+      <ul class="row-settings hidden">
+        <li><button><i class="fa fa-trash-o"></i> Delete</button></li>
+      </ul>
+      {{#this:value}}
+      <td class="{{value}}">
+        <textarea chooser="cell" value="{{this}}"></textarea>
+      </td>
+      {{/.}}
+    </tr>
+    {{/rows}}
+  </tbody>
+</table>

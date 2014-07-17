@@ -17,6 +17,9 @@
     "start": "serve & npm run watch"
   },
   "dependencies": {
+    "discore-closest": "git://github.com/component/closest",
+    "dom-event": "0.0.0",
+    "domquery": "^1.2.0",
     "domready": "^1.0.5",
     "element-class": "^0.1.1",
     "jsonpretty": "0.0.1",
@@ -24,6 +27,7 @@
     "levelup": "^0.18.5",
     "normalize-css": "^2.3.1",
     "remove-element": "0.0.0",
+    "siblings": "^1.0.1",
     "table-editor": "^0.2.1"
   },
   "devDependencies": {
