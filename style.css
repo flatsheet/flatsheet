@@ -171,6 +171,10 @@ a.button:hover {
   width: 150px;
 }
 
+#table-editor td.active textarea {
+  border: 1px solid red;
+}
+
 #code-box {
   position: fixed;
   width: 100%;

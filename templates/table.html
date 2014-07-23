@@ -16,10 +16,10 @@
   </thead>
   <tbody id="table-body">
     {{#rows:i}}
-    <tr class="{{ i }}">
+    <tr class="row-{{ i }}">
       <button class="delete-row"><i class="fa fa-trash-o delete-btn-icon"></i></button>
       {{#this:value}}
-      <td class="{{value}}">
+      <td class="column-{{value}}" id="row-{{ i }}-column-{{value}}">
         <textarea value="{{this}}"></textarea>
       </td>
       {{/.}}

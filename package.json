@@ -10,11 +10,11 @@
     "test": "tape test.js",
     "bundle-css": "rework-npm style.css | myth | cleancss -o bundle/app.css",
     "watch-css": "gazer -p 'style.css' 'rework-npm style.css | myth > bundle/app.css'",
-    "watch-js": "watchify -d index.js -o bundle/app.js -t brfs",
-    "bundle-js": "browserify -t brfs index.js -o bundle/app.js",
+    "watch-js": "watchify -d browser.js -o bundle/app.js -t brfs",
+    "bundle-js": "browserify -t brfs browser.js -o bundle/app.js",
     "bundle": "npm run bundle-js & npm run bundle-css",
     "watch": "npm run watch-js & npm run watch-css",
-    "start": "serve & npm run watch"
+    "start": "node server.js & npm run watch"
   },
   "dependencies": {
     "discore-closest": "git://github.com/component/closest",
@@ -22,12 +22,17 @@
     "domquery": "^1.2.0",
     "domready": "^1.0.5",
     "element-class": "^0.1.1",
+    "express": "^4.6.1",
+    "flat": "^1.2.1",
     "jsonpretty": "0.0.1",
     "level-js": "^2.1.6",
     "levelup": "^0.18.5",
+    "lodash.keys": "^2.4.1",
     "normalize-css": "^2.3.1",
     "remove-element": "0.0.0",
     "siblings": "^1.0.1",
+    "socket.io": "^1.0.6",
+    "socket.io-client": "^1.0.6",
     "table-editor": "^0.2.3"
   },
   "devDependencies": {
