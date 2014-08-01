@@ -14,7 +14,7 @@
     "bundle-js": "browserify -t brfs browser.js -o bundle/app.js",
     "bundle": "npm run bundle-js & npm run bundle-css",
     "watch": "npm run watch-js & npm run watch-css",
-    "start": "node server.js & npm run watch"
+    "start": "node server.js"
   },
   "dependencies": {
     "discore-closest": "git://github.com/component/closest",
