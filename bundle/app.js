@@ -8,12 +8,12 @@ var levelup = require('levelup');
 var leveljs = require('level-js');
 var on = require('dom-event');
 var remove = require('remove-element');
-var closest = require('discore-closest');
+var closest = require('component-closest');
 var menuToggle = require('./lib/menu-toggle');
 var keys = require('lodash.keys');
 var flat = require('flat');
 
-var io = require('socket.io-client')('http://localhost:3000');
+var io = require('socket.io-client')('http://flatsheet-realtime.herokuapp.com');
 
 var user = {
   cell: null
@@ -128,7 +128,7 @@ on(reset, 'click', function (e) {
   var msg = 'Are you sure you want to reset this project? You will start over with an empty workspace.';
   if (window.confirm(msg)) {
     editor.reset();
-    elClass(hello).remove('hidden');   
+    elClass(hello).remove('hidden');
   };
 });
 
@@ -187,9 +187,9 @@ on(tableBody, 'click', function (e) {
   }
 });
 
-},{"./lib/menu-toggle":2,"discore-closest":26,"dom-event":29,"domready":30,"element-class":31,"flat":32,"jsonpretty":33,"level-js":34,"levelup":52,"lodash.keys":76,"remove-element":82,"socket.io-client":85,"table-editor":128}],2:[function(require,module,exports){
+},{"./lib/menu-toggle":2,"component-closest":26,"dom-event":29,"domready":30,"element-class":31,"flat":32,"jsonpretty":33,"level-js":34,"levelup":52,"lodash.keys":76,"remove-element":82,"socket.io-client":85,"table-editor":128}],2:[function(require,module,exports){
 var elClass = require('element-class');
-var closest = require('discore-closest');
+var closest = require('component-closest');
 var siblings = require('siblings');
 
 /* helper function for toggling a menu open/closed */
@@ -216,7 +216,8 @@ module.exports = function menuToggle (prefix, target) {
     elClass(btn).add('active');
   }
 }
-},{"discore-closest":26,"element-class":31,"siblings":83}],3:[function(require,module,exports){
+
+},{"component-closest":26,"element-class":31,"siblings":83}],3:[function(require,module,exports){
 
 },{}],4:[function(require,module,exports){
 /*!
@@ -235,22 +236,35 @@ exports.INSPECT_MAX_BYTES = 50
 Buffer.poolSize = 8192
 
 /**
- * If `Buffer._useTypedArrays`:
+ * If `TYPED_ARRAY_SUPPORT`:
  *   === true    Use Uint8Array implementation (fastest)
- *   === false   Use Object implementation (compatible down to IE6)
+ *   === false   Use Object implementation (most compatible, even IE6)
+ *
+ * Browsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,
+ * Opera 11.6+, iOS 4.2+.
+ *
+ * Note:
+ *
+ * - Implementation must support adding new properties to `Uint8Array` instances.
+ *   Firefox 4-29 lacked support, fixed in Firefox 30+.
+ *   See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.
+ *
+ *  - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.
+ *
+ *  - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of
+ *    incorrect length in some situations.
+ *
+ * We detect these buggy browsers and set `TYPED_ARRAY_SUPPORT` to `false` so they will
+ * get the Object implementation, which is slower but will work correctly.
  */
-Buffer._useTypedArrays = (function () {
-  // Detect if browser supports Typed Arrays. Supported browsers are IE 10+, Firefox 4+,
-  // Chrome 7+, Safari 5.1+, Opera 11.6+, iOS 4.2+. If the browser does not support adding
-  // properties to `Uint8Array` instances, then that's the same as no `Uint8Array` support
-  // because we need to be able to add all the node Buffer API methods. This is an issue
-  // in Firefox 4-29. Now fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=695438
+var TYPED_ARRAY_SUPPORT = (function () {
   try {
     var buf = new ArrayBuffer(0)
     var arr = new Uint8Array(buf)
     arr.foo = function () { return 42 }
-    return 42 === arr.foo() &&
-        typeof arr.subarray === 'function' // Chrome 9-10 lack `subarray`
+    return 42 === arr.foo() && // typed array instances can be augmented
+        typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
+        new Uint8Array(1).subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
   } catch (e) {
     return false
   }
@@ -274,23 +288,23 @@ function Buffer (subject, encoding, noZero) {
 
   var type = typeof subject
 
-  if (encoding === 'base64' && type === 'string') {
-    subject = base64clean(subject)
-  }
-
   // Find the length
   var length
   if (type === 'number')
-    length = coerce(subject)
-  else if (type === 'string')
+    length = subject > 0 ? subject >>> 0 : 0
+  else if (type === 'string') {
+    if (encoding === 'base64')
+      subject = base64clean(subject)
     length = Buffer.byteLength(subject, encoding)
-  else if (type === 'object')
-    length = coerce(subject.length) // assume that object is array-like
-  else
+  } else if (type === 'object' && subject !== null) { // assume object is array-like
+    if (subject.type === 'Buffer' && isArray(subject.data))
+      subject = subject.data
+    length = +subject.length > 0 ? Math.floor(+subject.length) : 0
+  } else
     throw new Error('First argument needs to be a number, array or string.')
 
   var buf
-  if (Buffer._useTypedArrays) {
+  if (TYPED_ARRAY_SUPPORT) {
     // Preferred: Return an augmented `Uint8Array` instance for best performance
     buf = Buffer._augment(new Uint8Array(length))
   } else {
@@ -301,7 +315,7 @@ function Buffer (subject, encoding, noZero) {
   }
 
   var i
-  if (Buffer._useTypedArrays && typeof subject.byteLength === 'number') {
+  if (TYPED_ARRAY_SUPPORT && typeof subject.byteLength === 'number') {
     // Speed optimization -- use set if we're copying from a typed array
     buf._set(subject)
   } else if (isArrayish(subject)) {
@@ -315,7 +329,7 @@ function Buffer (subject, encoding, noZero) {
     }
   } else if (type === 'string') {
     buf.write(subject, 0, encoding)
-  } else if (type === 'number' && !Buffer._useTypedArrays && !noZero) {
+  } else if (type === 'number' && !TYPED_ARRAY_SUPPORT && !noZero) {
     for (i = 0; i < length; i++) {
       buf[i] = 0
     }
@@ -347,7 +361,7 @@ Buffer.isEncoding = function (encoding) {
 }
 
 Buffer.isBuffer = function (b) {
-  return !!(b !== null && b !== undefined && b._isBuffer)
+  return !!(b != null && b._isBuffer)
 }
 
 Buffer.byteLength = function (str, encoding) {
@@ -622,7 +636,7 @@ Buffer.prototype.copy = function (target, target_start, start, end) {
 
   var len = end - start
 
-  if (len < 100 || !Buffer._useTypedArrays) {
+  if (len < 100 || !TYPED_ARRAY_SUPPORT) {
     for (var i = 0; i < len; i++) {
       target[i + target_start] = this[i + start]
     }
@@ -694,10 +708,29 @@ function utf16leSlice (buf, start, end) {
 
 Buffer.prototype.slice = function (start, end) {
   var len = this.length
-  start = clamp(start, len, 0)
-  end = clamp(end, len, len)
+  start = ~~start
+  end = end === undefined ? len : ~~end
 
-  if (Buffer._useTypedArrays) {
+  if (start < 0) {
+    start += len;
+    if (start < 0)
+      start = 0
+  } else if (start > len) {
+    start = len
+  }
+
+  if (end < 0) {
+    end += len
+    if (end < 0)
+      end = 0
+  } else if (end > len) {
+    end = len
+  }
+
+  if (end < start)
+    end = start
+
+  if (TYPED_ARRAY_SUPPORT) {
     return Buffer._augment(this.subarray(start, end))
   } else {
     var sliceLen = end - start
@@ -1156,7 +1189,7 @@ Buffer.prototype.inspect = function () {
  */
 Buffer.prototype.toArrayBuffer = function () {
   if (typeof Uint8Array !== 'undefined') {
-    if (Buffer._useTypedArrays) {
+    if (TYPED_ARRAY_SUPPORT) {
       return (new Buffer(this)).buffer
     } else {
       var buf = new Uint8Array(this.length)
@@ -1247,25 +1280,6 @@ function base64clean (str) {
 function stringtrim (str) {
   if (str.trim) return str.trim()
   return str.replace(/^\s+|\s+$/g, '')
-}
-
-// slice(start, end)
-function clamp (index, len, defaultValue) {
-  if (typeof index !== 'number') return defaultValue
-  index = ~~index;  // Coerce to integer.
-  if (index >= len) return len
-  if (index >= 0) return index
-  index += len
-  if (index >= 0) return index
-  return 0
-}
-
-function coerce (length) {
-  // Coerce length to a number (possibly NaN), round up
-  // in case it's fractional (e.g. 123.456) then do a
-  // double negate to coerce a NaN to 0. Easy, right?
-  length = ~~Math.ceil(+length)
-  return length < 0 ? 0 : length
 }
 
 function isArray (subject) {
@@ -4766,9 +4780,10 @@ module.exports = function (element, selector, checkYoSelf, root) {
     // the selector matches the root
     // (when the root is not the document)
     if (element === root)
-      return  
+      return
   }
 }
+
 },{"matches-selector":27}],27:[function(require,module,exports){
 /**
  * Module dependencies.
@@ -4808,6 +4823,7 @@ module.exports = match;
  */
 
 function match(el, selector) {
+  if (!el || el.nodeType !== 1) return false;
   if (vendor) return vendor.call(el, selector);
   var nodes = query.all(selector, el.parentNode);
   for (var i = 0; i < nodes.length; ++i) {
@@ -7256,10 +7272,10 @@ module.exports = function isArguments(value) {
 
 
 },{"./foreach":46,"./isArguments":48}],50:[function(require,module,exports){
-/* Copyright (c) 2012-2013 LevelUP contributors
+/* Copyright (c) 2012-2014 LevelUP contributors
  * See list at <https://github.com/rvagg/node-levelup#contributing>
- * MIT +no-false-attribs License
- * <https://github.com/rvagg/node-levelup/blob/master/LICENSE>
+ * MIT License
+ * <https://github.com/rvagg/node-levelup/blob/master/LICENSE.md>
  */
 
 var util          = require('./util')
@@ -7336,10 +7352,10 @@ Batch.prototype.write = function (callback) {
 module.exports = Batch
 
 },{"./errors":51,"./util":54}],51:[function(require,module,exports){
-/* Copyright (c) 2012-2013 LevelUP contributors
+/* Copyright (c) 2012-2014 LevelUP contributors
  * See list at <https://github.com/rvagg/node-levelup#contributing>
- * MIT +no-false-attribs License
- * <https://github.com/rvagg/node-levelup/blob/master/LICENSE>
+ * MIT License
+ * <https://github.com/rvagg/node-levelup/blob/master/LICENSE.md>
  */
 
 var createError   = require('errno').create
@@ -7358,12 +7374,13 @@ module.exports = {
   , NotFoundError       : NotFoundError
   , EncodingError       : createError('EncodingError', LevelUPError)
 }
+
 },{"errno":62}],52:[function(require,module,exports){
 (function (process){
-/* Copyright (c) 2012-2013 LevelUP contributors
+/* Copyright (c) 2012-2014 LevelUP contributors
  * See list at <https://github.com/rvagg/node-levelup#contributing>
- * MIT +no-false-attribs License
- * <https://github.com/rvagg/node-levelup/blob/master/LICENSE>
+ * MIT License
+ * <https://github.com/rvagg/node-levelup/blob/master/LICENSE.md>
  */
 
 var EventEmitter   = require('events').EventEmitter
@@ -7798,9 +7815,9 @@ module.exports.repair  = utilStatic('repair')
 
 }).call(this,require("FWaASH"))
 },{"./batch":50,"./errors":51,"./read-stream":53,"./util":54,"./write-stream":55,"FWaASH":9,"deferred-leveldown":57,"events":7,"prr":63,"util":25,"xtend":74}],53:[function(require,module,exports){
-/* Copyright (c) 2012-2013 LevelUP contributors
+/* Copyright (c) 2012-2014 LevelUP contributors
  * See list at <https://github.com/rvagg/node-levelup#contributing>
- * MIT +no-false-attribs License <https://github.com/rvagg/node-levelup/blob/master/LICENSE>
+ * MIT License <https://github.com/rvagg/node-levelup/blob/master/LICENSE.md>
  */
 
 // NOTE: we are fixed to readable-stream@1.0.x for now
@@ -7927,10 +7944,10 @@ module.exports = ReadStream
 
 },{"./errors":51,"./util":54,"readable-stream":73,"util":25,"xtend":74}],54:[function(require,module,exports){
 (function (process,Buffer){
-/* Copyright (c) 2012-2013 LevelUP contributors
+/* Copyright (c) 2012-2014 LevelUP contributors
  * See list at <https://github.com/rvagg/node-levelup#contributing>
- * MIT +no-false-attribs License
- * <https://github.com/rvagg/node-levelup/blob/master/LICENSE>
+ * MIT License
+ * <https://github.com/rvagg/node-levelup/blob/master/LICENSE.md>
  */
 
 var extend        = require('xtend')
@@ -8113,10 +8130,10 @@ module.exports = {
 }).call(this,require("FWaASH"),require("buffer").Buffer)
 },{"../package.json":75,"./errors":51,"FWaASH":9,"buffer":4,"leveldown":3,"leveldown/package":3,"semver":3,"xtend":74}],55:[function(require,module,exports){
 (function (process,global){
-/* Copyright (c) 2012-2013 LevelUP contributors
+/* Copyright (c) 2012-2014 LevelUP contributors
  * See list at <https://github.com/rvagg/node-levelup#contributing>
- * MIT +no-false-attribs License
- * <https://github.com/rvagg/node-levelup/blob/master/LICENSE>
+ * MIT License
+ * <https://github.com/rvagg/node-levelup/blob/master/LICENSE.md>
  */
 
 var Stream       = require('stream').Stream
@@ -9142,7 +9159,7 @@ module.exports=require(39)
 module.exports={
   "name": "levelup",
   "description": "Fast & simple storage - a Node.js-style LevelDB wrapper",
-  "version": "0.18.5",
+  "version": "0.18.6",
   "contributors": [
     {
       "name": "Rod Vagg",
@@ -9226,7 +9243,7 @@ module.exports={
   ],
   "main": "lib/levelup.js",
   "dependencies": {
-    "bl": "~0.8.0",
+    "bl": "~0.8.1",
     "deferred-leveldown": "~0.2.0",
     "errno": "~0.1.1",
     "prr": "~0.0.0",
@@ -9263,16 +9280,14 @@ module.exports={
     "alltests": "npm test && npm run-script functionaltests"
   },
   "license": "MIT",
+  "gitHead": "213e989e2b75273e2b44c23f84f95e35bff7ea11",
   "bugs": {
     "url": "https://github.com/rvagg/node-levelup/issues"
   },
-  "_id": "levelup@0.18.5",
-  "dist": {
-    "shasum": "be6cbfed06eb1112adfe6fbb243a2218566ebe56",
-    "tarball": "http://registry.npmjs.org/levelup/-/levelup-0.18.5.tgz"
-  },
-  "_from": "levelup@",
-  "_npmVersion": "1.2.30",
+  "_id": "levelup@0.18.6",
+  "_shasum": "e6a01cb089616c8ecc0291c2a9bd3f0c44e3e5eb",
+  "_from": "levelup@^0.18.5",
+  "_npmVersion": "1.4.14",
   "_npmUser": {
     "name": "rvagg",
     "email": "rod@vagg.org"
@@ -9283,9 +9298,13 @@ module.exports={
       "email": "rod@vagg.org"
     }
   ],
+  "dist": {
+    "shasum": "e6a01cb089616c8ecc0291c2a9bd3f0c44e3e5eb",
+    "tarball": "http://registry.npmjs.org/levelup/-/levelup-0.18.6.tgz"
+  },
   "directories": {},
-  "_shasum": "be6cbfed06eb1112adfe6fbb243a2218566ebe56",
-  "_resolved": "https://registry.npmjs.org/levelup/-/levelup-0.18.5.tgz"
+  "_resolved": "https://registry.npmjs.org/levelup/-/levelup-0.18.6.tgz",
+  "readme": "ERROR: No README data found!"
 }
 
 },{}],76:[function(require,module,exports){
@@ -15723,6 +15742,7 @@ var View = _dereq_('ractive');
 var flatten = _dereq_('flat');
 var extend = _dereq_('extend');
 var convert = _dereq_('json-2-csv').json2csv;
+var sortKeys = _dereq_('sort-keys');
 
 module.exports = TableEditor;
 Emitter(TableEditor.prototype);
@@ -15732,6 +15752,7 @@ function TableEditor (id, data, tableTemplate) {
   var self = this;
 
   this.data = data || { headers: [], rows: [] };
+
   this.tableTemplate = tableTemplate || "<table id=\"table-editor\">\n  <thead>\n    <tr>\n      {{#headers:key}}\n        <th>{{name}}</th>\n      {{/headers}}\n    </tr>\n  </thead>\n  <tbody>\n    {{#rows:i}}\n    <tr class=\"{{ i }}\">\n      {{#this:value}}\n      <td class=\"{{value}}\">\n        <textarea chooser=\"cell\" value=\"{{this}}\"></textarea>\n      </td>\n      {{/.}}\n    </tr>\n    {{/rows}}\n  </tbody>\n</table>\n";
 
   this.view = new View({
@@ -15743,7 +15764,7 @@ function TableEditor (id, data, tableTemplate) {
   this.view.on('change', function (value) {
     var change = flatten.unflatten(value);
     self.data = extend(true, self.data, change);
-    self.emit('change', change, self.data);
+    self.emit('change', self.data);
   });
 }
 
@@ -15825,14 +15846,30 @@ TableEditor.prototype.emptyRow = function () {
 };
 
 TableEditor.prototype.update = function () {
-  this.emit('change', '', this.data);
+  this.emit('change', this.data);
   this.view.update();
 };
 
 TableEditor.prototype.reset = function (data) {
   this.set(data || { headers: [], rows: [] });
 };
-},{"component-emitter":3,"extend":4,"flat":5,"json-2-csv":6,"ractive":11}],2:[function(_dereq_,module,exports){
+
+TableEditor.prototype.sort = function () {
+  var self = this;
+  this.data.headers = this.data.headers.sort(sortHeaders);
+  this.data.rows.forEach(function (row, i) {
+    row = sortKeys(row);
+  });
+  this.update();
+};
+
+function sortHeaders (a, b) {
+  var nameA = a.name.toLowerCase();
+  var nameB = b.name.toLowerCase();
+  return (nameA < nameB) ? -1 : (nameA > nameB) ? 1 : 0;
+}
+
+},{"component-emitter":3,"extend":4,"flat":5,"json-2-csv":6,"ractive":11,"sort-keys":12}],2:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -30835,6 +30872,22 @@ module.exports = {
 	};
 
 }( typeof window !== 'undefined' ? window : this ) );
+
+},{}],12:[function(_dereq_,module,exports){
+'use strict';
+module.exports = function (obj, compareFn) {
+	if (typeof obj !== 'object') {
+		throw new TypeError('Expected an object');
+	}
+
+	var ret = {};
+
+	Object.keys(obj).sort(compareFn).forEach(function (el) {
+		ret[el] = obj[el];
+	});
+
+	return ret;
+};
 
 },{}]},{},[1])
 (1)

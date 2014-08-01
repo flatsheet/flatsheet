@@ -17,7 +17,7 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "discore-closest": "git://github.com/component/closest",
+    "component-closest": "^0.1.4",
     "dom-event": "0.0.0",
     "domquery": "^1.2.0",
     "domready": "^1.0.5",
