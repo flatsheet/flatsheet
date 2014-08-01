@@ -12,7 +12,7 @@ var menuToggle = require('./lib/menu-toggle');
 var keys = require('lodash.keys');
 var flat = require('flat');
 
-var io = require('socket.io-client')('http://localhost:3000');
+var io = require('socket.io-client')('http://flatsheet-realtime.herokuapp.com');
 
 var user = {
   cell: null
@@ -127,7 +127,7 @@ on(reset, 'click', function (e) {
   var msg = 'Are you sure you want to reset this project? You will start over with an empty workspace.';
   if (window.confirm(msg)) {
     editor.reset();
-    elClass(hello).remove('hidden');   
+    elClass(hello).remove('hidden');
   };
 });
 
