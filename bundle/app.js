@@ -47,7 +47,7 @@ var tableTemplate = "<table id=\"table-editor\">\n  <thead id=\"table-header\">\
 window.editor = new TableEditor('main-content', { headers: [], rows: [] }, tableTemplate);
 
 editor.on('change', function (data) {
-  io.emit('change', flat.flatten(data));
+
 });
 
 /* get the help message */
@@ -66,10 +66,11 @@ db.get('sheet', function (err, value) {
 });
 
 /* listen for changes to the data and save the object to the db */
-editor.on('change', function (change, data) {
+editor.on('change', function (data) {
   db.put('sheet', data, function (error) {
     if (error) console.error(error);
   });
+  io.emit('change', flat.flatten(data));
 });
 
 /* button element and listener for adding a row */
