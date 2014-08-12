@@ -5,38 +5,37 @@ var elClass = require('element-class');
 var domready = require('domready');
 var levelup = require('levelup');
 var leveljs = require('level-js');
-var on = require('dom-event');
+var on = require('component-delegate').bind;
 var remove = require('remove-element');
 var closest = require('component-closest');
 var menuToggle = require('./lib/menu-toggle');
-var keys = require('lodash.keys');
-var flat = require('flat');
+var randomColor = require('random-color');
+var unflatten = require('flat').unflatten;
+var deepEqual = require('deep-equal');
+var extend = require('extend');
 
 var server;
 if (process.env.NODE_ENV === 'production') server = 'http://flatsheet-realtime.herokuapp.com'
 else server = 'http://localhost:3000';
 
 var io = require('socket.io-client')(server);
-
-var user = {
-  cell: null
-};
+var user = {};
 
 io.on('connect', function(s){
-  console.log('connection.');
+  user.id = this.io.engine.id;
+  console.log('connection:', this.io.engine.id);
 });
 
-io.on('cell-focus', function (cell) {
-  elClass(document.getElementById(cell.id)).add('active');
+io.on('change', function (change, id) {
+  editor.set(change);
 });
 
-io.on('change', function (data) {
-  console.log(flat.flatten(data));
-  editor.set(data);
+io.on('cell-focus', function (id, color) {
+  document.querySelector(id + ' textarea').style.borderColor = color;
 });
 
-io.on('cell-blur', function (cell) {
-  elClass(document.getElementById(cell.id)).remove('active');
+io.on('cell-blur', function (id) {
+  document.querySelector(id + ' textarea').style.borderColor = '#ccc';
 });
 
 io.on('disconnect', function(){
@@ -44,13 +43,12 @@ io.on('disconnect', function(){
 });
 
 /* get the table template */
-var tableTemplate = fs.readFileSync('./templates/table.html', 'utf8');
+var template = fs.readFileSync('./templates/table.html', 'utf8');
 
 /* create the table editor */
-window.editor = new TableEditor('main-content', { headers: [], rows: [] }, tableTemplate);
-
-editor.on('change', function (data) {
-
+window.editor = new TableEditor({
+  el: 'main-content',
+  template: template
 });
 
 /* get the help message */
@@ -61,34 +59,47 @@ window.db = levelup('sheet', { db: leveljs, valueEncoding: 'json' });
 
 /* check to see if the sheet has has been added to the db already */
 db.get('sheet', function (err, value) {
-  if (err) return console.error(err);
-  if (value.headers.length > 0) {
+  console.log(value)
+  if (err && err.type === "NotFoundError") editor.clear();
+  else if (value.columns && value.columns.length > 0) {
     elClass(hello).add('hidden');
     editor.set(value);
   }
+  else editor.clear();
 });
 
 /* listen for changes to the data and save the object to the db */
-editor.on('change', function (data) {
-  db.put('sheet', data, function (error) {
+editor.on('change:rows', function (change) {
+  db.put('sheet', editor.data, function (error) {
     if (error) console.error(error);
+    console.log('in editor.on change', change)
+    clearTimeout(timer);
+    var timer = setTimeout(function() {
+      //io.emit('change', 'rows', change);
+    }, 1000);
   });
-  io.emit('change', flat.flatten(data));
 });
 
-/* button element and listener for adding a row */
-var addRow = document.getElementById('add-row');
+editor.on('change:columns', function (change) {
+  db.put('sheet', editor.data, function (error) {
+    if (error) console.error(error);
+    console.log('in editor.on change', change)
+    clearTimeout(timer);
+    var timer = setTimeout(function() {
+      //io.emit('change', 'columns', change);
+    }, 1000);
+  });
+});
 
-on(addRow, 'click', function (e) {
+
+/* listener for adding a row */
+on(document.body, '#add-row', 'click', function (e) {
   editor.addRow();
 });
 
-/* button element and listener for adding a column */
-var addColumn = document.getElementById('add-column');
-
-on(addColumn, 'click', function (e) {
-  if (editor.data.headers.length < 1) elClass(hello).add('hidden');
-  if (editor.data.rows < 1) editor.addRow();
+/* listener for adding a column */
+on(document.body, '#add-column', 'click', function (e) {
+  if (editor.get('columns')) elClass(hello).add('hidden');
   var name = window.prompt('New column name');
   if (name) editor.addColumn({ name: name, type: 'string' });
 });
@@ -97,55 +108,45 @@ on(addColumn, 'click', function (e) {
 var codeBox = document.getElementById('code-box');
 var textarea = codeBox.querySelector('textarea');
 
-/* button element and listener for showing the data as json */
-var showJSON = document.getElementById('show-json');
-
-on(showJSON, 'click', function (e) {
+/* listener for showing the data as json */
+on(document.body, 'show-json', 'click', function (e) {
   editor.getJSON(function (data) {
     textarea.value = prettify(data);
     elClass(codeBox).remove('hidden');
   });
 });
 
-/* button element and listener for showing the data as csv */
-var showCSV = document.getElementById('show-csv');
-
-on(showCSV, 'click', function (e) {
+/* listener for showing the data as csv */
+on(document.body, 'show-csv', 'click', function (e) {
   editor.getCSV(function (data) {
     textarea.value = data;
     elClass(codeBox).remove('hidden');
   });
 });
 
-/* button element and listener for closing the codebox */
-var close = document.getElementById('close');
-
-on(close, 'click', function (e) {
+/* listener for closing the codebox */
+on(document.body, '#close', 'click', function (e) {
   textarea.value = '';
   elClass(codeBox).add('hidden');
 });
 
-/* button element and listener for clearing the db */
-var reset = document.getElementById('reset');
-
-on(reset, 'click', function (e) {
+/* listener for clearing the db */
+on(document.body, '#reset', 'click', function (e) {
   var msg = 'Are you sure you want to reset this project? You will start over with an empty workspace.';
   if (window.confirm(msg)) {
-    editor.reset();
+    editor.clear();
     elClass(hello).remove('hidden');
   };
 });
 
-/* element and listener for the table header */
-var tableHeader = document.getElementById('table-header');
-
-on(tableHeader, 'click', function (e) {
+/* listener for the table header settings button */
+on(document.body, '.header-settings-toggle', 'click', function (e) {
   if (elClass(e.target).has('setting')) {
     var btn = e.target.id.split('-');
 
     if (btn[0] === 'delete') {
       if (window.confirm('Sure you want to delete this column and its contents?')) {
-        editor.deleteColumn(btn[1]);
+        editor.destroyColumn(btn[1]);
       }
     }
 
@@ -155,28 +156,22 @@ on(tableHeader, 'click', function (e) {
     }
   }
 
-  else menuToggle('header', e.target)
+  else menuToggle('header', e.target);
 });
 
-/* element and listener for the table body */
-var tableBody = document.getElementById('table-body');
-
-on(tableBody, 'click', function (e) {
+/* listener for the table body */
+on(document.body, '#table-body', 'click', function (e) {
   var btn;
 
   if (e.target.tagName === 'TEXTAREA') {
     var cellEl = document.getElementById(closest(e.target, 'td').id);
 
-    user.cell = {
-      id: closest(e.target, 'td').id,
-      value: e.target.value
+    var id = closest(e.target, 'td').id;
+    io.emit('cell-focus', '#' + id);
+
+    e.target.onblur = function (e) {
+      io.emit('cell-blur', '#' + id);
     }
-
-    io.emit('cell-focus', user.cell);
-
-    on(e.target, 'blur', function (blurEvent) {
-      io.emit('cell-blur', user.cell);
-    });
 
     return;
   }
@@ -187,6 +182,8 @@ on(tableBody, 'click', function (e) {
 
   if (window.confirm('Sure you want to delete this row and its contents?')) {
     var row = closest(btn, 'tr');
-    editor.deleteRow(row.className);
+    console.log('happenenenenen', row.className.split('-')[1])
+    editor.destroyRow(row.className.split('-')[1]);
+    editor.update();
   }
 });

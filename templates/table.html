@@ -2,16 +2,15 @@
   <thead id="table-header">
     <tr>
       <span class="spacer"></span>
-      {{#headers:key}}
-        <th id={{name}}>
-          <span class="header-name">{{name}}</span>
+      {{#columns:key}}
+        <th id={{id}}>
+          <span class="header-name"><input value="{{name}}"></span>
           <button class="header-settings-toggle"><i class="fa fa-gear settings-icon"></i></button>
           <ul class="header-settings hidden">
-            <li><button id="rename-{{name}}" class="setting"><i class="fa fa-edit"></i> Rename</button></li>
             <li><button id="delete-{{name}}" class="setting"><i class="fa fa-trash-o"></i> Delete</button></li>
           </ul>
         </th>
-      {{/headers}}
+      {{/columns}}
     </tr>
   </thead>
   <tbody id="table-body">

@@ -154,12 +154,18 @@ a.button:hover {
 #table-editor thead th {
   text-align: left;
   padding-top: 10px;
-  padding-left: 10px;
 }
 
 #table-editor thead th span.header-name {
   padding-top: 5px;
   display: inline-block;
+}
+
+#table-editor thead th span.header-name input {
+  border: 0px;
+  width: 100px;
+  overflow: hidden;
+  padding-left: 5px;
 }
 
 #table-editor textarea {
@@ -169,6 +175,7 @@ a.button:hover {
   padding: 0px 0px 0px 5px;
   border: 1px solid #ccc;
   width: 150px;
+  outline: 0;
 }
 
 #table-editor td.active textarea {
