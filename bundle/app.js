@@ -10,7 +10,7 @@ var closest = require('component-closest');
 var toCSV = require('json-2-csv').json2csv;
 
 var remoteChange;
-var server = 'http://flatsheet-realtime.herokuapp.com';
+var server = /* 'http://localhost:3000'; //*/ 'http://flatsheet-realtime.herokuapp.com';
 var io = require('socket.io-client')(server);
 var user = {};
 
@@ -26,12 +26,10 @@ io.on('change', function (change, id) {
 });
 
 io.on('cell-focus', function (id, color) {
-  console.log(id, color, document.querySelector('#' + id + ' textarea'))
   document.querySelector('#' + id + ' textarea').style.borderColor = color;
 });
 
 io.on('cell-blur', function (id) {
-  console.log(id, document.querySelector('#' + id + ' textarea'))
   document.querySelector('#' + id + ' textarea').style.borderColor = '#ccc';
 });
 
@@ -40,7 +38,7 @@ io.on('disconnect', function(){
 });
 
 /* get the table template */
-var template = "<table id=\"table-editor\">\n  <thead id=\"table-column\">\n    <tr>\n      <span class=\"spacer\"></span>\n      {{#columns:key}}\n        <th id={{id}}>\n          <span class=\"column-name\"><input value=\"{{name}}\"></span>\n          <button id=\"{{id}}\" class=\"destroy\"><i class=\"fa fa-trash-o destroy-icon\"></i></button>\n        </th>\n      {{/columns}}\n    </tr>\n  </thead>\n  <tbody id=\"table-body\">\n    {{#rows:i}}\n    <tr id=\"{{i}}\">\n      <button class=\"delete-row destroy\"><i class=\"fa fa-trash-o destroy-icon\"></i></button>\n      {{#this:value}}\n      <td id=\"{{value}}\">\n        <textarea value=\"{{this}}\"></textarea>\n      </td>\n      {{/.}}\n    </tr>\n    {{/rows}}\n  </tbody>\n</table>\n";
+var template = "<table id=\"table-editor\">\n  <thead id=\"table-column\">\n    <tr>\n      <span class=\"spacer\"></span>\n      {{#columns:key}}\n        <th id={{id}}>\n          <span class=\"column-name\"><input value=\"{{name}}\"></span>\n          <button id=\"{{id}}\" class=\"destroy\"><i class=\"fa fa-trash-o destroy-icon\"></i></button>\n        </th>\n      {{/columns}}\n    </tr>\n  </thead>\n  <tbody id=\"table-body\">\n    {{#rows:i}}\n    <tr id=\"{{i}}\">\n      <button class=\"delete-row destroy\"><i class=\"fa fa-trash-o destroy-icon\"></i></button>\n      {{#this:value}}\n      <td id=\"row-{{i}}-column-{{value}}\">\n        <textarea value=\"{{this}}\"></textarea>\n      </td>\n      {{/.}}\n    </tr>\n    {{/rows}}\n  </tbody>\n</table>\n";
 
 /* create the table editor */
 window.editor = new TableEditor({

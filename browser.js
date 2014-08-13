@@ -9,7 +9,7 @@ var closest = require('component-closest');
 var toCSV = require('json-2-csv').json2csv;
 
 var remoteChange;
-var server = 'http://flatsheet-realtime.herokuapp.com';
+var server = /* 'http://localhost:3000'; //*/ 'http://flatsheet-realtime.herokuapp.com';
 var io = require('socket.io-client')(server);
 var user = {};
 
@@ -25,12 +25,10 @@ io.on('change', function (change, id) {
 });
 
 io.on('cell-focus', function (id, color) {
-  console.log(id, color, document.querySelector('#' + id + ' textarea'))
   document.querySelector('#' + id + ' textarea').style.borderColor = color;
 });
 
 io.on('cell-blur', function (id) {
-  console.log(id, document.querySelector('#' + id + ' textarea'))
   document.querySelector('#' + id + ' textarea').style.borderColor = '#ccc';
 });
 
