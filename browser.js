@@ -9,11 +9,7 @@ var closest = require('component-closest');
 var toCSV = require('json-2-csv').json2csv;
 
 var remoteChange;
-
-var server;
-if (process.env.NODE_ENV === 'production') server = 'http://flatsheet-realtime.herokuapp.com'
-else server = 'http://localhost:3000';
-
+var server = 'http://flatsheet-realtime.herokuapp.com';
 var io = require('socket.io-client')(server);
 var user = {};
 
