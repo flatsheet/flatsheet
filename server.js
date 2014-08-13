@@ -11,14 +11,10 @@ app.get('/', function (req, res) {
   res.sendfile('index.html');
 });
 
-app.get('/:id', function (req, res) {
-
-});
-
 io.on('connection', function (socket) {
   users[socket.id] = { color: randomColor() };
 
-  socket.on('change:rows', function (keypath, value) {
+  socket.on('change', function (keypath, value) {
     socket.broadcast.emit('change', keypath, value);
   });
 

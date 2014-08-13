@@ -19,24 +19,16 @@
   "dependencies": {
     "component-closest": "^0.1.4",
     "component-delegate": "^0.2.3",
-    "deep-diff": "^0.1.7",
-    "deep-equal": "^0.2.1",
     "dom-event": "0.0.0",
-    "domquery": "^1.2.0",
     "element-class": "^0.1.1",
     "express": "^4.6.1",
-    "extend": "^1.3.0",
-    "flat": "^1.2.1",
     "jsonpretty": "0.0.1",
     "level-js": "^2.1.6",
     "levelup": "^0.18.5",
     "normalize-css": "^2.3.1",
-    "random-color": "0.0.0",
-    "remove-element": "0.0.0",
-    "siblings": "^1.0.1",
     "socket.io": "^1.0.6",
     "socket.io-client": "^1.0.6",
-    "table-editor": "^0.4.0"
+    "table-editor": "^0.4.3"
   },
   "devDependencies": {
     "brfs": "^1.1.1",
@@ -45,7 +37,6 @@
     "gazer": "0.0.3",
     "myth": "^1.1.0",
     "rework-npm-cli": "^0.1.1",
-    "serve": "^1.4.0",
     "tape": "^2.13.3",
     "uglify-js": "^2.4.13",
     "watchify": "^0.10.1"

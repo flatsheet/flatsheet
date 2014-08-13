@@ -2,17 +2,13 @@ var fs = require('fs');
 var TableEditor = require('table-editor');
 var prettify = require('jsonpretty');
 var elClass = require('element-class');
-var domready = require('domready');
 var levelup = require('levelup');
 var leveljs = require('level-js');
 var on = require('component-delegate').bind;
-var remove = require('remove-element');
 var closest = require('component-closest');
-var menuToggle = require('./lib/menu-toggle');
-var randomColor = require('random-color');
-var unflatten = require('flat').unflatten;
-var deepEqual = require('deep-equal');
-var extend = require('extend');
+var toCSV = require('json-2-csv').json2csv;
+
+var remoteChange;
 
 var server;
 if (process.env.NODE_ENV === 'production') server = 'http://flatsheet-realtime.herokuapp.com'
@@ -27,15 +23,19 @@ io.on('connect', function(s){
 });
 
 io.on('change', function (change, id) {
+  remoteChange = true;
   editor.set(change);
+  remoteChange = false;
 });
 
 io.on('cell-focus', function (id, color) {
-  document.querySelector(id + ' textarea').style.borderColor = color;
+  console.log(id, color, document.querySelector('#' + id + ' textarea'))
+  document.querySelector('#' + id + ' textarea').style.borderColor = color;
 });
 
 io.on('cell-blur', function (id) {
-  document.querySelector(id + ' textarea').style.borderColor = '#ccc';
+  console.log(id, document.querySelector('#' + id + ' textarea'))
+  document.querySelector('#' + id + ' textarea').style.borderColor = '#ccc';
 });
 
 io.on('disconnect', function(){
@@ -59,7 +59,6 @@ window.db = levelup('sheet', { db: leveljs, valueEncoding: 'json' });
 
 /* check to see if the sheet has has been added to the db already */
 db.get('sheet', function (err, value) {
-  console.log(value)
   if (err && err.type === "NotFoundError") editor.clear();
   else if (value.columns && value.columns.length > 0) {
     elClass(hello).add('hidden');
@@ -69,28 +68,14 @@ db.get('sheet', function (err, value) {
 });
 
 /* listen for changes to the data and save the object to the db */
-editor.on('change:rows', function (change) {
+editor.on('change', function (change, data) {
+  if (remoteChange) return;
+
   db.put('sheet', editor.data, function (error) {
     if (error) console.error(error);
-    console.log('in editor.on change', change)
-    clearTimeout(timer);
-    var timer = setTimeout(function() {
-      //io.emit('change', 'rows', change);
-    }, 1000);
+    io.emit('change', change);
   });
 });
-
-editor.on('change:columns', function (change) {
-  db.put('sheet', editor.data, function (error) {
-    if (error) console.error(error);
-    console.log('in editor.on change', change)
-    clearTimeout(timer);
-    var timer = setTimeout(function() {
-      //io.emit('change', 'columns', change);
-    }, 1000);
-  });
-});
-
 
 /* listener for adding a row */
 on(document.body, '#add-row', 'click', function (e) {
@@ -109,17 +94,15 @@ var codeBox = document.getElementById('code-box');
 var textarea = codeBox.querySelector('textarea');
 
 /* listener for showing the data as json */
-on(document.body, 'show-json', 'click', function (e) {
-  editor.getJSON(function (data) {
-    textarea.value = prettify(data);
-    elClass(codeBox).remove('hidden');
-  });
+on(document.body, '#show-json', 'click', function (e) {
+  textarea.value = prettify(editor.getRows());
+  elClass(codeBox).remove('hidden');
 });
 
 /* listener for showing the data as csv */
-on(document.body, 'show-csv', 'click', function (e) {
-  editor.getCSV(function (data) {
-    textarea.value = data;
+on(document.body, '#show-csv', 'click', function (e) {
+  toCSV(editor.getRows(), function (err, csv) {
+    textarea.value = csv;
     elClass(codeBox).remove('hidden');
   });
 });
@@ -139,51 +122,37 @@ on(document.body, '#reset', 'click', function (e) {
   };
 });
 
-/* listener for the table header settings button */
-on(document.body, '.header-settings-toggle', 'click', function (e) {
-  if (elClass(e.target).has('setting')) {
-    var btn = e.target.id.split('-');
+/* listener for the delete column button */
+on(document.body, 'thead .destroy', 'click', function (e) {
+  var id;
 
-    if (btn[0] === 'delete') {
-      if (window.confirm('Sure you want to delete this column and its contents?')) {
-        editor.destroyColumn(btn[1]);
-      }
-    }
+  if (elClass(e.target).has('destroy')) id = e.target.id;
+  else if (elClass(e.target).has('destroy-icon')) id = closest(e.target, '.destroy').id;
 
-    if (btn[0] === 'rename') {
-      var newName = window.prompt('Choose a new column name:')
-      if (newName) editor.renameColumn(btn[1], newName);
-    }
+  if (window.confirm('Sure you want to delete this column and its contents?')) {
+    editor.destroyColumn(id);
   }
-
-  else menuToggle('header', e.target);
 });
 
-/* listener for the table body */
-on(document.body, '#table-body', 'click', function (e) {
+on(document.body, '.delete-row', 'click', function (e) {
   var btn;
 
-  if (e.target.tagName === 'TEXTAREA') {
-    var cellEl = document.getElementById(closest(e.target, 'td').id);
-
-    var id = closest(e.target, 'td').id;
-    io.emit('cell-focus', '#' + id);
-
-    e.target.onblur = function (e) {
-      io.emit('cell-blur', '#' + id);
-    }
-
-    return;
-  }
-
-  else if (elClass(e.target).has('delete-row')) btn = e.target;
-  else if (elClass(e.target).has('delete-btn-icon')) btn = closest(e.target, '.delete-row');
-  else return;
+  if (elClass(e.target).has('delete-row')) btn = e.target;
+  else if (elClass(e.target).has('destroy-icon')) btn = closest(e.target, '.delete-row');
+  var row = closest(btn, 'tr');
 
   if (window.confirm('Sure you want to delete this row and its contents?')) {
-    var row = closest(btn, 'tr');
-    console.log('happenenenenen', row.className.split('-')[1])
-    editor.destroyRow(row.className.split('-')[1]);
-    editor.update();
+    editor.destroyRow(row.id);
   }
+});
+
+
+/* listener for the table body */
+on(document.body, 'textarea', 'click', function (e) {
+  var id = closest(e.target, 'td').id;
+  io.emit('cell-focus', id);
+
+  e.target.onblur = function () {
+    io.emit('cell-blur', id);
+  };
 });
