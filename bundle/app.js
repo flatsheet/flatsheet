@@ -1,5 +1,4 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-(function (process){
 
 var TableEditor = require('table-editor');
 var prettify = require('jsonpretty');
@@ -11,11 +10,7 @@ var closest = require('component-closest');
 var toCSV = require('json-2-csv').json2csv;
 
 var remoteChange;
-
-var server;
-if (process.env.NODE_ENV === 'production') server = 'http://flatsheet-realtime.herokuapp.com'
-else server = 'http://localhost:3000';
-
+var server = 'http://flatsheet-realtime.herokuapp.com';
 var io = require('socket.io-client')(server);
 var user = {};
 
@@ -159,8 +154,7 @@ on(document.body, 'textarea', 'click', function (e) {
   };
 });
 
-}).call(this,require("FWaASH"))
-},{"FWaASH":8,"component-closest":25,"component-delegate":28,"element-class":30,"json-2-csv":31,"jsonpretty":36,"level-js":37,"levelup":55,"socket.io-client":80,"table-editor":123}],2:[function(require,module,exports){
+},{"component-closest":25,"component-delegate":28,"element-class":30,"json-2-csv":31,"jsonpretty":36,"level-js":37,"levelup":55,"socket.io-client":80,"table-editor":123}],2:[function(require,module,exports){
 
 },{}],3:[function(require,module,exports){
 /*!
