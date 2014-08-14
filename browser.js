@@ -9,7 +9,7 @@ var closest = require('component-closest');
 var toCSV = require('json-2-csv').json2csv;
 
 var remoteChange;
-var server = /* 'http://localhost:3000'; //*/ 'http://flatsheet-realtime.herokuapp.com';
+var server = /**/ 'http://localhost:3000'; // 'http://flatsheet-realtime.herokuapp.com';
 var io = require('socket.io-client')(server);
 var user = {};
 
@@ -142,11 +142,20 @@ on(document.body, '.delete-row', 'click', function (e) {
 
 
 /* listener for the table body */
-on(document.body, 'textarea', 'click', function (e) {
+on(document.body, 'textarea', 'click', cellFocus);
+
+/* listener for tabbing through cells */
+on(document.body, 'tbody', 'keyup', function (e) {
+  if (elClass(e.target).has('cell') && e.keyCode === 9) {
+    cellFocus(e);
+  }
+});
+
+function cellFocus (e) {
   var id = closest(e.target, 'td').id;
   io.emit('cell-focus', id);
 
   e.target.onblur = function () {
     io.emit('cell-blur', id);
   };
-});
+}

@@ -10,7 +10,7 @@ var closest = require('component-closest');
 var toCSV = require('json-2-csv').json2csv;
 
 var remoteChange;
-var server = /* 'http://localhost:3000'; //*/ 'http://flatsheet-realtime.herokuapp.com';
+var server = /**/ 'http://localhost:3000'; // 'http://flatsheet-realtime.herokuapp.com';
 var io = require('socket.io-client')(server);
 var user = {};
 
@@ -38,7 +38,7 @@ io.on('disconnect', function(){
 });
 
 /* get the table template */
-var template = "<table id=\"table-editor\">\n  <thead id=\"table-column\">\n    <tr>\n      <span class=\"spacer\"></span>\n      {{#columns:key}}\n        <th id={{id}}>\n          <span class=\"column-name\"><input value=\"{{name}}\"></span>\n          <button id=\"{{id}}\" class=\"destroy\"><i class=\"fa fa-trash-o destroy-icon\"></i></button>\n        </th>\n      {{/columns}}\n    </tr>\n  </thead>\n  <tbody id=\"table-body\">\n    {{#rows:i}}\n    <tr id=\"{{i}}\">\n      <button class=\"delete-row destroy\"><i class=\"fa fa-trash-o destroy-icon\"></i></button>\n      {{#this:value}}\n      <td id=\"row-{{i}}-column-{{value}}\">\n        <textarea value=\"{{this}}\"></textarea>\n      </td>\n      {{/.}}\n    </tr>\n    {{/rows}}\n  </tbody>\n</table>\n";
+var template = "<table id=\"table-editor\">\n  <thead id=\"table-column\">\n    <tr>\n      <span class=\"spacer\"></span>\n      {{#columns:key}}\n        <th id={{id}}>\n          <span class=\"column-name\"><input value=\"{{name}}\"></span>\n          <button id=\"{{id}}\" class=\"destroy\"><i class=\"fa fa-trash-o destroy-icon\"></i></button>\n        </th>\n      {{/columns}}\n    </tr>\n  </thead>\n  <tbody id=\"table-body\">\n    {{#rows:i}}\n    <tr id=\"{{i}}\">\n      <button class=\"delete-row destroy\"><i class=\"fa fa-trash-o destroy-icon\"></i></button>\n      {{#this:value}}\n      <td id=\"row-{{i}}-column-{{value}}\">\n        <textarea value=\"{{this}}\" class=\"cell\"></textarea>\n      </td>\n      {{/.}}\n    </tr>\n    {{/rows}}\n  </tbody>\n</table>\n";
 
 /* create the table editor */
 window.editor = new TableEditor({
@@ -143,14 +143,23 @@ on(document.body, '.delete-row', 'click', function (e) {
 
 
 /* listener for the table body */
-on(document.body, 'textarea', 'click', function (e) {
+on(document.body, 'textarea', 'click', cellFocus);
+
+/* listener for tabbing through cells */
+on(document.body, 'tbody', 'keyup', function (e) {
+  if (elClass(e.target).has('cell') && e.keyCode === 9) {
+    cellFocus(e);
+  }
+});
+
+function cellFocus (e) {
   var id = closest(e.target, 'td').id;
   io.emit('cell-focus', id);
 
   e.target.onblur = function () {
     io.emit('cell-blur', id);
   };
-});
+}
 
 },{"component-closest":25,"component-delegate":28,"element-class":30,"json-2-csv":31,"jsonpretty":36,"level-js":37,"levelup":55,"socket.io-client":80,"table-editor":123}],2:[function(require,module,exports){
 

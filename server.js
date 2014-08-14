@@ -20,11 +20,14 @@ io.on('connection', function (socket) {
 
   socket.on('cell-focus', function (cell) {
     io.emit('cell-focus', cell, users[socket.id].color);
-    console.log(cell)
   });
 
   socket.on('cell-blur', function (cell) {
     io.emit('cell-blur', cell);
+  });
+
+  io.on('disconnect', function () {
+    io.emit('cell-blur');
   });
 });
 
