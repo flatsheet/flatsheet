@@ -10,12 +10,10 @@ var closest = require('component-closest');
 var toCSV = require('json-2-csv').json2csv;
 
 var remoteChange;
-var server = /*'http://localhost:3000'; //*/  'http://flatsheet-realtime.herokuapp.com';
+var server = /**/ 'http://localhost:3000'; // 'http://flatsheet-realtime.herokuapp.com';
 var io = require('socket.io-client')(server);
-var user = {};
 
 io.on('connect', function(s){
-  user.id = this.io.engine.id;
   console.log('connection:', this.io.engine.id);
 });
 
@@ -124,9 +122,8 @@ on(document.body, 'thead .destroy', 'click', function (e) {
   if (elClass(e.target).has('destroy')) id = e.target.id;
   else if (elClass(e.target).has('destroy-icon')) id = closest(e.target, '.destroy').id;
 
-  if (window.confirm('Sure you want to delete this column and its contents?')) {
-    editor.destroyColumn(id);
-  }
+  var msg = 'Sure you want to delete this column and its contents?';
+  if (window.confirm(msg)) editor.destroyColumn(id);
 });
 
 on(document.body, '.delete-row', 'click', function (e) {
@@ -134,13 +131,11 @@ on(document.body, '.delete-row', 'click', function (e) {
 
   if (elClass(e.target).has('delete-row')) btn = e.target;
   else if (elClass(e.target).has('destroy-icon')) btn = closest(e.target, '.delete-row');
+
   var row = closest(btn, 'tr');
-
-  if (window.confirm('Sure you want to delete this row and its contents?')) {
-    editor.destroyRow(row.id);
-  }
+  var msg = 'Sure you want to delete this row and its contents?';
+  if (window.confirm(msg)) editor.destroyRow(row.id);
 });
-
 
 /* listener for the table body */
 on(document.body, 'textarea', 'click', cellFocus);
