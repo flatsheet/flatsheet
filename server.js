@@ -11,6 +11,14 @@ app.get('/', function (req, res) {
   res.sendfile('index.html');
 });
 
+app.get('/data/:id', function (req, res) {
+
+});
+
+app.get('/:id', function (req, res) {
+
+});
+
 io.on('connection', function (socket) {
   users[socket.id] = { color: randomColor() };
 

@@ -199,6 +199,8 @@ a.button i.fa {
 #table-editor thead th span.column-name input {
   border: 0px;
   width: 114px;
+  height: 30px;
+  padding-left: 5px;
 }
 
 #table-editor textarea {
