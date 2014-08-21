@@ -6,7 +6,7 @@ var levelup = require('levelup');
 var leveljs = require('level-js');
 var on = require('component-delegate').bind;
 var closest = require('component-closest');
-var toCSV = require('json-2-csv').json2csv;
+var CSV = require('comma-separated-values');
 
 var remoteChange;
 var server = /**/ 'http://localhost:3000'; // 'http://flatsheet-realtime.herokuapp.com';
@@ -93,10 +93,8 @@ on(document.body, '#show-json', 'click', function (e) {
 
 /* listener for showing the data as csv */
 on(document.body, '#show-csv', 'click', function (e) {
-  toCSV(editor.getRows(), function (err, csv) {
-    textarea.value = csv;
-    elClass(codeBox).remove('hidden');
-  });
+  textarea.value = new CSV(editor.getRows(), { header: true }).encode();
+  elClass(codeBox).remove('hidden');
 });
 
 /* listener for closing the codebox */

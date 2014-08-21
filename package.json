@@ -17,6 +17,7 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "comma-separated-values": "^3.3.0",
     "component-closest": "^0.1.4",
     "component-delegate": "^0.2.3",
     "dom-event": "0.0.0",
