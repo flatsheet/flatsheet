@@ -9,7 +9,7 @@ var closest = require('component-closest');
 var CSV = require('comma-separated-values');
 
 var remoteChange;
-var server = /**/ 'http://localhost:3000'; // 'http://flatsheet-realtime.herokuapp.com';
+var server = /* 'http://localhost:3000'; //*/ 'http://flatsheet-realtime.herokuapp.com';
 var io = require('socket.io-client')(server);
 
 io.on('connect', function(s){
