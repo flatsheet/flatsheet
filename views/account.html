@@ -1,31 +1,15 @@
 {{#extend "layout"}}
 
 {{#replace "body"}}
-
 <div class="container">
-  <h1>Edit tabular data and get JSON/CSV in return.</h1>
-
-  <hr>
-
-  <h2>Sign in</h2>
-  <form action="/session" method="post">
-    username: <input type="text" name="username"><br>
-    password: <input type="password" name="password"><br>
-    <input type="submit" value="Sign in">
-  </form>
-
-  <hr>
-
-  <h2>Create account</h2>
+  <h1>Sign up</h1>
   <form action="/account" method="post">
     username: <input type="text" name="username"><br>
     email: <input type="email" name="email"><br>
     password: <input type="password" name="password"><br>
     <input type="submit" value="Create account">
   </form>
-
 </div>
-
 {{/replace}}
 
 {{/extend}}

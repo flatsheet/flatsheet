@@ -1,0 +1,26 @@
+{{#extend "layout"}}
+
+{{#replace "body"}}
+
+<div class="container">
+  <h1>Edit tabular data and get JSON/CSV in return.</h1>
+
+  <h2>hi {{account.username}}</h2>
+
+  <div class="sheet-list">
+  {{#each sheets}}
+    <div class="list-item">
+      <a href="/sheet/{{ key }}">
+        <h3 class="list-item-title">{{value.wee}}</h3>
+      </a>
+    </div>
+  {{/each }}
+  </div>
+
+</div>
+
+<script src="/public/app.js"></script>
+
+{{/replace}}
+
+{{/extend}}

@@ -2,40 +2,16 @@ var fs = require('fs');
 var TableEditor = require('table-editor');
 var prettify = require('jsonpretty');
 var elClass = require('element-class');
-var levelup = require('levelup');
-var leveljs = require('level-js');
 var on = require('component-delegate').bind;
 var closest = require('component-closest');
 var CSV = require('comma-separated-values');
 
-var remoteChange;
-var server = /* 'http://localhost:3000'; //*/ 'http://flatsheet-realtime.herokuapp.com';
-var io = require('socket.io-client')(server);
+var remoteChange = false;
 
-io.on('connect', function(s){
-  console.log('connection:', this.io.engine.id);
-});
 
-io.on('change', function (change, id) {
-  remoteChange = true;
-  editor.set(change);
-  remoteChange = false;
-});
-
-io.on('cell-focus', function (id, color) {
-  document.querySelector('#' + id + ' textarea').style.borderColor = color;
-});
-
-io.on('cell-blur', function (id) {
-  document.querySelector('#' + id + ' textarea').style.borderColor = '#ccc';
-});
-
-io.on('disconnect', function(){
-  console.log('disconnection.');
-});
 
 /* get the table template */
-var template = fs.readFileSync('./templates/table.html', 'utf8');
+var template = fs.readFileSync('./views/table.html', 'utf8');
 
 /* create the table editor */
 window.editor = new TableEditor({
@@ -47,9 +23,11 @@ window.editor = new TableEditor({
 var hello = document.getElementById('hello-message');
 
 /* created the db */
-window.db = levelup('sheet', { db: leveljs, valueEncoding: 'json' });
+//window.db = levelup('sheet', { db: leveljs, valueEncoding: 'json' });
 
 /* check to see if the sheet has has been added to the db already */
+
+/*
 db.get('sheet', function (err, value) {
   if (err && err.type === "NotFoundError") editor.clear();
   else if (value.columns && value.columns.length > 0) {
@@ -58,15 +36,18 @@ db.get('sheet', function (err, value) {
   }
   else editor.clear();
 });
+*/
 
 /* listen for changes to the data and save the object to the db */
 editor.on('change', function (change, data) {
   if (remoteChange) return;
 
+/*
   db.put('sheet', editor.data, function (error) {
     if (error) console.error(error);
     io.emit('change', change);
   });
+*/
 });
 
 /* listener for adding a row */

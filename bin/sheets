@@ -1,0 +1,35 @@
+#!/usr/bin/env node
+
+var Sheets = require('../sheets');
+
+var level = require('level');
+var sublevel = require('level-sublevel');
+var minimist = require('minimist');
+var through = require('through2');
+var JSONStream = require('JSONStream');
+
+var argv = minimist(process.argv.slice(2));
+var sheets = new Sheets();
+var cmd = argv._[0];
+
+var db = level('./data/db');
+
+var sheets = Sheets(sublevel(db).sublevel('sheets', {
+  valueEncoding: 'json'
+}));
+
+if (cmd === 'add') {
+  sheets.create('poop', { type: 'excrement', quality: 'awful' }, function (err) {
+    if (err) return console.log(err)
+
+    sheets.fetch('poop', function (err, sheet) {
+      console.log(sheet);
+    });
+  });
+}
+
+if (cmd === 'list') {
+  sheets.list()
+    .pipe(JSONStream.stringify())
+    .pipe(process.stdout);
+}
