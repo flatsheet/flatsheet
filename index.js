@@ -6,7 +6,7 @@ var sheets = require('./routes/sheets');
 var accounts = require('./routes/accounts');
 var sessions = require('./routes/sessions');
 
-var server = new Server();
+var server = module.exports = new Server();
 
 
 /*

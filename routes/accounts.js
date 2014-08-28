@@ -5,6 +5,15 @@ var formBody = require('body/form');
 exports.install = function (server, prefix) {
   var prefix = prefix || '/account';
 
+
+  server.route(prefix + 's', function (req, res) {
+    if (req.method === 'GET') {
+      return server.accounts.list()
+        .pipe(JSONStream.stringify())
+        .pipe(res);
+    }
+  });
+
   /*
   *  Sign in
   */
