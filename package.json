@@ -1,9 +1,9 @@
 {
-  "name": "flatsheet-editor",
+  "name": "flatsheet",
   "description": "a multi-user, realtime editor for tabular data",
   "version": "0.0.0",
   "repository": {
-    "url": "git://github.com/flatsheet/editor.git"
+    "url": "git://github.com/flatsheet/flatsheet.git"
   },
   "main": "index.js",
   "scripts": {
