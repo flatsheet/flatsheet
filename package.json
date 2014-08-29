@@ -8,13 +8,13 @@
   "main": "index.js",
   "scripts": {
     "test": "tape test.js",
-    "bundle-css": "rework-npm style.css | myth | cleancss -o public/app.css",
-    "watch-css": "gazer -p 'style.css' 'rework-npm style.css | myth > public/app.css'",
-    "watch-js": "watchify -d browser.js -o public/app.js -t brfs",
-    "bundle-js": "browserify -t brfs browser.js -o public/app.js",
+    "bundle-css": "rework-npm browser/style.css | myth | cleancss -o public/style.css",
+    "watch-css": "gazer -p 'browser/style.css' 'rework-npm browser/style.css | myth > public/style.css'",
+    "watch-js": "watchify -d browser/sheet.js -o public/sheet.js -t brfs",
+    "bundle-js": "browserify -t brfs browser/sheet.js -o public/sheet.js",
     "bundle": "npm run bundle-js & npm run bundle-css",
     "watch": "npm run watch-js & npm run watch-css",
-    "start": "node server.js"
+    "start": "nodemon --watch public --watch server.js --watch index.js index.js"
   },
   "dependencies": {
     "JSONStream": "^0.9.0",
@@ -34,14 +34,18 @@
     "level-sublevel": "^6.3.4",
     "nodemailer": "^1.2.1",
     "nodemailer-sendgrid-transport": "0.0.2",
+    "nodemon": "^1.2.1",
     "normalize-css": "^2.3.1",
     "random-color": "0.0.0",
     "response": "git://github.com/mikeal/response",
     "routes-router": "^4.1.0",
+    "socket.io": "^1.0.6",
+    "socket.io-client": "^1.0.6",
     "st": "^0.5.1",
-    "table-editor": "^0.4.3",
+    "table-editor": "^0.4.5",
     "through": "^2.3.4",
     "uuid": "^1.4.1",
+    "xhr": "^1.15.0"
   },
   "devDependencies": {
     "brfs": "^1.1.1",

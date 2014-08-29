@@ -3,13 +3,8 @@
 {{#replace "body"}}
 
 <div class="container">
-  <p>hi {{ user.username }}</p>
-
-  <a class="button" href="/sign-in">Sign in</a>
-
-  <form action="/session/destroy" method="post">
-    <input type="submit" value="Log out">
-  </form>
+  <h1>{{sheet.name}}</h1>
+  <p>{{sheet.description}}</p>
 
   <button id="add-row"><i class="fa fa-plus"></i> row</button>
   <button id="add-column"><i class="fa fa-plus"></i> column</button>
@@ -26,7 +21,7 @@
   </div>
 </div>
 
-<script src="/public/app.js"></script>
+<script src="/public/sheet.js"></script>
 
 {{/replace}}
 

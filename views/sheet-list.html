@@ -4,12 +4,12 @@
 
 <div class="container">
   <h1>Your sheets:</h1>
-  
+
   <div class="sheet-list">
   {{#each sheets}}
     <div class="list-item">
       <a href="/sheet/{{ key }}">
-        <h3 class="list-item-title">{{value.wee}}</h3>
+        <h3 class="list-item-title">{{value.name}}</h3>
       </a>
     </div>
   {{/each }}

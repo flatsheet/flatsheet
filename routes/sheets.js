@@ -15,7 +15,7 @@ exports.install = function (server, prefix) {
   server.route(prefix + '/:id', function (req, res, opts) {
     server.sheets.fetch(opts.params.id, function (err, sheet) {
       var ctx = { account: res.account, sheet: sheet };
-      return response().html(server.views.sheetlist(ctx)).pipe(res);
+      return response().html(server.views.sheet(ctx)).pipe(res);
     });
   });
 

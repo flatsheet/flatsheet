@@ -30,7 +30,7 @@ function sheet () {
   if (sub === 'add') {
     var file = fs.readFileSync(argv._[2], 'utf8');
 
-    sheets.create(file, function (err) {
+    sheets.create(JSON.parse(file), function (err) {
       if (err) return console.log(err)
     });
   }
