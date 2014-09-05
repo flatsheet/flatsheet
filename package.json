@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "JSONStream": "^0.9.0",
-    "accountdown": "git://github.com/substack/accountdown",
+    "accountdown": "^1.0.2",
     "accountdown-basic": "^1.0.0",
     "body": "^4.5.0",
     "comma-separated-values": "^3.3.0",

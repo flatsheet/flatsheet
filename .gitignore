@@ -1,6 +1,6 @@
 .DS_Store
 node_modules
 npm-debug.log
-data
+data/db
 !tests/data
 public/.app.js
