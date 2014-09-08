@@ -23,6 +23,7 @@ io.on('change', function (change, id) {
 });
 
 io.on('cell-focus', function (id, color) {
+  console.log('focused!', id, color)
   document.querySelector('#' + id + ' textarea').style.borderColor = color;
 });
 

@@ -1,6 +1,7 @@
 var response = require('response');
 var JSONStream = require('JSONStream');
 var formBody = require('body/form');
+var randomColor = require('random-color');
 
 exports.install = function (server, prefix) {
   var prefix = prefix || '/account';
@@ -13,6 +14,7 @@ exports.install = function (server, prefix) {
         .pipe(res);
     }
   });
+
 
   /*
   *  Sign in
@@ -28,6 +30,11 @@ exports.install = function (server, prefix) {
     }
   });
 
+
+  /*
+  *  Create an account
+  */
+
   server.route(prefix, function (req, res) {
     if (req.method === 'GET') {
       return response().html(server.views.account({})).pipe(res);
@@ -38,7 +45,11 @@ exports.install = function (server, prefix) {
 
         var opts = {
           login: { basic: { username: body.username, password: body.password } },
-          value: { email: body.email, username: body.username }
+          value: {
+            email: body.email,
+            username: body.username,
+            color: randomColor()
+          }
         };
 
         server.accounts.create(body.username, opts, function (err) {

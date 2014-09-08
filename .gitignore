@@ -4,3 +4,4 @@ npm-debug.log
 data/db
 !tests/data
 public/.app.js
+config.js

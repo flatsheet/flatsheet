@@ -10,7 +10,6 @@ var level = require('level');
 var accountdown = require('accountdown');
 var sublevel = require('level-sublevel');
 var levelSession   = require('level-session');
-var randomColor = require('random-color');
 var socketio = require('socket.io');
 var getView = require('./util/get-view')(Handlebars);
 var Sheets = require('./sheets');
@@ -120,28 +119,6 @@ Server.prototype.createServer = function () {
 
     self.session(req, res, function () {
       self.router(req, res);
-    });
-  });
-
-  var io = socketio(this.server);
-
-  io.on('connection', function (socket) {
-    //users[socket.id] = { color: randomColor() };
-
-    socket.on('change', function (keypath, value) {
-      socket.broadcast.emit('change', keypath, value);
-    });
-
-    socket.on('cell-focus', function (cell) {
-      //io.emit('cell-focus', cell, users[socket.id].color);
-    });
-
-    socket.on('cell-blur', function (cell) {
-      io.emit('cell-blur', cell);
-    });
-
-    io.on('disconnect', function () {
-      io.emit('cell-blur');
     });
   });
 }

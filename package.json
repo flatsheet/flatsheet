@@ -41,6 +41,7 @@
     "routes-router": "^4.1.0",
     "socket.io": "^1.0.6",
     "socket.io-client": "^1.0.6",
+    "socket.io-emitter": "^0.2.0",
     "st": "^0.5.1",
     "table-editor": "^0.4.5",
     "through": "^2.3.4",
