@@ -42,6 +42,6 @@ server.route('/', function (req, res) {
 * Start the server
 */
 
-server.listen(3333, function () {
-  console.log('server started at 127.0.0.1:3333');
+server.listen(process.env.PORT || 3333, function () {
+  console.log('server started at 127.0.0.1:' + process.env.PORT || 3333);
 });
