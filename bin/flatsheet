@@ -8,7 +8,9 @@ var sublevel = require('level-sublevel');
 var minimist = require('minimist');
 var JSONStream = require('JSONStream');
 var accountdown = require('accountdown');
+var randomColor = require('random-color');
 var through = require('through2');
+var prompt = require('prompt');
 
 var argv = minimist(process.argv.slice(2));
 var sheets = new Sheets();
@@ -31,6 +33,41 @@ if (cmd === 'account') return account();
 else if (cmd === 'sheet') return sheet();
 
 function account () {
+  if (sub === 'create-admin') {
+    var properties = [
+      { name: 'email' },
+      { name: 'username', },
+      { name: 'password', hidden: true }
+    ];
+
+    prompt.start();
+    prompt.get(properties, function (err, result) {
+
+      var opts = {
+        login: {
+          basic: {
+            username: result.username,
+            password: result.password
+          }
+        },
+        value: {
+          admin: true,
+          email: result.email,
+          username: result.username,
+          color: randomColor()
+        }
+      };
+
+      accounts.create(result.username, opts, function (err) {
+
+        //todo: notification of error
+        if (err) console.error(err);
+
+      });
+    });
+
+  }
+
   if (sub === 'list') {
     accounts.list()
       .pipe(JSONStream.stringify())

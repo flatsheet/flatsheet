@@ -113,8 +113,14 @@ exports.install = function (server, prefix) {
   */
 
   server.route(prefix + '/invite', function (req, res) {
-    if (req.method === 'GET') {
-      return response().html(server.render('invite')).pipe(res);
+    if (res.account.admin) {
+      if (req.method === 'GET') {
+        return response().html(server.render('invite')).pipe(res);
+      }
+    }
+    else {
+      res.writeHead(302, { 'Location': '/' });
+      return res.end();
     }
   });
 
