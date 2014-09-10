@@ -17,18 +17,19 @@ Open issues represent current todo list: [github.com/flatsheet/flatsheet/issues]
 - Clone this repository `git@github.com:flatsheet/flatsheet.git`
 - Change directory `cd flatsheet`
 - Install dependencies with `npm install`
-- Start the server `npm start`
-- In development you can watch the css & js using `npm run watch`
 
 ## Getting started
-- Follow above installation instructions, but don't run `npm start` yet.
+- Follow above installation instructions.
 - Navigate to the root directory of the project and run `mkdir data` to create the directory the db will live in.
 - Right now a sheet is added through the command-line by importing a JSON file (soon to be improved with UI, CSV import, etc.)
 - Import a sheet like this: `./bin/flatsheet sheet add tests/data/coworking.json`
 - Then you can run `./bin/flatsheet sheet list` to see that your sheet has been added.
-- Next: run `npm start`
-- Go to `http://127.0.0.1:3333` and create an account.
-- You should now see the example coworking data set, and be able to click it to go to the editor.
+- Next, create an admin account by running `./bin/flatsheet account create-admin`. You'll be prompted for email, username, & password.
+- You can run `./bin/flatsheet account list` to see that your admin account was created.
+- Now run `npm start` to start the server.
+- In development you can watch the css & js using `npm run watch`.
+- Go to `http://127.0.0.1:3333` and log in with the admin account credentials.
+- You should now see the example data set, and be able to click it to go to the editor.
 - NOTE: the editor in this version is not currently fully functional!
 
 ## Support
