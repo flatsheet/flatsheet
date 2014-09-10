@@ -1,8 +1,8 @@
 .DS_Store
 node_modules
 npm-debug.log
-data/db
-data/sheets
+data/
+data/*
 !tests/data
 public/.app.js
 config.js
