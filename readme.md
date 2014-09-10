@@ -22,6 +22,7 @@ Open issues represent current todo list: [github.com/flatsheet/flatsheet/issues]
 
 ## Getting started
 - Follow above installation instructions, but don't run `npm start` yet.
+- Navigate to the root directory of the project and run `mkdir data` to create the directory the db will live in.
 - Right now a sheet is added through the command-line by importing a JSON file (soon to be improved with UI, CSV import, etc.)
 - Import a sheet like this: `./bin/flatsheet sheet add tests/data/coworking.json`
 - Then you can run `./bin/flatsheet sheet list` to see that your sheet has been added.
