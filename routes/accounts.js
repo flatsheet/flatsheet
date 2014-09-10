@@ -117,6 +117,16 @@ exports.install = function (server, prefix) {
       if (req.method === 'GET') {
         return response().html(server.render('invite')).pipe(res);
       }
+
+      if (req.method === 'POST') {
+        formBody(req, res, function (err, body) {
+          //todo: notification of error on page
+          if (err) console.error(err);
+
+          console.log(body);
+
+        });
+      }
     }
     else {
       res.writeHead(302, { 'Location': '/' });
