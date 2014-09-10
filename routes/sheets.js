@@ -9,7 +9,7 @@ exports.install = function (server, prefix) {
   server.route(prefix + 's', function (req, res, opts) {
     server.sheets.list(function (err, list) {
       var ctx = { account: res.account, sheets: list };
-      return response().html(server.views.sheetlist(ctx)).pipe(res);
+      return response().html(server.render('sheet-list', ctx)).pipe(res);
     });
   });
 
@@ -46,7 +46,7 @@ exports.install = function (server, prefix) {
 
     server.sheets.fetch(opts.params.id, function (err, sheet) {
       var ctx = { account: res.account, sheet: sheet };
-      return response().html(server.views.sheet(ctx)).pipe(res);
+      return response().html(server.render('sheet', ctx)).pipe(res);
     });
   });
 

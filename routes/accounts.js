@@ -7,7 +7,11 @@ exports.install = function (server, prefix) {
   var prefix = prefix || '/account';
 
 
-  server.route(prefix + 's', function (req, res) {
+  /*
+  * Get list of accounts
+  */
+
+  server.route(prefix + '/list', function (req, res) {
     if (req.method === 'GET') {
       return server.accounts.list()
         .pipe(JSONStream.stringify())
@@ -24,9 +28,9 @@ exports.install = function (server, prefix) {
     if (req.method === 'GET') {
       if (res.account) {
         res.writeHead(302, { 'Location': '/' });
-        res.end();
+        return res.end();
       }
-      else return response().html(server.views.signin({})).pipe(res);
+      else return response().html(server.render('signin')).pipe(res);
     }
   });
 
@@ -37,14 +41,23 @@ exports.install = function (server, prefix) {
 
   server.route(prefix, function (req, res) {
     if (req.method === 'GET') {
-      return response().html(server.views.account({})).pipe(res);
+      if (res.account) response()
+        .html(server.render('account-update')).pipe(res);
+
+      else return response()
+        .html(server.render('account-new')).pipe(res);
     }
 
     if (req.method === 'POST') {
       formBody(req, res, function (err, body) {
 
         var opts = {
-          login: { basic: { username: body.username, password: body.password } },
+          login: {
+            basic: {
+              username: body.username,
+              password: body.password
+            }
+          },
           value: {
             email: body.email,
             username: body.username,
@@ -60,7 +73,33 @@ exports.install = function (server, prefix) {
           req.session.set(req.session.id, opts.value, function (sessionerr) {
             if (err) console.error(sessionerr);
             res.writeHead(302, { 'Location': '/' });
-            res.end();
+            return res.end();
+          });
+
+        });
+      });
+    }
+
+  });
+
+
+  /*
+  * Invite users to create accounts
+  */
+
+  server.route(prefix + '/update', function (req, res) {
+    if (req.method === 'POST') {
+      formBody(req, res, function (err, body) {
+
+        server.accounts.update(body.username, {}, function (err) {
+
+          //todo: notification of error on page
+          if (err) console.error(err);
+
+          req.session.set(req.session.id, opts.value, function (sessionerr) {
+            if (err) console.error(sessionerr);
+            res.writeHead(302, { 'Location': '/' });
+            return res.end();
           });
 
         });
@@ -70,21 +109,13 @@ exports.install = function (server, prefix) {
 
 
   /*
-  * Update an account
-  */
-
-  server.route(prefix + '/:id', function (req, res) {
-    // if post, update
-    // if delete, destroy
-    // todo
-  });
-
-
-  /*
   * Invite users to create accounts
   */
 
   server.route(prefix + '/invite', function (req, res) {
-
+    if (req.method === 'GET') {
+      return response().html(server.render('invite')).pipe(res);
+    }
   });
+
 }

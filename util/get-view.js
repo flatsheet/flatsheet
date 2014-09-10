@@ -6,7 +6,7 @@ var fs = require('fs');
 */
 
 module.exports = function (handlebars) {
-  return function getView (filename) {
-    return handlebars.compile(fs.readFileSync('./views/' + filename + '.html', 'utf8'));
+  return function getView (filepath) {
+    return handlebars.compile(fs.readFileSync(filepath, 'utf8'));
   }
 }

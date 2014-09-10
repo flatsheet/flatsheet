@@ -1,0 +1,15 @@
+{{#extend "layout"}}
+
+{{#replace "body"}}
+
+<div class="container">
+  <h1>Invite users to edit sheets</h1>
+  <form action="/invite" method="post">
+    <textarea name="emails"></textarea>
+    <input type="submit" value="Send invitation">
+  </form>
+</div>
+
+{{/replace}}
+
+{{/extend}}

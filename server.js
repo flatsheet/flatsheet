@@ -76,17 +76,13 @@ function Server (opts) {
 
 
   /*
-  * Set up the application's views using the getView() helper
+  * Set up the application's views
   */
 
-  this.views = {
-    account: getView('account'),
-    dashboard: getView('dashboard'),
-    index: getView('index'),
-    sheet: getView('sheet'),
-    sheetlist: getView('sheet-list'),
-    signin: getView('signin')
-  };
+  this.views = {};
+  this.viewsDir = opts.viewsDir || __dirname + '/views/';
+  this.createViews();
+
 
   this.createServer();
 }
@@ -149,7 +145,25 @@ Server.prototype.route = function (path, cb) {
 }
 
 
+/*
+* Create views on application startup
+*/
+
+Server.prototype.createViews = function () {
+  var self = this;
+
+  fs.readdir(this.viewsDir, function (err, files) {
+    files.forEach(function (file) {
+      self.views[file.split('.')[0]] = getView(self.viewsDir + file);
+    });
+  });
+}
+
+
+/*
+* Method for rendering html views
+*/
 
 Server.prototype.render = function (view, ctx) {
-  return this.views[view](ctx);
+  return this.views[view]((ctx || {}));
 }

@@ -1,0 +1,14 @@
+{{#extend "layout"}}
+
+{{#replace "body"}}
+<div class="container">
+  <h1>Your account</h1>
+  <form action="/account/update" method="post">
+    username: <input type="text" name="username"><br>
+    email: <input type="email" name="email"><br>
+    <input type="submit" value="Create account">
+  </form>
+</div>
+{{/replace}}
+
+{{/extend}}
