@@ -49,7 +49,7 @@ window.editor = new TableEditor({
 /* get the help message */
 var hello = document.getElementById('hello-message');
 
-var id = window.location.pathname.split('/')[2];
+var id = window.location.pathname.split('/')[3];
 
 request({
   uri: '/api/v2/sheets/' + id,

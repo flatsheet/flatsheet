@@ -1,0 +1,36 @@
+{{#extend "layout"}}
+
+{{#replace "body"}}
+
+<div class="container">
+  <h1>{{sheet.name}}</h1>
+  <p>{{sheet.description}}</p>
+
+  <table id="table-editor">
+    <thead id="table-header">
+      <tr>
+        <span class="spacer"></span>
+        {{#each headers}}
+          <th id={{this}}>
+            <span class="column-name">{{this}}</span>
+          </th>
+        {{/each}}
+      </tr>
+    </thead>
+    <tbody id="table-body">
+      {{#each sheet.rows}}
+      <tr class="row">
+        {{#each this}}
+        <td class="column-{{@key}}">
+          {{this}}
+        </td>
+        {{/each}}
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>
+
+{{/replace}}
+
+{{/extend}}

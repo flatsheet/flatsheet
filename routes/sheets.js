@@ -13,7 +13,7 @@ exports.install = function (server, prefix) {
     });
   });
 
-  server.route(prefix + '/:id', function (req, res, opts) {
+  server.route(prefix + '/edit/:id', function (req, res, opts) {
 
     if (!res.account) {
       res.writeHead(302, { 'Location': '/' });
@@ -46,11 +46,23 @@ exports.install = function (server, prefix) {
 
     server.sheets.fetch(opts.params.id, function (err, sheet) {
       var ctx = { account: res.account, sheet: sheet };
-      return response().html(server.render('sheet', ctx)).pipe(res);
+      return response().html(server.render('sheet-edit', ctx)).pipe(res);
     });
   });
 
-  server.route(prefix + '/:id/view', function (req, res) {
-    // todo
+  server.route(prefix + '/view/:id', function (req, res, opts) {
+    server.sheets.fetch(opts.params.id, function (err, sheet) {
+
+      var headers = [];
+
+      sheet.rows.forEach(function (row) {
+        Object.keys(row).forEach( function (name) {
+          if (headers.indexOf(name) < 0) headers.push(name);
+        });
+      });
+
+      var ctx = { account: res.account, sheet: sheet, headers: headers };
+      return response().html(server.render('sheet-view', ctx)).pipe(res);
+    });
   });
 }
