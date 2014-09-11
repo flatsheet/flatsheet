@@ -8,6 +8,8 @@ Allow multiple users to edit tabular data in real time, and get a json file that
 
 ## Refactor notes
 
+This version of Flatsheet is a complete rewrite using Node.js. The first version was a [Ruby on Rails prototype](https://github.com/flatsheet/flatsheet-prototype). 
+
 ### Todos:
 
 Open issues represent current todo list: [github.com/flatsheet/flatsheet/issues](http://github.com/flatsheet/flatsheet/issues)
