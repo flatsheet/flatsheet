@@ -19,6 +19,11 @@ var Sheets = require('./sheets');
 
 var config = require('./config');
 
+var apiV2 = require('./routes/api-v2');
+var sheets = require('./routes/sheets');
+var accounts = require('./routes/accounts');
+var sessions = require('./routes/sessions');
+
 module.exports = Server;
 
 
@@ -113,11 +118,23 @@ function Server (opts) {
   this.createViews();
 
   this.createServer();
+
+  if (opts.defaultRoutes !== false) {
+
+    /*
+    * Set up the routes of the app
+    */
+
+    apiV2.install(this);
+    sheets.install(this);
+    accounts.install(this);
+    sessions.install(this);
+  }
 }
 
 
 /*
-*
+*  Create server
 */
 
 Server.prototype.createServer = function () {

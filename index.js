@@ -1,23 +1,5 @@
 var response = require('response');
-
-var Server = require('./server');
-var apiV2 = require('./routes/api-v2');
-var sheets = require('./routes/sheets');
-var accounts = require('./routes/accounts');
-var sessions = require('./routes/sessions');
-
-var server = module.exports = new Server();
-
-
-/*
-* Set up the routes of the app
-*/
-
-apiV2.install(server);
-sheets.install(server);
-accounts.install(server);
-sessions.install(server);
-
+var server = require('./server')();
 
 /*
 * Create the root route
