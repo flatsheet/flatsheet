@@ -1,14 +1,10 @@
 # flatsheet
 
-A multi-user, real-time editor for tabular data.
-
-## Goal
-
-Allow multiple users to edit tabular data in real time, and get a json file that can be downloaded or integrated with a server API.
+A multi-user, real-time editor for curating data.
 
 ## Refactor notes
 
-This version of Flatsheet is a complete rewrite using Node.js. The first version was a [Ruby on Rails prototype](https://github.com/flatsheet/flatsheet-prototype). 
+This version of Flatsheet is a complete rewrite using Node.js. The first version was a [Ruby on Rails prototype](https://github.com/flatsheet/flatsheet-prototype).
 
 ### Todos:
 
