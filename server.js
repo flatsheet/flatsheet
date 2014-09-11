@@ -11,8 +11,13 @@ var accountdown = require('accountdown');
 var sublevel = require('level-sublevel');
 var levelSession   = require('level-session');
 var socketio = require('socket.io');
+var nodemailer = require('nodemailer');
+var sgTransport = require('nodemailer-sendgrid-transport');
+
 var getView = require('./util/get-view')(Handlebars);
 var Sheets = require('./sheets');
+
+var config = require('./config');
 
 module.exports = Server;
 
@@ -25,13 +30,14 @@ Handlebars.registerPartial('layout', fs.readFileSync('views/layout.html', 'utf8'
 
 
 /*
-*
+* Main server constructor function
 */
 
 function Server (opts) {
   if (!(this instanceof Server)) return new Server(opts);
   opts || (opts = {});
 
+  this.site = config.site;
 
   /*
   * Set path for static files
@@ -76,13 +82,35 @@ function Server (opts) {
 
 
   /*
+  * Invites sublevel
+  */
+
+  this.invites = sublevel(this.db).sublevel('invites', {
+    valueEncoding: 'json'
+  });
+
+
+  /*
+  * Email
+  */
+
+  var options = {
+    auth: {
+      api_user: config.sendgrid.user,
+      api_key: config.sendgrid.pass
+    }
+  };
+
+  this.email = nodemailer.createTransport(sgTransport(options));
+
+
+  /*
   * Set up the application's views
   */
 
   this.views = {};
   this.viewsDir = opts.viewsDir || __dirname + '/views/';
   this.createViews();
-
 
   this.createServer();
 }

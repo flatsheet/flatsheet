@@ -1,7 +1,11 @@
+var qs = require('querystring')
+var url = require('url');
 var response = require('response');
 var JSONStream = require('JSONStream');
 var formBody = require('body/form');
 var randomColor = require('random-color');
+var uuid = require('uuid').v1;
+
 
 exports.install = function (server, prefix) {
   var prefix = prefix || '/account';
@@ -123,14 +127,56 @@ exports.install = function (server, prefix) {
           //todo: notification of error on page
           if (err) console.error(err);
 
-          console.log(body);
+          var emails = body.emails.split('\r\n');
 
+          emails.forEach(function (email) {
+            var token = uuid();
+            var opts = { email: email, accepted: false };
+            server.invites.put(token, opts, function (err) {
+              if (err) console.log(new Error(err));
+
+              var viewData = {
+                url: server.site.url + '/account/accept?token=' + token,
+                from: server.site.email,
+                fromname: server.site.contact
+              };
+
+              var message = {
+                to: email,
+                from: server.site.email,
+                fromname: server.site.contact,
+                subject: 'Help me curate data with Flatsheet',
+                text: server.render('invite-email', viewData),
+                html: server.render('invite-email', viewData)
+              };
+
+              server.email.sendMail(message, function(err, info){
+                if (err) console.log(err);
+              });
+            });
+          });
         });
       }
     }
     else {
       res.writeHead(302, { 'Location': '/' });
       return res.end();
+    }
+  });
+
+
+  /*
+  * Accept invitation
+  */
+
+  server.route(prefix + '/accept', function (req, res) {
+    if (req.method === 'GET') {
+      var query = url.parse(req.url).query;
+      var token = qs.parse(query).token;
+    }
+
+    if (req.method === 'POST') {
+      console.log()
     }
   });
 

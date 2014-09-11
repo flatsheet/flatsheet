@@ -1,6 +1,12 @@
 module.exports = {
+  site: {
+    title: 'Flatsheet',
+    email: 'hi@flatsheet.io',
+    url: 'http://127.0.0.1:3333',
+    contact: 'your full name'
+  },
   sendgrid: {
-    user: process.env.SENDGRID_USER,
-    key: process.env.SENDGRID_KEY
+    user: 'your username',
+    pass: 'your password'
   }
 }

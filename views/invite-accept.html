@@ -3,8 +3,8 @@
 {{#replace "body"}}
 <div class="container">
   <h1>Sign up</h1>
-  <form action="/account" method="post">
-    email: <input type="email" name="email"><br>
+  <form action="/account/accept" method="post">
+    email: <input type="email" name="email" value="{{ email }}"><br>
     username: <input type="text" name="username"><br>
     password: <input type="password" name="password"><br>
     <input type="submit" value="Create your account">
