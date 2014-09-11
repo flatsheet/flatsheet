@@ -135,7 +135,7 @@ exports.install = function (server, prefix) {
             server.invites.put(token, opts, function (err) {
               if (err) console.log(new Error(err));
 
-              var viewData = {
+              var data = {
                 url: server.site.url + '/account/accept?token=' + token,
                 from: server.site.email,
                 fromname: server.site.contact
@@ -146,8 +146,8 @@ exports.install = function (server, prefix) {
                 from: server.site.email,
                 fromname: server.site.contact,
                 subject: 'Help me curate data with Flatsheet',
-                text: server.render('invite-email', viewData),
-                html: server.render('invite-email', viewData)
+                text: server.render('invite-email', data),
+                html: server.render('invite-email', data)
               };
 
               server.email.sendMail(message, function(err, info){
@@ -173,10 +173,52 @@ exports.install = function (server, prefix) {
     if (req.method === 'GET') {
       var query = url.parse(req.url).query;
       var token = qs.parse(query).token;
+
+      server.invites.get(token, function (err, invite) {
+        if (err) {
+          res.writeHead(302, { 'Location': '/' });
+          return res.end();
+        }
+        else {
+          var data = { email: invite.email };
+          return response()
+            .html(server.render('invite-accept', data))
+            .pipe(res);
+        }
+      });
     }
 
     if (req.method === 'POST') {
-      console.log()
+      formBody(req, res, function (err, body) {
+
+        var opts = {
+          login: {
+            basic: {
+              username: body.username,
+              password: body.password
+            }
+          },
+          value: {
+            admin: true,
+            email: body.email,
+            username: body.username,
+            color: randomColor()
+          }
+        };
+
+        server.accounts.create(body.username, opts, function (err) {
+
+          //todo: notification of error on page
+          if (err) console.error(err);
+
+          req.session.set(req.session.id, opts.value, function (sessionerr) {
+            if (err) console.error(sessionerr);
+            res.writeHead(302, { 'Location': '/' });
+            return res.end();
+          });
+
+        });
+      });
     }
   });
 
