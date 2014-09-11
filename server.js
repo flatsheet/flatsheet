@@ -22,9 +22,6 @@ var sheets = require('./routes/sheets');
 var accounts = require('./routes/accounts');
 var sessions = require('./routes/sessions');
 
-var config = require('./config');
-
-
 module.exports = Server;
 
 
@@ -44,7 +41,7 @@ function Server (opts) {
   if (!(this instanceof Server)) return new Server(opts);
   opts || (opts = {});
 
-  this.site = config.site;
+  this.site = opts.site;
 
   /*
   * Set path for static files
@@ -103,8 +100,8 @@ function Server (opts) {
 
   var options = {
     auth: {
-      api_user: config.sendgrid.user,
-      api_key: config.sendgrid.pass
+      api_user: opts.sendgrid.user,
+      api_key: opts.sendgrid.pass
     }
   };
 

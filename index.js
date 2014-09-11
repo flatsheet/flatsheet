@@ -1,5 +1,6 @@
 var response = require('response');
-var server = require('./server')();
+var config = require('./config');
+var server = require('./server')(config);
 
 /*
 * Create the root route
