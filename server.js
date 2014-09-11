@@ -17,18 +17,20 @@ var sgTransport = require('nodemailer-sendgrid-transport');
 var getView = require('./util/get-view')(Handlebars);
 var Sheets = require('./sheets');
 
-var config = require('./config');
-
 var apiV2 = require('./routes/api-v2');
 var sheets = require('./routes/sheets');
 var accounts = require('./routes/accounts');
 var sessions = require('./routes/sessions');
 
+var config = require('./config');
+
+
 module.exports = Server;
 
 
 /*
-* Register the layout view as the a handlebars layout so it can be used by partial views
+* Register the layout view as the a handlebars layout
+* so it can be used by partial views
 */
 
 Handlebars.registerPartial('layout', fs.readFileSync('views/layout.html', 'utf8'));
@@ -117,14 +119,19 @@ function Server (opts) {
   this.viewsDir = opts.viewsDir || __dirname + '/views/';
   this.createViews();
 
+
+  /*
+  *  Create the http server
+  */
+
   this.createServer();
 
+
+  /*
+  * Set up the routes of the app
+  */
+
   if (opts.defaultRoutes !== false) {
-
-    /*
-    * Set up the routes of the app
-    */
-
     apiV2.install(this);
     sheets.install(this);
     accounts.install(this);
@@ -134,13 +141,16 @@ function Server (opts) {
 
 
 /*
-*  Create server
+*  Method for creating http server
 */
 
 Server.prototype.createServer = function () {
   var self = this;
 
 
+  /*
+  *  Create router
+  */
 
   this.router = Router();
 
@@ -166,7 +176,7 @@ Server.prototype.createServer = function () {
 
 
 /*
-*
+*  listen method for starting the server
 */
 
 Server.prototype.listen = function (port, cb) {
