@@ -175,11 +175,13 @@ exports.install = function (server, prefix) {
       var token = qs.parse(query).token;
 
       server.invites.get(token, function (err, invite) {
-        if (err) {
+        if (err || invite.accepted) {
           res.writeHead(302, { 'Location': '/' });
           return res.end();
         }
         else {
+          invite.accepted = true;
+          server.invites.put(token, invite);
           var data = { email: invite.email };
           return response()
             .html(server.render('invite-accept', data))
