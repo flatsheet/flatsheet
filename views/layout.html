@@ -19,9 +19,13 @@
       {{/if}}
       <!--<li><a href="http://flatsheet.io/docs">documentation</a></li>-->
       {{#if account.email}}
-      <form action="/session/destroy" method="post" class="sign-out">
-        <input type="submit" value="Sign out">
-      </form>
+      <li>
+        <form action="/session/destroy" method="post" class="sign-out">
+          <input type="submit" value="Sign out">
+        </form>
+      </li>
+      {{else}}
+      <li><a href="/account/sign-in" class="button">Sign in</a></li>
       {{/if}}
     </ul>
   </div>
