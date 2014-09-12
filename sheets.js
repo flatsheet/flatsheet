@@ -46,7 +46,7 @@ Sheets.prototype.list = function (fn, opts) {
   }
 }
 
-Sheets.prototype.update = function () {
+Sheets.prototype.update = function (name, data, cb) {
   this.db.put(name, data, cb);
 }
 

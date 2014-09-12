@@ -105,4 +105,10 @@ function sheet () {
       .pipe(JSONStream.stringify())
       .pipe(process.stdout);
   }
+
+  if (sub === 'delete') {
+    sheets.destroy(argv._[2], function () {
+      console.log('sheet deleted.');
+    });
+  }
 }

@@ -15,7 +15,7 @@ server.route('/', function (req, res) {
       .pipe(res);
   }
   else {
-    res.writeHead(302, { 'Location': '/sheets' });
+    res.writeHead(302, { 'Location': '/sheet/list' });
     res.end();
   }
 });

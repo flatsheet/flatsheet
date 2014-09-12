@@ -7,14 +7,15 @@ var on = require('component-delegate').bind;
 var closest = require('component-closest');
 var CSV = require('comma-separated-values');
 var request = require('xhr');
+var io = require('socket.io-client')('http://127.0.0.1:3333');
+
+var id = window.location.pathname.split('/')[3];
+
+io.on('connect', function(){
+  io.emit('room', id);
+});
 
 var remoteChange;
-var server = process.env.NODE_ENV === 'production' ? '' : 'http://127.0.0.1:3333';
-var io = require('socket.io-client')(server);
-
-io.on('connect', function(s){
-  console.log('connection:', this.io.engine.id);
-});
 
 io.on('change', function (change, id) {
   remoteChange = true;
@@ -23,7 +24,6 @@ io.on('change', function (change, id) {
 });
 
 io.on('cell-focus', function (id, color) {
-  console.log('focused!', id, color)
   document.querySelector('#' + id + ' textarea').style.borderColor = color;
 });
 
@@ -32,7 +32,7 @@ io.on('cell-blur', function (id) {
 });
 
 io.on('disconnect', function(){
-  console.log('disconnection.');
+  // console.log('disconnection.');
 });
 
 /* get the table template */
@@ -47,26 +47,20 @@ window.editor = new TableEditor({
 /* get the help message */
 var hello = document.getElementById('hello-message');
 
-var id = window.location.pathname.split('/')[3];
-
 request({
   uri: '/api/v2/sheets/' + id,
   headers: { "Content-Type": "application/json" }
 }, function (err, resp, body) {
   elClass(hello).add('hidden');
   editor.import(JSON.parse(body).rows);
-  console.log(JSON.parse(body).rows)
 });
 
 
 /* listen for changes to the data and save the object to the db */
 editor.on('change', function (change, data) {
   if (remoteChange) return;
-
-  //db.put('sheet', editor.data, function (error) {
-  //  if (error) console.error(error);
-  //  io.emit('change', change);
-  //});
+  if (editor.data.rows) var data = editor.getRows();
+  io.emit('change', change, data);
 });
 
 /* listener for adding a row */

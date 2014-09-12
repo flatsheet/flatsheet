@@ -1,5 +1,4 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-(function (process){
 
 var url = require('url');
 var TableEditor = require('table-editor');
@@ -9,14 +8,15 @@ var on = require('component-delegate').bind;
 var closest = require('component-closest');
 var CSV = require('comma-separated-values');
 var request = require('xhr');
+var io = require('socket.io-client')('http://127.0.0.1:3333');
+
+var id = window.location.pathname.split('/')[3];
+
+io.on('connect', function(){
+  io.emit('room', id);
+});
 
 var remoteChange;
-var server = process.env.NODE_ENV === 'production' ? '' : 'http://127.0.0.1:3333';
-var io = require('socket.io-client')(server);
-
-io.on('connect', function(s){
-  console.log('connection:', this.io.engine.id);
-});
 
 io.on('change', function (change, id) {
   remoteChange = true;
@@ -25,7 +25,6 @@ io.on('change', function (change, id) {
 });
 
 io.on('cell-focus', function (id, color) {
-  console.log('focused!', id, color)
   document.querySelector('#' + id + ' textarea').style.borderColor = color;
 });
 
@@ -34,7 +33,7 @@ io.on('cell-blur', function (id) {
 });
 
 io.on('disconnect', function(){
-  console.log('disconnection.');
+  // console.log('disconnection.');
 });
 
 /* get the table template */
@@ -49,26 +48,20 @@ window.editor = new TableEditor({
 /* get the help message */
 var hello = document.getElementById('hello-message');
 
-var id = window.location.pathname.split('/')[3];
-
 request({
   uri: '/api/v2/sheets/' + id,
   headers: { "Content-Type": "application/json" }
 }, function (err, resp, body) {
   elClass(hello).add('hidden');
   editor.import(JSON.parse(body).rows);
-  console.log(JSON.parse(body).rows)
 });
 
 
 /* listen for changes to the data and save the object to the db */
 editor.on('change', function (change, data) {
   if (remoteChange) return;
-
-  //db.put('sheet', editor.data, function (error) {
-  //  if (error) console.error(error);
-  //  io.emit('change', change);
-  //});
+  if (editor.data.rows) var data = editor.getRows();
+  io.emit('change', change, data);
 });
 
 /* listener for adding a row */
@@ -155,8 +148,7 @@ function cellFocus (e) {
   };
 }
 
-}).call(this,require("FWaASH"))
-},{"FWaASH":5,"comma-separated-values":11,"component-closest":12,"component-delegate":15,"element-class":17,"jsonpretty":18,"socket.io-client":19,"table-editor":62,"url":10,"xhr":65}],2:[function(require,module,exports){
+},{"comma-separated-values":11,"component-closest":12,"component-delegate":15,"element-class":17,"jsonpretty":18,"socket.io-client":19,"table-editor":62,"url":10,"xhr":65}],2:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
