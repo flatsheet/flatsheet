@@ -240,6 +240,43 @@ a.button i.fa {
   border-top-right-radius: 0px;
 }
 
+header {
+  padding: 10px;
+  background-color: #f6f6f5;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e2e2e0;
+}
+
+header h1.site-title {
+  font-size: 20px;
+  margin-top: 0px;
+  line-height: 1;
+  float: left;
+  font-weight: 400;
+  letter-spacing: -1px;
+}
+
+header h1.site-title a {
+  color: #535351;
+  text-decoration: none;
+}
+
+header h1.site-title a:hover {
+  color: #000;
+}
+
+header ul.main-nav {
+  margin: 0px;
+  padding: 0px;
+  text-align: right;
+}
+
+header ul.main-nav li {
+  display: inline-block;
+  margin-left: 15px;
+}
+
+
 .header-settings-toggle {
   float: right;
 }
