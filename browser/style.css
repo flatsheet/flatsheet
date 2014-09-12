@@ -309,8 +309,8 @@ header form.sign-out {
 
 header form.sign-out input {
   height: 36px;
-  line-height: 25px;
-  vertical-align: middle;
+  line-height: 36px;
+  vertical-align: baseline;
 }
 
 header a.button {
