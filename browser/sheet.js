@@ -7,7 +7,7 @@ var on = require('component-delegate').bind;
 var closest = require('component-closest');
 var CSV = require('comma-separated-values');
 var request = require('xhr');
-var io = require('socket.io-client')('http://127.0.0.1:3333');
+var io = require('socket.io-client')();
 
 var id = window.location.pathname.split('/')[3];
 

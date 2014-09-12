@@ -151,7 +151,10 @@ exports.install = function (server, prefix) {
               };
 
               server.email.sendMail(message, function(err, info){
-                if (err) console.log(err);
+                if (err) return console.log(err);
+                return response()
+                  .html(server.render('invite', { emails: emails }))
+                  .pipe(res);
               });
             });
           });

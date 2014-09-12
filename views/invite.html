@@ -4,6 +4,16 @@
 
 <div class="container">
   <h1>Invite users to edit sheets</h1>
+
+  {{#if emails}}
+  <div class="invited-emails">
+    <h3>Invited emails:
+    {{#each emails}}
+      <p>{{this}}</p>
+    {{/each}}
+  </div>
+  {{/if}}
+
   <form action="/account/invite" method="post">
     <textarea name="emails"></textarea>
     <input type="submit" value="Send invitation">
