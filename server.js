@@ -13,6 +13,7 @@ var levelSession   = require('level-session');
 var socketio = require('socket.io');
 var nodemailer = require('nodemailer');
 var sgTransport = require('nodemailer-sendgrid-transport');
+var extend = require('extend');
 
 var getView = require('./util/get-view')(Handlebars);
 var Sheets = require('./sheets');
@@ -116,6 +117,10 @@ function Server (opts) {
   this.viewsDir = opts.viewsDir || __dirname + '/views/';
   this.createViews();
 
+  this.viewData = {
+    site: this.site
+  };
+
 
   /*
   *  Create the http server
@@ -170,7 +175,7 @@ Server.prototype.createServer = function () {
     });
   });
 
-  
+
 
 }
 
@@ -193,7 +198,7 @@ Server.prototype.route = function (path, cb) {
 
   this.router.addRoute(path, function (req, res, opts) {
     req.session.get(req.session.id, function (err, account) {
-      res.account = account;
+      self.viewData.account = res.account = account;
       cb.call(self, req, res, opts);
     });
   });
@@ -220,5 +225,6 @@ Server.prototype.createViews = function () {
 */
 
 Server.prototype.render = function (view, ctx) {
-  return this.views[view]((ctx || {}));
+  var data = extend(this.viewData, (ctx || {}));
+  return this.views[view](data);
 }

@@ -298,6 +298,12 @@ header ul.main-nav li {
   text-align: left;
 }
 
+header form.sign-out {
+  float: right;
+  margin-top: -5px;
+  margin-left: 25px;
+}
+
 .hidden {
   display: none;
 }

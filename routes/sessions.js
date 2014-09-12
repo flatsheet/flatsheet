@@ -12,8 +12,6 @@ exports.install = function (server, prefix) {
   server.route(prefix, function (req, res) {
     if (req.method === 'POST') {
       formBody(req, res, function (err, body) {
-        console.log('create new session')
-
         server.accounts.verify('basic', body, function (err, ok) {
           if (err) return console.error(err)
           if (ok) {

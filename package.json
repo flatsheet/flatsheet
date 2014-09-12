@@ -26,6 +26,7 @@
     "component-delegate": "^0.2.3",
     "dom-event": "0.0.0",
     "element-class": "^0.1.1",
+    "extend": "^1.3.0",
     "handlebars": "~2.0",
     "handlebars-layouts": "^0.3.3",
     "jsonpretty": "0.0.1",

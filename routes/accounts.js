@@ -117,7 +117,7 @@ exports.install = function (server, prefix) {
   */
 
   server.route(prefix + '/invite', function (req, res) {
-    if (res.account.admin) {
+    if (res.account && res.account.admin) {
       if (req.method === 'GET') {
         return response().html(server.render('invite')).pipe(res);
       }
