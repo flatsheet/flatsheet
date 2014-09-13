@@ -25,7 +25,7 @@ Sheets.prototype.fetch = function (name, cb) {
   this.db.get(name, cb);
 }
 
-Sheets.prototype.list = function (fn, opts) {
+Sheets.prototype.list = function (cb, opts) {
   if (typeof fn === 'function') {
     var results = [];
     this.db.createReadStream()
@@ -33,12 +33,11 @@ Sheets.prototype.list = function (fn, opts) {
         results.push(data);
       })
       .on('error', function (err) {
-        return fn(err);
+        return cb(err);
       })
       .on('end', function () {
-        return fn(null, results);
+        return cb(null, results);
       });
-
   }
   else {
     var opts = fn;
