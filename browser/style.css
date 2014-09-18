@@ -327,6 +327,39 @@ header a.button {
   margin: 0px 50px;
 }
 
+
+/*
+* SHEET LIST
+*/
+
+.sheet-list h1 {
+  font-size: 20px;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+}
+
+.sheet-list .list-item a {
+  border-left: 10px solid #f2f2f0;
+  padding: 10px 20px;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.sheet-list .list-item a:hover {
+  border-left: 10px solid #d2d2d0;
+  background-color: #fcfcfa;
+}
+
+.sheet-list .list-item-description {
+  color: #999;
+}
+
+.sheet-list .list-item a:hover .list-item-description {
+  color: #424240;
+}
+
 /*
 * MODAL
 */
@@ -364,4 +397,25 @@ header a.button {
   height: 400px;
   margin-bottom: 15px;
   padding: 10px;
+}
+
+
+/*
+* FOOTER
+*/
+
+footer {
+  margin-top: 50px;
+  border-top: 1px solid #f2f2f0;
+  padding-top: 20px;
+}
+
+footer ul {
+  list-style-type: none;
+  margin: 0px;
+  padding: 0px;
+}
+
+footer ul li {
+  margin-bottom: 4px;
 }
