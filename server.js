@@ -174,9 +174,6 @@ Server.prototype.createServer = function () {
       self.router(req, res);
     });
   });
-
-
-
 }
 
 

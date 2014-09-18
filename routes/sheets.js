@@ -1,6 +1,7 @@
 var response = require('response');
 var JSONStream = require('JSONStream');
 var jsonBody = require('body/json');
+var formBody = require('body/form');
 var socketio = require('socket.io');
 
 exports.install = function (server, prefix) {
@@ -8,6 +9,7 @@ exports.install = function (server, prefix) {
 
   server.route(prefix + '/list', function (req, res, opts) {
     server.sheets.list(function (err, list) {
+      if (err) console.log(err);
       var ctx = { account: res.account, sheets: list };
       return response().html(server.render('sheet-list', ctx)).pipe(res);
     });
@@ -17,34 +19,43 @@ exports.install = function (server, prefix) {
 
     if (!res.account) {
       res.writeHead(302, { 'Location': prefix + '/view/' + opts.params.id });
-      res.end();
-      return;
+      return res.end();
     }
 
     server.sheets.fetch(opts.params.id, function (err, sheet) {
+      if (err) {
+        res.writeHead(302, { 'Location': '/' });
+        return res.end();
+      }
 
       var io = socketio(server.server);
+      var users = {};
 
       io.on('connection', function (socket) {
+        users[socket.id] = res.account;
 
-        socket.on('change', function (change, rows) {
-          socket.broadcast.emit('change', change);
-          sheet.rows = rows
-          server.sheets.update(opts.params.id, sheet, function (err) {
-            if (err) console.error(err);
+        socket.on('room', function (room) {
+          socket.join(room);
+
+          socket.on('change', function (change, rows) {
+            socket.broadcast.to(room).emit('change', change);
+            sheet.rows = rows;
+            server.sheets.update(opts.params.id, sheet, function (err) {
+              if (err) console.error(err);
+            });
           });
-        });
 
-        socket.on('cell-focus', function (cell) {
-          io.emit('cell-focus', cell, res.account.color);
-        });
+          socket.on('cell-focus', function (cell) {
+            io.to(room).emit('cell-focus', cell, res.account.color);
+          });
 
-        socket.on('cell-blur', function (cell) {
-          io.emit('cell-blur', cell);
-        });
+          socket.on('cell-blur', function (cell) {
+            io.to(room).emit('cell-blur', cell);
+          });
 
-        io.on('disconnect', function () {
-          io.emit('cell-blur');
+          io.on('disconnect', function () {
+            io.to(room).emit('cell-blur');
+          });
         });
       });
 
@@ -55,6 +66,10 @@ exports.install = function (server, prefix) {
 
   server.route(prefix + '/view/:id', function (req, res, opts) {
     server.sheets.fetch(opts.params.id, function (err, sheet) {
+      if (err) {
+        res.writeHead(302, { 'Location': '/' });
+        return res.end();
+      }
 
       var headers = [];
 
@@ -66,6 +81,18 @@ exports.install = function (server, prefix) {
 
       var ctx = { account: res.account, sheet: sheet, headers: headers };
       return response().html(server.render('sheet-view', ctx)).pipe(res);
+    });
+  });
+
+  server.route(prefix + '/new', function (req, res, opts) {
+    formBody(req, res, function (err, body) {
+      var data = body;
+      data.rows = [];
+      server.sheets.create(data, function (err, sheet, token) {
+        if (err) console.error(err);
+        res.writeHead(302, { 'Location': '/sheet/edit/' + token });
+        return res.end();
+      })
     });
   });
 }

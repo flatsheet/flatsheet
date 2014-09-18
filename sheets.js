@@ -16,17 +16,21 @@ Sheets.prototype.create = function (data, cb) {
 
   this.db.put(token, data, function (err) {
     self.db.get(token, function (err, sheet) {
-      cb(err, sheet);
+      cb(err, sheet, token);
     });
   });
 }
+
+Sheets.prototype.put = Sheets.prototype.create;
 
 Sheets.prototype.fetch = function (name, cb) {
   this.db.get(name, cb);
 }
 
+Sheets.prototype.get = Sheets.prototype.fetch;
+
 Sheets.prototype.list = function (cb, opts) {
-  if (typeof fn === 'function') {
+  if (typeof cb === 'function') {
     var results = [];
     this.db.createReadStream()
       .on('data', function (data) {
@@ -40,7 +44,7 @@ Sheets.prototype.list = function (cb, opts) {
       });
   }
   else {
-    var opts = fn;
+    var opts = cb;
     return this.db.createReadStream(opts);
   }
 }

@@ -11,7 +11,7 @@ var io = require('socket.io-client')();
 
 var id = window.location.pathname.split('/')[3];
 
-io.on('connect', function(){
+io.on('connect', function () {
   io.emit('room', id);
 });
 

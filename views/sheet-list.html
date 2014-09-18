@@ -3,19 +3,24 @@
 {{#replace "body"}}
 
 <div class="container">
-  <h1>Your sheets:</h1>
-
+  <button id="new-blank-sheet">New blank sheet</button>
+  <!--<button id="import-csv">Import CSV file</button>-->
+  <hr>
   <div class="sheet-list">
-  {{#each sheets}}
+    <h1>Your sheets:</h1>
+
+    {{#each sheets}}
     <div class="list-item">
       <a href="/sheet/edit/{{ key }}">
         <h3 class="list-item-title">{{value.name}}</h3>
       </a>
     </div>
-  {{/each }}
+    {{/each }}
   </div>
 
 </div>
+
+<script src="/public/sheet-list.js"></script>
 
 {{/replace}}
 

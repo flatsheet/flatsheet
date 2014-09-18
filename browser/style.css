@@ -13,6 +13,11 @@ textarea {
   font-weight: 300;
 }
 
+html,
+body {
+  height: 100%;
+}
+
 body {
   border-top: 3px solid #015770;
 }
@@ -232,12 +237,7 @@ a.button i.fa {
   border: 0px;
 }
 
-#code-box #close {
-  position: fixed;
-  right: 50px;
-  border-top-left-radius: 0px;
-  border-top-right-radius: 0px;
-}
+
 
 header {
   padding: 10px;
@@ -325,4 +325,26 @@ header a.button {
 
 .container {
   margin: 0px 50px;
+}
+
+#modal {
+  position: absolute;
+  top: 3px;
+  width: 100%;
+  background-color: #fff;
+  height: 100%;
+  padding: 50px;
+}
+
+#close-modal {
+  position: absolute;
+  top: 0;
+  right: 50px;
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+}
+
+#modal h1 {
+  border-bottom: 1px solid #f2f2f0;
+  margin-bottom: 10px;
 }
