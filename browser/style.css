@@ -327,6 +327,10 @@ header a.button {
   margin: 0px 50px;
 }
 
+/*
+* MODAL
+*/
+
 #modal {
   position: absolute;
   top: 3px;
@@ -347,4 +351,17 @@ header a.button {
 #modal h1 {
   border-bottom: 1px solid #f2f2f0;
   margin-bottom: 10px;
+}
+
+
+/*
+* INVITES
+*/
+
+.invite-emails {
+  width: 100%;
+  max-width: 500px;
+  height: 400px;
+  margin-bottom: 15px;
+  padding: 10px;
 }
