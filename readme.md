@@ -52,8 +52,7 @@ Open issues represent current todo list: [github.com/flatsheet/flatsheet/issues]
 - Click the **New blank sheet** button
 
 #### From the command line
-- Right now a sheet is added through the command-line by importing a JSON file (soon to be improved with UI, CSV import, etc.)
-- Import a sheet like this: `./bin/flatsheet sheet add tests/data/coworking.json`
+- Import a json file: `./bin/flatsheet sheet add tests/data/coworking.json`
 - Then you can run `./bin/flatsheet sheet list` to see that your sheet has been added.
 
 ### Start the server
