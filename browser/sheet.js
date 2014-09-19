@@ -8,15 +8,27 @@ var closest = require('component-closest');
 var CSV = require('comma-separated-values');
 var Handlebars = require('handlebars');
 var request = require('xhr');
-var domready = require('domready');
+var domify = require('domify');
+var dom = require('dom-tree');
+var domquery = require('domquery');
+var siblings = require('siblings');
 var io = require('socket.io-client')();
 
 var id = window.location.pathname.split('/')[3];
 
 var usersEl = document.getElementById('user-list');
 
-/* get the user-list template */
-var userListTemplate = Handlebars.compile(fs.readFileSync(__dirname + '/views/user-list.html', 'utf8'));
+var templates = {
+  modal: Handlebars.compile(
+    fs.readFileSync(__dirname + '/views/modal.html', 'utf8')
+  ),
+  userList: Handlebars.compile(
+    fs.readFileSync(__dirname + '/views/user-list.html', 'utf8')
+  ),
+  editLongText: Handlebars.compile(
+    fs.readFileSync(__dirname + '/views/editor-long-text.html', 'utf8')
+  )
+};
 
 io.on('connect', function () {
   io.emit('room', id);
@@ -26,8 +38,7 @@ io.on('connect', function () {
   var users = {};
 
   io.on('update-users', function (userlist) {
-    console.log(userlist)
-    usersEl.innerHTML = userListTemplate({ users: userlist });
+    usersEl.innerHTML = templates.userList({ users: userlist });
   });
 });
 
@@ -78,6 +89,7 @@ request({
 
 /* listen for changes to the data and save the object to the db */
 editor.on('change', function (change, data) {
+  console.log('chaaaaaaaange')
   if (remoteChange) return;
   if (editor.data.rows) var data = editor.getRows();
   io.emit('change', change, data);
@@ -149,13 +161,43 @@ on(document.body, '.delete-row', 'click', function (e) {
 });
 
 /* listener for the table body */
-on(document.body, 'textarea', 'click', cellFocus);
+on(document.body, 'tbody textarea', 'click', cellFocus);
 
 /* listener for tabbing through cells */
 on(document.body, 'tbody', 'keyup', function (e) {
   if (elClass(e.target).has('cell') && e.keyCode === 9) {
     cellFocus(e);
   }
+});
+
+/* listener for expand-editor button */
+on(document.body, '.expand-editor', 'click', function (e) {
+  e.preventDefault();
+  cellFocus(e);
+
+  var id = closest(e.target, 'td').id;
+  var link = closest(e.target, 'a');
+  var cell = siblings(link, 'textarea')[0];
+  var text = cell.value;
+
+  var modal = templates.modal({
+    content: templates.editLongText({ text: text, id: id })
+  });
+
+  dom.add(document.body, domify(modal));
+});
+
+on(document.body, '#save-long-text-editor', 'click', function (e) {
+  var expandedCell = siblings(e.target, 'textarea')[0];
+  var id = siblings(e.target, 'input')[0].value;
+  var cell = domquery('#' + id + ' textarea');
+  cell.value(expandedCell.value);
+  dom.remove('#modal');
+  editor.updateModel();
+});
+
+on(document.body, '#close-modal', 'click', function (e) {
+  dom.remove('#modal');
 });
 
 function cellFocus (e) {

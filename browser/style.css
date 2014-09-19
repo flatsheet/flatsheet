@@ -216,6 +216,10 @@ a.button i.fa {
   padding-left: 5px;
 }
 
+#table-editor tbody td {
+  width: 150px;
+}
+
 #table-editor textarea {
   resize: none;
   height: 28px;
@@ -226,8 +230,33 @@ a.button i.fa {
   outline: 0;
 }
 
+#table-editor .expand-editor {
+  position: relative;
+  float: right;
+  margin-top: -22px;
+  margin-right: 5px;
+  display: none;
+}
+
+#table-editor td:hover > .expand-editor {
+  display: inline;
+}
+
 #main-content {
   margin-left: -32px;
+}
+
+.long-text-wrapper {
+  width: 700px;
+  margin: 0px auto;
+}
+
+#long-text-editor {
+  border: 2px solid #f2f2f0;
+  padding: 30px;
+  width: 700px;
+  height: 500px;
+  margin-bottom: 20px;
 }
 
 #code-box {

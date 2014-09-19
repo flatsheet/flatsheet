@@ -16,7 +16,11 @@
     "watch": "npm run watch-js & npm run watch-css",
     "start": "nodemon --watch public --watch server.js --watch index.js index.js"
   },
-  "browserify": { "transform": [ "brfs" ] },
+  "browserify": {
+    "transform": [
+      "brfs"
+    ]
+  },
   "dependencies": {
     "JSONStream": "^0.9.0",
     "accountdown": "^1.0.2",
@@ -28,6 +32,7 @@
     "dom-event": "0.0.0",
     "dom-tree": "0.0.1",
     "domify": "^1.3.1",
+    "domquery": "^1.2.0",
     "domready": "^1.0.7",
     "element-class": "^0.1.1",
     "extend": "^1.3.0",
@@ -45,6 +50,7 @@
     "random-color": "0.0.0",
     "response": "git://github.com/mikeal/response",
     "routes-router": "^4.1.0",
+    "siblings": "^1.0.1",
     "socket.io": "^1.0.6",
     "socket.io-client": "^1.0.6",
     "socket.io-emitter": "^0.2.0",
