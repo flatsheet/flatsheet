@@ -109,7 +109,7 @@ input[type=text],
 input[type=email],
 input[type=password] {
   border: 1px solid #efefef;
-  padding: 0px 15px;
+  padding: 0px 10px;
   margin-top: 0px;
   margin-bottom: 10px;
   width: 300px;
@@ -394,9 +394,10 @@ header a.button {
 .invite-emails {
   width: 100%;
   max-width: 500px;
-  height: 400px;
+  height: 300px;
   margin-bottom: 15px;
   padding: 10px;
+  border: 1px solid #e2e2e0;
 }
 
 
