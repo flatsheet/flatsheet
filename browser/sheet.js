@@ -194,6 +194,7 @@ on(document.body, '#save-long-text-editor', 'click', function (e) {
   cell.value(expandedCell.value);
   dom.remove('#modal');
   editor.updateModel();
+  io.emit('cell-blur', id);
 });
 
 on(document.body, '#close-modal', 'click', function (e) {
