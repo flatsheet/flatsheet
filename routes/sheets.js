@@ -28,37 +28,6 @@ exports.install = function (server, prefix) {
         return res.end();
       }
 
-      var io = socketio(server.server);
-      var users = {};
-
-      io.on('connection', function (socket) {
-        users[socket.id] = res.account;
-
-        socket.on('room', function (room) {
-          socket.join(room);
-
-          socket.on('change', function (change, rows) {
-            socket.broadcast.to(room).emit('change', change);
-            sheet.rows = rows;
-            server.sheets.update(opts.params.id, sheet, function (err) {
-              if (err) console.error(err);
-            });
-          });
-
-          socket.on('cell-focus', function (cell) {
-            io.to(room).emit('cell-focus', cell, res.account.color);
-          });
-
-          socket.on('cell-blur', function (cell) {
-            io.to(room).emit('cell-blur', cell);
-          });
-
-          io.on('disconnect', function () {
-            io.to(room).emit('cell-blur');
-          });
-        });
-      });
-
       var ctx = { account: res.account, sheet: sheet };
       return response().html(server.render('sheet-edit', ctx)).pipe(res);
     });

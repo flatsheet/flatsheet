@@ -8,11 +8,19 @@ var closest = require('component-closest');
 var CSV = require('comma-separated-values');
 var request = require('xhr');
 var io = require('socket.io-client')();
+var users;
 
 var id = window.location.pathname.split('/')[3];
 
+var usersEl = document.getElementById('user-list');
+
 io.on('connect', function () {
   io.emit('room', id);
+  io.emit('user', user);
+});
+
+io.on('update-users', function (userlist) {
+  var users = userlist;
 });
 
 var remoteChange;
@@ -140,7 +148,7 @@ on(document.body, 'tbody', 'keyup', function (e) {
 
 function cellFocus (e) {
   var id = closest(e.target, 'td').id;
-  io.emit('cell-focus', id);
+  io.emit('cell-focus', id, user.color);
 
   e.target.onblur = function () {
     io.emit('cell-blur', id);

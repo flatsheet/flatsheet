@@ -35,6 +35,14 @@ Handlebars.registerPartial('layout', fs.readFileSync('views/layout.html', 'utf8'
 
 
 /*
+*
+*/
+
+Handlebars.registerHelper('json', function(context) {
+  return JSON.stringify(context);
+});
+
+/*
 * Main server constructor function
 */
 
@@ -172,6 +180,43 @@ Server.prototype.createServer = function () {
 
     self.session(req, res, function () {
       self.router(req, res);
+    });
+  });
+
+  var io = socketio(this.server);
+  var users = {};
+
+  io.on('connection', function (socket) {
+    socket.on('room', function (room) {
+      socket.join(room);
+      socket.on('user', function (user) {
+        if (!users[user.username]) {
+          users[user.username] = user;
+        }
+        socket.to(room).emit('update-users', users);
+      });
+
+      self.sheets.fetch(room, function (err, sheet) {
+        socket.on('change', function (change, rows) {
+          socket.broadcast.to(room).emit('change', change);
+          sheet.rows = rows;
+          self.sheets.update(room, sheet, function (err) {
+            if (err) console.error(err);
+          });
+        });
+
+        socket.on('cell-focus', function (cell, color) {
+          io.to(room).emit('cell-focus', cell, color);
+        });
+
+        socket.on('cell-blur', function (cell) {
+          io.to(room).emit('cell-blur', cell);
+        });
+      });
+
+      io.on('disconnect', function () {
+        io.to(room).emit('cell-blur');
+      });
     });
   });
 }
