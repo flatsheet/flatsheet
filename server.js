@@ -219,6 +219,7 @@ Server.prototype.createServer = function () {
 
       io.on('disconnect', function () {
         io.to(room).emit('cell-blur');
+        delete rooms[room].users[user.username];
       });
     });
   });
