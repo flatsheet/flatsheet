@@ -1,6 +1,6 @@
 # flatsheet
 
-A multi-user, real-time editor for curating data.
+> A realtime editor for curating data.
 
 ## Current status
 
@@ -46,6 +46,12 @@ Open issues represent current todo list: [github.com/flatsheet/flatsheet/issues]
 - You can run `./bin/flatsheet account list` to see that your admin account was created.
 
 ### Create a sheet
+
+#### Through the UI
+- Log in
+- Click the **New blank sheet** button
+
+#### From the command line
 - Right now a sheet is added through the command-line by importing a JSON file (soon to be improved with UI, CSV import, etc.)
 - Import a sheet like this: `./bin/flatsheet sheet add tests/data/coworking.json`
 - Then you can run `./bin/flatsheet sheet list` to see that your sheet has been added.
