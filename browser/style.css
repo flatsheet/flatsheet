@@ -187,6 +187,15 @@ a.button i.fa {
   line-height: 1.5;
 }
 
+
+/*
+* SHEET EDITOR
+*/
+
+.table-wrapper {
+  overflow: auto;
+}
+
 #table-editor {
   margin-top: 30px;
 }
