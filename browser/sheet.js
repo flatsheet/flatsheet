@@ -6,22 +6,34 @@ var elClass = require('element-class');
 var on = require('component-delegate').bind;
 var closest = require('component-closest');
 var CSV = require('comma-separated-values');
+var Handlebars = require('handlebars');
 var request = require('xhr');
+var domready = require('domready');
 var io = require('socket.io-client')();
-var users;
 
 var id = window.location.pathname.split('/')[3];
 
 var usersEl = document.getElementById('user-list');
 
+/* get the user-list template */
+var userListTemplate = Handlebars.compile(fs.readFileSync(__dirname + '/views/user-list.html', 'utf8'));
+
 io.on('connect', function () {
   io.emit('room', id);
+
   io.emit('user', user);
+
+  var users = {};
+
+  io.on('update-users', function (userlist) {
+    console.log(userlist)
+    usersEl.innerHTML = userListTemplate({ users: userlist });
+  });
 });
 
-io.on('update-users', function (userlist) {
-  var users = userlist;
-});
+io.on('waaa', function (u) {
+  console.log('waaaaaaaaaaa', u)
+})
 
 var remoteChange;
 

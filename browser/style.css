@@ -246,7 +246,22 @@ a.button i.fa {
   border: 0px;
 }
 
+#user-list {
+  height: 40px;
+}
 
+#user-list ul {
+  margin: 0px 0px 10px 0px;
+  padding: 0px;
+}
+
+#user-list li {
+  padding: 3px 5px;
+  background-color: #f5f5f3;
+  display: inline-block;
+  border-radius: 4px;
+  border: 1px solid #f5f5f3;
+}
 
 header {
   padding: 10px;

@@ -53,6 +53,7 @@ Open issues represent current todo list: [github.com/flatsheet/flatsheet/issues]
 
 #### From the command line
 - Import a json file: `./bin/flatsheet sheet add tests/data/coworking.json`
+- Check out that coworking.json example file. Make sure your file has the same format
 - Then you can run `./bin/flatsheet sheet list` to see that your sheet has been added.
 
 ### Start the server

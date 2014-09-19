@@ -184,16 +184,19 @@ Server.prototype.createServer = function () {
   });
 
   var io = socketio(this.server);
-  var users = {};
+  var rooms = {};
 
   io.on('connection', function (socket) {
     socket.on('room', function (room) {
       socket.join(room);
+
+      if (!rooms[room]) rooms[room] = { users: {} };
+
       socket.on('user', function (user) {
-        if (!users[user.username]) {
-          users[user.username] = user;
+        if (!rooms[room].users[user.username]) {
+          rooms[room].users[user.username] = user;
         }
-        socket.to(room).emit('update-users', users);
+        io.in(room).emit('update-users', rooms[room].users);
       });
 
       self.sheets.fetch(room, function (err, sheet) {

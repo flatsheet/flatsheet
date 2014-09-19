@@ -1,0 +1,10 @@
+<ul>
+  <span class="active-users">active users:</span>
+
+  {{#each users}}
+  <li style="color:{{this.color}}">
+    <i class="fa fa-square"></i>
+    {{this.username}}
+  </li>
+  {{/each}}
+</ul>
