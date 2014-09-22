@@ -126,8 +126,8 @@ on(document.body, '#close', 'click', function (e) {
 });
 
 /* listener for clearing the db */
-on(document.body, '#reset', 'click', function (e) {
-  var msg = 'Are you sure you want to reset this project? You will start over with an empty workspace.';
+on(document.body, '#destroy', 'click', function (e) {
+  var msg = 'Are you sure you want to destroy the data in this project? You will start over with an empty workspace.';
   if (window.confirm(msg)) {
     editor.clear();
     elClass(hello).remove('hidden');
