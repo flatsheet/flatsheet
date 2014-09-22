@@ -42,10 +42,6 @@ io.on('connect', function () {
   });
 });
 
-io.on('waaa', function (u) {
-  console.log('waaaaaaaaaaa', u)
-})
-
 var remoteChange;
 
 io.on('change', function (change, id) {
