@@ -85,7 +85,6 @@ request({
 
 /* listen for changes to the data and save the object to the db */
 editor.on('change', function (change, data) {
-  console.log('chaaaaaaaange')
   if (remoteChange) return;
   if (editor.data.rows) var data = editor.getRows();
   io.emit('change', change, data);
