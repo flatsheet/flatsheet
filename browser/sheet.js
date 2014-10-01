@@ -112,39 +112,15 @@ var codeBox = document.getElementById('code-box');
 var textarea = codeBox.querySelector('textarea');
 
 /* listener for showing the data as json */
-on(document.body, '#show-json', 'click', function (e) {
-  
-  var anchor_tag, json_output;
-
-  json_output = editor.getRows();
-
-  anchor_tag = document.createElement('a');
-  anchor_tag.href = 'data:attachment/json,' + encodeURIComponent( prettify(json_output) );
-  anchor_tag.target = '_blank';
-  anchor_tag.download = 'this-sheet.json';
-
-  document.body.appendChild( anchor_tag );
-  anchor_tag.click();
-
-  anchor_tag.parentNode.removeChild(anchor_tag);
+on(document.body, '#show-json', 'click', function (e) {  
+  var json_output = editor.getRows();  
+  startDownload('this-sheet', 'json', json_output);
 });
 
 /* listener for showing the data as csv */
-on(document.body, '#show-csv', 'click', function (e) {
-  
-  var anchor_tag, csv_file;
-
-  csv_file = new CSV(editor.getRows(), { header: true }).encode();
-
-  anchor_tag = document.createElement('a');
-  anchor_tag.href = 'data:attachment/csv,' + encodeURIComponent(csv_file);
-  anchor_tag.target = '_blank';
-  anchor_tag.download = 'this-sheet.csv';
-
-  document.body.appendChild( anchor_tag );
-  anchor_tag.click();
-
-  anchor_tag.parentNode.removeChild(anchor_tag);
+on(document.body, '#show-csv', 'click', function (e) {  
+  var csv_file = new CSV(editor.getRows(), { header: true }).encode();
+  startDownload('this-sheet','csv', csv_file);
 });
 
 /* listener for closing the codebox */
@@ -232,4 +208,27 @@ function cellFocus (e) {
   e.target.onblur = function () {
     io.emit('cell-blur', id);
   };
+}
+
+function startDownload (name, extension, content, attachment_type) {
+
+  if(!name || !extension){ return false; }
+
+  if(!content){ console.log('nobody wants to download an empty file'); return false; }
+
+  if(!attachment_type){ attachment_type = extension; }
+
+  var anchor_tag, body;
+
+  body = document.body;
+
+  anchor_tag = document.createElement('a');
+  anchor_tag.href = 'data:attachment/' + attachment_type + ',' + encodeURIComponent( content );
+  anchor_tag.target = '_blank';
+  anchor_tag.download = name + '.' + extension;
+
+  body.appendChild( anchor_tag );
+  anchor_tag.click();
+
+  body.removeChild(anchor_tag);
 }
