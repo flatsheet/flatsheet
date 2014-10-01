@@ -1,5 +1,6 @@
 var level = require('level');
 var uuid = require('uuid').v1;
+var extend = require('extend');
 
 module.exports = Sheets;
 
@@ -12,47 +13,57 @@ function Sheets (db, opts) {
 
 Sheets.prototype.create = function (data, cb) {
   var self = this;
-  var token = uuid();
-
-  this.db.put(token, data, function (err) {
-    self.db.get(token, function (err, sheet) {
-      cb(err, sheet, token);
+  var key = uuid();
+  data.id = key;
+  
+  this.db.put(key, data, function (err) {
+    self.db.get(key, function (err, sheet) {
+      cb(err, sheet, key);
     });
   });
-}
+};
 
 Sheets.prototype.put = Sheets.prototype.create;
 
-Sheets.prototype.fetch = function (name, cb) {
-  this.db.get(name, cb);
-}
+Sheets.prototype.fetch = function (key, cb) {
+  this.db.get(key, cb);
+};
 
 Sheets.prototype.get = Sheets.prototype.fetch;
 
-Sheets.prototype.list = function (cb, opts) {
-  if (typeof cb === 'function') {
-    var results = [];
-    this.db.createReadStream()
-      .on('data', function (data) {
-        results.push(data);
-      })
-      .on('error', function (err) {
-        return cb(err);
-      })
-      .on('end', function () {
-        return cb(null, results);
-      });
-  }
-  else {
-    var opts = cb;
-    return this.db.createReadStream(opts);
-  }
-}
+Sheets.prototype.list = function (opts, cb) {
+  var defaultOpts = { keys: false, values: true };
 
-Sheets.prototype.update = function (name, data, cb) {
-  this.db.put(name, data, cb);
-}
+  if (typeof opts === 'function') {
+    var cb = opts;
+    var opts = defaultOpts;
+  } else {
+    var opts = extend(defaultOpts, opts);
+  }
+  
+  if (!cb) return this.db.createReadStream(opts);
 
-Sheets.prototype.destroy = function (name, cb) {
-  this.db.del(name, cb);
-}
+  var results = [];
+  this.db.createReadStream(opts)
+    .on('data', function (data) {
+      results.push(data);
+    })
+    .on('error', function (err) {
+      return cb(err);
+    })
+    .on('end', function () {
+      return cb(null, results);
+    });
+};
+
+Sheets.prototype.update = function (key, data, cb) {
+  var self = this;
+  this.db.put(key, data, function (err) {
+    if (err) return cb(err);
+    self.db.get(key, cb);
+  });
+};
+
+Sheets.prototype.destroy = function (key, cb) {
+  this.db.del(key, cb);
+};

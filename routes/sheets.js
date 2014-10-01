@@ -64,4 +64,12 @@ exports.install = function (server, prefix) {
       })
     });
   });
+  
+  server.route(prefix + '/:id/destroy', function (req, res, opts) {
+    if (req.method === 'DELETE') {
+      server.sheets.destroy(opts.params.id, function (a, b, c) {
+        console.log(a, b, c);
+      });
+    }
+  });
 }

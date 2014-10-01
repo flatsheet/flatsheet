@@ -13,6 +13,7 @@ exports.install = function (server, prefix) {
     */
 
     if (req.method === 'GET') {
+      res.setHeader('Content-Type', 'application/json');
       server.sheets.list()
         .pipe(JSONStream.stringify())
         .pipe(res);
@@ -25,7 +26,6 @@ exports.install = function (server, prefix) {
 
     if (req.method === 'POST') {
       jsonBody(req, res, function (err, body) {
-        console.log(err, body)
         server.sheets.create(body, function (err, sheet) {
           // todo: set statuscode when create fails
 
@@ -41,7 +41,7 @@ exports.install = function (server, prefix) {
 
 
 
-  server.route(prefix + 'sheets/:id', function (req, res, match) {
+  server.route(prefix + 'sheets/:id', function (req, res, opts) {
 
 
     /*
@@ -49,9 +49,16 @@ exports.install = function (server, prefix) {
     */
 
     if (req.method === 'GET') {
-      server.sheets.fetch(match.params.id, function (err, sheet) {
+      server.sheets.get(opts.params.id, function (err, sheet) {
         // todo: set 404 when no sheet
-        if (!sheet) return response.json({ message: 'nope' }).pipe(res);
+        if (!sheet) {
+          var data = { 
+            message: 'Not found',
+            statusCode: 404
+          }
+
+          return response.json(data).status(404).pipe(res);
+        }
         return response.json(sheet).pipe(res);
       });
     }
@@ -62,12 +69,20 @@ exports.install = function (server, prefix) {
     */
 
     if (req.method === 'PUT') {
-      server.sheets.update(match.params.id, function (err) {
-        // todo: set statuscode when create fails
+      jsonBody(req, res, function (err, body) {
+        server.sheets.update(opts.params.id, body, function (err, sheet) {
+          // todo: require authentication
 
-        //todo: require authentication
-
-        if (!sheet) return response.json({ message: 'nope' }).pipe(res);
+          if (err || !sheet) {
+            var data = { 
+              message: 'Something went wrong',
+              statusCode: 400
+            }
+            return response.json(data).status(400).pipe(res);
+          }
+          
+          else return response.json(sheet).pipe(res);
+        });
       });
     }
 
@@ -78,12 +93,20 @@ exports.install = function (server, prefix) {
     */
 
     if (req.method === 'DELETE') {
-      server.sheets.destroy(match.params.id, function (err) {
-        // todo: set statuscode when create fails
-
+      server.sheets.destroy(opts.params.id, function (err) {
         //todo: require authentication
+        console.log('waaaaaaaaaaa\n\n\n\n', err, '\n\n\n\n\n')
+        if (err) {
+          
+          var data = { 
+            message: 'Something went wrong',
+            statusCode: 400
+          }
+          return response.json(data).status(400).pipe(res);
+        }
 
-        if (!sheet) return response.json({ message: 'nope' }).pipe(res);
+        res.writeHead(204);
+        return res.end();
       });
     }
   });
