@@ -10,6 +10,9 @@
     <thead id="table-header">
       <tr>
         <span class="spacer"></span>
+        <th>
+          <span class="column-name"></span>
+        </th>
         {{#each headers}}
           <th id={{this}}>
             <span class="column-name">{{this}}</span>
@@ -20,6 +23,7 @@
     <tbody id="table-body">
       {{#each sheet.rows}}
       <tr class="row">
+        <td class="row-index">{{plus1 @index}}</td>
         {{#each this}}
         <td class="column-{{@key}}">
           {{this}}

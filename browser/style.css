@@ -220,6 +220,10 @@ a.button i.fa {
   width: 150px;
 }
 
+#table-editor tbody .row-index {
+  width: 25px;
+}
+
 #table-editor textarea {
   resize: none;
   height: 28px;
