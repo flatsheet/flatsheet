@@ -113,14 +113,38 @@ var textarea = codeBox.querySelector('textarea');
 
 /* listener for showing the data as json */
 on(document.body, '#show-json', 'click', function (e) {
-  textarea.value = prettify(editor.getRows());
-  elClass(codeBox).remove('hidden');
+  
+  var anchor_tag, json_output;
+
+  json_output = editor.getRows();
+
+  anchor_tag = document.createElement('a');
+  anchor_tag.href = 'data:attachment/json,' + encodeURIComponent( prettify(json_output) );
+  anchor_tag.target = '_blank';
+  anchor_tag.download = 'this-sheet.json';
+
+  document.body.appendChild( anchor_tag );
+  anchor_tag.click();
+
+  anchor_tag.parentNode.removeChild(anchor_tag);
 });
 
 /* listener for showing the data as csv */
 on(document.body, '#show-csv', 'click', function (e) {
-  textarea.value = new CSV(editor.getRows(), { header: true }).encode();
-  elClass(codeBox).remove('hidden');
+  
+  var anchor_tag, csv_file;
+
+  csv_file = new CSV(editor.getRows(), { header: true }).encode();
+
+  anchor_tag = document.createElement('a');
+  anchor_tag.href = 'data:attachment/csv,' + encodeURIComponent(csv_file);
+  anchor_tag.target = '_blank';
+  anchor_tag.download = 'this-sheet.csv';
+
+  document.body.appendChild( anchor_tag );
+  anchor_tag.click();
+
+  anchor_tag.parentNode.removeChild(anchor_tag);
 });
 
 /* listener for closing the codebox */
