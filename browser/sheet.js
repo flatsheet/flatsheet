@@ -42,10 +42,6 @@ io.on('connect', function () {
   });
 });
 
-io.on('waaa', function (u) {
-  console.log('waaaaaaaaaaa', u)
-})
-
 var remoteChange;
 
 io.on('change', function (change, id) {
@@ -89,7 +85,6 @@ request({
 
 /* listen for changes to the data and save the object to the db */
 editor.on('change', function (change, data) {
-  console.log('chaaaaaaaange')
   if (remoteChange) return;
   if (editor.data.rows) var data = editor.getRows();
   io.emit('change', change, data);
@@ -130,8 +125,8 @@ on(document.body, '#close', 'click', function (e) {
 });
 
 /* listener for clearing the db */
-on(document.body, '#reset', 'click', function (e) {
-  var msg = 'Are you sure you want to reset this project? You will start over with an empty workspace.';
+on(document.body, '#destroy', 'click', function (e) {
+  var msg = 'Are you sure you want to destroy the data in this project? You will start over with an empty workspace.';
   if (window.confirm(msg)) {
     editor.clear();
     elClass(hello).remove('hidden');
