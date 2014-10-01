@@ -95,7 +95,7 @@ exports.install = function (server, prefix) {
     if (req.method === 'DELETE') {
       server.sheets.destroy(opts.params.id, function (err) {
         //todo: require authentication
-        console.log('waaaaaaaaaaa\n\n\n\n', err, '\n\n\n\n\n')
+
         if (err) {
           
           var data = { 
