@@ -107,10 +107,23 @@ function sheet () {
   }
 
   if (sub === 'fix-ids') {
-    sheets.list({ keys:true, values:true }, function (err, sheets) {
-      sheets.forEach(function (sheet) {
+    sheets.list({ keys:true, values:true }, function (err, results) {
+      results.forEach(function (sheet) {
         sheet.value.id = sheet.key;
-        sheets.put(sheet.key, sheet)
+        console.log(sheet)
+        sheets.update(sheet.key, sheet.value, function (err) {
+          if (err) throw err;
+        });
+      });
+    });
+  }
+  
+  if (sub === 'delete-all') {
+    sheets.list({ keys:true, values:true }, function (err, results) {
+      results.forEach(function (sheet) {
+        sheets.destroy(sheet.key, function () {
+          console.log('destroyed ' + sheet.key);
+        });
       });
     });
   }
