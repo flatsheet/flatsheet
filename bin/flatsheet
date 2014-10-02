@@ -106,6 +106,15 @@ function sheet () {
       .pipe(process.stdout);
   }
 
+  if (sub === 'fix-ids') {
+    sheets.list({ keys:true, values:true }, function (err, sheets) {
+      sheets.forEach(function (sheet) {
+        sheet.value.id = sheet.key;
+        sheets.put(sheet.key, sheet)
+      });
+    });
+  }
+
   if (sub === 'delete') {
     sheets.destroy(argv._[2], function () {
       console.log('sheet deleted.');
