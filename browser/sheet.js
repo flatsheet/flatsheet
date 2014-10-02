@@ -74,6 +74,7 @@ window.editor = new TableEditor({
 /* get the help message */
 var hello = document.getElementById('hello-message');
 
+/* request the sheet from the api */
 request({
   uri: '/api/v2/sheets/' + id,
   headers: { "Content-Type": "application/json" }
@@ -144,6 +145,7 @@ on(document.body, 'thead .destroy', 'click', function (e) {
   if (window.confirm(msg)) editor.destroyColumn(id);
 });
 
+/* listener for delete-row button */
 on(document.body, '.delete-row', 'click', function (e) {
   var btn;
 
@@ -182,6 +184,7 @@ on(document.body, '.expand-editor', 'click', function (e) {
   dom.add(document.body, domify(modal));
 });
 
+/* listener for saving the long text editor */
 on(document.body, '#save-long-text-editor', 'click', function (e) {
   var expandedCell = siblings(e.target, 'textarea')[0];
   var id = siblings(e.target, 'input')[0].value;
@@ -192,6 +195,7 @@ on(document.body, '#save-long-text-editor', 'click', function (e) {
   io.emit('cell-blur', id);
 });
 
+/* listener for closing a modal */
 on(document.body, '#close-modal', 'click', function (e) {
   var id = document.querySelector('.expanded-cell-id').value;
   dom.remove('#modal');
