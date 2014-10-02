@@ -193,7 +193,9 @@ on(document.body, '#save-long-text-editor', 'click', function (e) {
 });
 
 on(document.body, '#close-modal', 'click', function (e) {
+  var id = document.querySelector('.expanded-cell-id').value;
   dom.remove('#modal');
+  io.emit('cell-blur', id);
 });
 
 function cellFocus (e) {
