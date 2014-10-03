@@ -74,6 +74,7 @@ window.editor = new TableEditor({
 /* get the help message */
 var hello = document.getElementById('hello-message');
 
+/* request the sheet from the api */
 request({
   uri: '/api/v2/sheets/' + id,
   headers: { "Content-Type": "application/json" }
@@ -107,15 +108,15 @@ var codeBox = document.getElementById('code-box');
 var textarea = codeBox.querySelector('textarea');
 
 /* listener for showing the data as json */
-on(document.body, '#show-json', 'click', function (e) {
-  textarea.value = prettify(editor.getRows());
-  elClass(codeBox).remove('hidden');
+on(document.body, '#show-json', 'click', function (e) {  
+  var json_output = editor.getRows();  
+  startDownload('this-sheet', 'json', JSON.stringify(json_output));
 });
 
 /* listener for showing the data as csv */
-on(document.body, '#show-csv', 'click', function (e) {
-  textarea.value = new CSV(editor.getRows(), { header: true }).encode();
-  elClass(codeBox).remove('hidden');
+on(document.body, '#show-csv', 'click', function (e) {  
+  var csv_file = new CSV(editor.getRows(), { header: true }).encode();
+  startDownload('this-sheet','csv', csv_file);
 });
 
 /* listener for closing the codebox */
@@ -142,8 +143,11 @@ on(document.body, 'thead .destroy', 'click', function (e) {
 
   var msg = 'Sure you want to delete this column and its contents?';
   if (window.confirm(msg)) editor.destroyColumn(id);
+  var data = editor.get('rows');
+  editor.set('rows', data);
 });
 
+/* listener for delete-row button */
 on(document.body, '.delete-row', 'click', function (e) {
   var btn;
 
@@ -182,6 +186,7 @@ on(document.body, '.expand-editor', 'click', function (e) {
   dom.add(document.body, domify(modal));
 });
 
+/* listener for saving the long text editor */
 on(document.body, '#save-long-text-editor', 'click', function (e) {
   var expandedCell = siblings(e.target, 'textarea')[0];
   var id = siblings(e.target, 'input')[0].value;
@@ -192,8 +197,11 @@ on(document.body, '#save-long-text-editor', 'click', function (e) {
   io.emit('cell-blur', id);
 });
 
+/* listener for closing a modal */
 on(document.body, '#close-modal', 'click', function (e) {
+  var id = document.querySelector('.expanded-cell-id').value;
   dom.remove('#modal');
+  io.emit('cell-blur', id);
 });
 
 function cellFocus (e) {
@@ -203,4 +211,27 @@ function cellFocus (e) {
   e.target.onblur = function () {
     io.emit('cell-blur', id);
   };
+}
+
+function startDownload (name, extension, content, attachment_type) {
+
+  if(!name || !extension){ return false; }
+
+  if(!content){ console.log('nobody wants to download an empty file'); return false; }
+
+  if(!attachment_type){ attachment_type = extension; }
+
+  var anchor_tag, body;
+
+  body = document.body;
+
+  anchor_tag = document.createElement('a');
+  anchor_tag.href = 'data:attachment/' + attachment_type + ',' + encodeURIComponent( content );
+  anchor_tag.target = '_blank';
+  anchor_tag.download = name + '.' + extension;
+
+  body.appendChild( anchor_tag );
+  anchor_tag.click();
+
+  body.removeChild(anchor_tag);
 }
