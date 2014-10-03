@@ -143,6 +143,8 @@ on(document.body, 'thead .destroy', 'click', function (e) {
 
   var msg = 'Sure you want to delete this column and its contents?';
   if (window.confirm(msg)) editor.destroyColumn(id);
+  var data = editor.get('rows');
+  editor.set('rows', data);
 });
 
 /* listener for delete-row button */
