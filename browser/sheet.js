@@ -110,7 +110,7 @@ var textarea = codeBox.querySelector('textarea');
 /* listener for showing the data as json */
 on(document.body, '#show-json', 'click', function (e) {  
   var json_output = editor.getRows();  
-  startDownload('this-sheet', 'json', json_output);
+  startDownload('this-sheet', 'json', JSON.stringify(json_output));
 });
 
 /* listener for showing the data as csv */
