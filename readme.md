@@ -40,7 +40,6 @@ Open issues represent current todo list: [github.com/flatsheet/flatsheet/issues]
 - Copy the example config file:
   - `cp config.example.js config.js`
   - Edit the values to suit your purpose
-- Create the public folder if it doesn't exist: `mkdir public`
 - Generate js & css files for public folder: `npm run bundle`
 
 ### Create an admin user
