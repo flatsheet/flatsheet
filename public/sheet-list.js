@@ -7,10 +7,10 @@ var Handlebars = require('handlebars');
 
 var templates = {
   modal: Handlebars.compile(
-    "<section id=\"modal\" class=\"modal-wrapper\">\n  <button id=\"close-modal\"><i class=\"fa fa-times\"></i> close</button>\n  <div class=\"modal-content\">\n    {{{ content }}}\n  </div>\n</section>\n"
+    "<section id=\"modal\" class=\"modal-wrapper\">\r\n  <button id=\"close-modal\"><i class=\"fa fa-times\"></i> close</button>\r\n  <div class=\"modal-content\">\r\n    {{{ content }}}\r\n  </div>\r\n</section>\r\n"
   ),
   newSheet: Handlebars.compile(
-    "<h1>Create new blank sheet</h1>\n<form action=\"/sheet/new\" method=\"post\">\n  <input type=\"text\" name=\"name\" placeholder=\"name of sheet\"><br>\n  <input type=\"text\" name=\"description\" placeholder=\"description\"><br>\n  <input type=\"submit\" value=\"Create sheet\">\n</form>\n"
+    "<h1>Create new blank sheet</h1>\r\n<form action=\"/sheet/new\" method=\"post\">\r\n  <input type=\"text\" name=\"name\" placeholder=\"name of sheet\"><br>\r\n  <input type=\"text\" name=\"description\" placeholder=\"description\"><br>\r\n  <input type=\"submit\" value=\"Create sheet\">\r\n</form>\r\n"
   )
 };
 
@@ -1046,7 +1046,7 @@ exports["default"] = Handlebars;
 var Utils = require("./utils");
 var Exception = require("./exception")["default"];
 
-var VERSION = "2.0.0-beta.1";
+var VERSION = "2.0.0";
 exports.VERSION = VERSION;var COMPILER_REVISION = 6;
 exports.COMPILER_REVISION = COMPILER_REVISION;
 var REVISION_CHANGES = {
@@ -1088,11 +1088,11 @@ exports.HandlebarsEnvironment = HandlebarsEnvironment;HandlebarsEnvironment.prot
     delete this.helpers[name];
   },
 
-  registerPartial: function(name, str) {
+  registerPartial: function(name, partial) {
     if (toString.call(name) === objectType) {
       Utils.extend(this.partials,  name);
     } else {
-      this.partials[name] = str;
+      this.partials[name] = partial;
     }
   },
   unregisterPartial: function(name) {
@@ -1234,9 +1234,9 @@ function registerDefaultHelpers(instance) {
     }
   });
 
-  instance.registerHelper('log', function(context, options) {
+  instance.registerHelper('log', function(message, options) {
     var level = options.data && options.data.level != null ? parseInt(options.data.level, 10) : 1;
-    instance.log(level, context);
+    instance.log(level, message);
   });
 
   instance.registerHelper('lookup', function(obj, field) {
@@ -1255,11 +1255,11 @@ var logger = {
   level: 3,
 
   // can be overridden in the host environment
-  log: function(level, obj) {
+  log: function(level, message) {
     if (logger.level <= level) {
       var method = logger.methodMap[level];
       if (typeof console !== 'undefined' && console[method]) {
-        console[method].call(console, obj);
+        console[method].call(console, message);
       }
     }
   }
