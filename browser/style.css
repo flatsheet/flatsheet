@@ -220,6 +220,10 @@ a.button i.fa {
   width: 150px;
 }
 
+#table-editor tbody .row-index {
+  width: 25px;
+}
+
 #table-editor textarea {
   resize: none;
   height: 28px;
@@ -240,6 +244,11 @@ a.button i.fa {
 
 #table-editor td:hover > .expand-editor {
   display: inline;
+}
+
+#table-editor tbody td.row-label,
+#table-editor tbody td.row-index {
+  width: 20px;
 }
 
 #main-content {

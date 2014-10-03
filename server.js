@@ -43,6 +43,14 @@ Handlebars.registerHelper('json', function(context) {
 });
 
 /*
+* Increment variable
+*/
+
+Handlebars.registerHelper('plus1', function(value, options) {
+    return parseInt(value) + 1;
+});
+
+/*
 * Main server constructor function
 */
 
