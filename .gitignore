@@ -4,5 +4,5 @@ npm-debug.log
 data/
 data/*
 !tests/data
-public/.app.js
+public/*
 config.js
