@@ -446,7 +446,7 @@ header a.button {
 */
 
 #modal {
-  position: absolute;
+  position: fixed;
   top: 3px;
   width: 100%;
   background-color: #fff;
