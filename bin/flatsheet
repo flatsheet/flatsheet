@@ -3,7 +3,7 @@
 var Sheets = require('../sheets');
 
 var fs = require('fs');
-var level = require('level');
+var level = require('level-party');
 var sublevel = require('level-sublevel');
 var minimist = require('minimist');
 var JSONStream = require('JSONStream');
@@ -62,16 +62,16 @@ function account () {
 
         //todo: notification of error
         if (err) console.error(err);
-
+        db.close();
       });
     });
 
   }
 
   if (sub === 'list') {
-    accounts.list()
-      .pipe(JSONStream.stringify())
-      .pipe(process.stdout);
+    var l = accounts.list();
+    l.on('data', console.log);
+    l.on('end', function () { db.close(); });
   }
 
   if (sub === 'delete-all') {
@@ -86,7 +86,8 @@ function account () {
     }
 
     function end () {
-      console.log('All accounts deleted.')
+      db.close();
+      console.log('All accounts deleted.');
     }
   }
 }
@@ -96,21 +97,21 @@ function sheet () {
     var file = fs.readFileSync(argv._[2], 'utf8');
 
     sheets.create(JSON.parse(file), function (err) {
-      if (err) return console.log(err)
+      if (err) return console.log(err);
+      db.close();
     });
   }
 
   if (sub === 'list') {
-    sheets.list()
-      .pipe(JSONStream.stringify())
-      .pipe(process.stdout);
+    var l = sheets.list();
+    l.on('data', console.log);
+    l.on('end', function () { db.close(); });
   }
 
   if (sub === 'fix-ids') {
     sheets.list({ keys:true, values:true }, function (err, results) {
       results.forEach(function (sheet) {
         sheet.value.id = sheet.key;
-        console.log(sheet)
         sheets.update(sheet.key, sheet.value, function (err) {
           if (err) throw err;
         });
@@ -125,12 +126,14 @@ function sheet () {
           console.log('destroyed ' + sheet.key);
         });
       });
+      db.close();
     });
   }
 
   if (sub === 'delete') {
     sheets.destroy(argv._[2], function () {
       console.log('sheet deleted.');
+      db.close();
     });
   }
 }
