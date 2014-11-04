@@ -13,6 +13,7 @@ var dom = require('dom-tree');
 var domquery = require('domquery');
 var siblings = require('siblings');
 var io = require('socket.io-client')();
+var View = require('ractive');
 
 var id = window.location.pathname.split('/')[3];
 
@@ -59,7 +60,7 @@ io.on('cell-blur', function (id) {
 });
 
 io.on('disconnect', function(){
-  // console.log('disconnection.');
+  console.log('disconnection.');
 });
 
 /* get the table template */

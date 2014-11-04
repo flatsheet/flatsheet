@@ -201,10 +201,10 @@ Server.prototype.createServer = function () {
       if (!rooms[room]) rooms[room] = { users: {} };
 
       socket.on('user', function (user) {
-        if (!rooms[room].users[user.username]) {
-          rooms[room].users[user.username] = user;
+        if (!rooms[room].users[socket.id]) {
+          rooms[room].users[socket.id] = user;
         }
-        io.in(room).emit('update-users', rooms[room].users);
+        io.to(room).emit('update-users', rooms[room].users);
       });
 
       self.sheets.fetch(room, function (err, sheet) {
@@ -225,9 +225,10 @@ Server.prototype.createServer = function () {
         });
       });
 
-      io.on('disconnect', function () {
+      socket.on('disconnect', function () {
         io.to(room).emit('cell-blur');
-        delete rooms[room].users[user.username];
+        delete rooms[room].users[socket.id];
+        io.to(room).emit('update-users', rooms[room].users);
       });
     });
   });
