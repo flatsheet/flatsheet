@@ -48,6 +48,7 @@
     "normalize-css": "^2.3.1",
     "prompt": "^0.2.13",
     "ractive": "^0.6.1",
+    "ractive-decorators-sortable": "git://github.com/ractivejs/Ractive-decorators-sortable",
     "random-color": "0.0.0",
     "response": "git://github.com/mikeal/response",
     "routes-router": "^4.1.0",
@@ -56,7 +57,7 @@
     "socket.io-client": "^1.0.6",
     "socket.io-emitter": "^0.2.0",
     "st": "^0.5.1",
-    "table-editor": "^0.5.0",
+    "table-editor": "^0.6.0",
     "through": "^2.3.4",
     "uuid": "^1.4.1",
     "xhr": "^1.15.0"

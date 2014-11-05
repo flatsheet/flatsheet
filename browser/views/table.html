@@ -6,7 +6,7 @@
         <span class="column-name"></span>
       </th>
       {{# columns:key }}
-        <th id={{ id }}>
+        <th id={{ id }} decorator="sortable">
           <span class="column-name"><input value="{{ name }}"></span>
           <button id="{{ id }}" class="destroy"><i class="fa fa-trash-o destroy-icon"></i></button>
         </th>
@@ -15,7 +15,7 @@
   </thead>
   <tbody id="table-body">
     {{# rows:i }}
-    <tr id="{{ i }}">
+    <tr id="{{ i }}" decorator="sortable">
       <button class="delete-row destroy"><i class="fa fa-trash-o destroy-icon"></i></button>
       <td class='row-label'>{{i+1}}</td>
       {{# this:value }}
