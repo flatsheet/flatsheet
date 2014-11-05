@@ -157,7 +157,11 @@ on(document.body, '.delete-row', 'click', function (e) {
 
   var row = closest(btn, 'tr');
   var msg = 'Sure you want to delete this row and its contents?';
-  if (window.confirm(msg)) editor.destroyRow(row.id);
+  
+  if (window.confirm(msg)) {
+    editor.destroyRow(row.id);
+    editor.forceUpdate();
+  }
 });
 
 /* listener for the table body */
@@ -214,24 +218,18 @@ function cellFocus (e) {
   };
 }
 
-function startDownload (name, extension, content, attachment_type) {
+function startDownload (name, extension, content, attachment_type) {  
+  if (!name || !extension || !content) return false;
+  if (!attachment_type) attachment_type = extension;
 
-  if(!name || !extension){ return false; }
-
-  if(!content){ console.log('nobody wants to download an empty file'); return false; }
-
-  if(!attachment_type){ attachment_type = extension; }
-
-  var anchor_tag, body;
-
-  body = document.body;
-
-  anchor_tag = document.createElement('a');
-  anchor_tag.href = 'data:attachment/' + attachment_type + ',' + encodeURIComponent( content );
+  var body = document.body;
+  var anchor_tag = document.createElement('a');
+  
+  anchor_tag.href = 'data:attachment/' + attachment_type + ',' + encodeURIComponent(content);
   anchor_tag.target = '_blank';
   anchor_tag.download = name + '.' + extension;
 
-  body.appendChild( anchor_tag );
+  body.appendChild(anchor_tag);
   anchor_tag.click();
 
   body.removeChild(anchor_tag);

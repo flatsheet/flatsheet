@@ -57,7 +57,7 @@
     "socket.io-client": "^1.0.6",
     "socket.io-emitter": "^0.2.0",
     "st": "^0.5.1",
-    "table-editor": "^0.6.0",
+    "table-editor": "^0.7.0",
     "through": "^2.3.4",
     "uuid": "^1.4.1",
     "xhr": "^1.15.0"
