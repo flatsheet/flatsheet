@@ -250,6 +250,7 @@ a.button i.fa {
 #table-editor tbody td.row-index {
   width: 20px;
   cursor: all-scroll;
+  cursor: --webkit-grab;
   cursor: grab;
 }
 
