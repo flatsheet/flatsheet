@@ -165,7 +165,7 @@ on(document.body, '.delete-row', 'click', function (e) {
 });
 
 /* listener for the table body */
-on(document.body, 'tbody textarea', 'click', cellFocus);
+on(document.body, '#table-editor textarea', 'click', cellFocus);
 
 /* listener for tabbing through cells */
 on(document.body, 'tbody', 'keyup', function (e) {
@@ -212,9 +212,13 @@ on(document.body, '#close-modal', 'click', function (e) {
 function cellFocus (e) {
   var id = closest(e.target, 'td').id;
   io.emit('cell-focus', id, user.color);
+  
+  var row = closest(e.target, 'tr');
+  row.setAttribute('draggable', false);
 
   e.target.onblur = function () {
     io.emit('cell-blur', id);
+    row.setAttribute('draggable', true);
   };
 }
 
