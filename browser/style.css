@@ -249,6 +249,7 @@ a.button i.fa {
 #table-editor tbody td.row-label,
 #table-editor tbody td.row-index {
   width: 20px;
+  cursor: all-scroll;
 }
 
 #main-content {
