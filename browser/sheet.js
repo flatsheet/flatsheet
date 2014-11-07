@@ -45,22 +45,32 @@ io.on('connect', function () {
 
 var remoteChange;
 
-io.on('change', function (change, id) {
+io.on('change', function (change, rows, sort) {
+  console.log('sort? ', sort, !!rows);
   remoteChange = true;
-  editor.set(change);
+  if (sort) editor.forceUpdate(rows);
+  else editor.set(change);
   remoteChange = false;
 });
 
-io.on('cell-focus', function (id, color) {
-  document.querySelector('#' + id + ' textarea').style.borderColor = color;
+io.on('cell-focus', function (id, color) {  
+  var cell = document.querySelector('#' + id + ' textarea');
+  if (cell) {
+    cell.style.borderColor = color;
+    cell.style.backgroundColor = '#fefefa';
+  }
 });
 
-io.on('cell-blur', function (id) {
-  document.querySelector('#' + id + ' textarea').style.borderColor = '#ccc';
+io.on('cell-blur', function (id) {  
+  var cell = document.querySelector('#' + id + ' textarea');
+  if (cell) {
+    cell.style.borderColor = '#ccc';
+    cell.style.backgroundColor = '#fff';
+  }
 });
 
-io.on('disconnect', function(){
-  console.log('disconnection.');
+io.on('disconnect', function (a, b, c) {
+  console.log('disconnection.', a, b, c);
 });
 
 /* get the table template */
@@ -86,10 +96,20 @@ request({
 
 
 /* listen for changes to the data and save the object to the db */
-editor.on('change', function (change, data) {
+editor.on('input', function (change) {
   if (remoteChange) return;
-  if (editor.data.rows) var data = editor.getRows();
-  io.emit('change', change, data);
+  if (editor.data.rows) var rows = editor.getRows();
+  io.emit('change', change, rows);
+});
+
+editor.on('dragenter', function () {
+
+});
+
+editor.on('drop', function () {
+  console.log('dropped')
+  var rows = editor.getRows();
+  io.emit('change', {}, rows, true);
 });
 
 /* listener for adding a row */
@@ -161,6 +181,7 @@ on(document.body, '.delete-row', 'click', function (e) {
   if (window.confirm(msg)) {
     editor.destroyRow(row.id);
     editor.forceUpdate();
+    editor.update();
   }
 });
 
