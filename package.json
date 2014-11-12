@@ -1,7 +1,7 @@
 {
   "name": "flatsheet",
   "description": "a multi-user, realtime editor for tabular data",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "repository": {
     "url": "git://github.com/flatsheet/flatsheet.git"
   },
