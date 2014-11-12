@@ -5,6 +5,7 @@ var formBody = require('body/form');
 exports.install = function (server, prefix) {
   var prefix = prefix || '/session';
 
+
   /*
   * Create a session
   */
@@ -13,9 +14,9 @@ exports.install = function (server, prefix) {
     if (req.method === 'POST') {
       formBody(req, res, function (err, body) {
         server.accounts.verify('basic', body, function (err, ok) {
-          if (err) return console.error(err)
-          if (ok) {
+          if (err) return console.error(err);
 
+          if (ok) {
             server.accounts.get(body.username, function (err, account) {
               req.session.set(req.session.id, account, function (sessionerr) {
                 if (err) console.error(sessionerr);
@@ -26,7 +27,6 @@ exports.install = function (server, prefix) {
           }
         });
       });
-
     }
   });
 
