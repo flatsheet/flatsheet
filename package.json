@@ -1,5 +1,5 @@
 {
-  "name": "flatsheet",
+  "name": "flatsheet-server",
   "description": "a multi-user, realtime editor for tabular data",
   "version": "0.1.0",
   "repository": {
@@ -36,6 +36,7 @@
     "domready": "^1.0.7",
     "element-class": "^0.1.1",
     "extend": "^1.3.0",
+    "flatsheet": "^1.1.1",
     "handlebars": "~2.0",
     "handlebars-layouts": "^0.3.3",
     "jsonpretty": "0.0.1",

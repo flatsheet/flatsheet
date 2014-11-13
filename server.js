@@ -208,11 +208,20 @@ Server.prototype.createServer = function () {
       });
 
       self.sheets.fetch(room, function (err, sheet) {
-        socket.on('change', function (change, rows, sort) {
-          socket.broadcast.to(room).emit('change', change, rows, sort);
+        socket.on('change', function (change, rows, sort) {          
           sheet.rows = rows;
           self.sheets.update(room, sheet, function (err) {
             if (err) console.error(err);
+            socket.broadcast.to(room).emit('change', change, rows, sort);
+          });
+        });
+        
+        socket.on('sheet-details', function (change) {
+          sheet = extend(sheet, change);
+          
+          self.sheets.update(room, sheet, function (err) {
+            if (err) console.error(err);
+            socket.broadcast.to(room).emit('sheet-details', change);
           });
         });
 

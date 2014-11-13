@@ -192,6 +192,22 @@ a.button i.fa {
 * SHEET EDITOR
 */
 
+input[type="text"].sheet-name {
+  margin: 0px;
+  font-weight: 500;
+  font-size: 2em;
+  border: 0px;
+  padding: 0px;
+  height: 50px;
+  line-height: 50px;
+  width: 100%;
+}
+
+textarea.sheet-description {
+  border: 0px;
+  width: 100%;
+}
+
 .table-wrapper {
   overflow: auto;
 }

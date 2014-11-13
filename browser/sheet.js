@@ -15,11 +15,16 @@ var siblings = require('siblings');
 var io = require('socket.io-client')();
 var View = require('ractive');
 
-var id = window.location.pathname.split('/')[3];
+var flatsheet = require('flatsheet')({ 
+  host: 'http://' + window.location.host
+});
 
+var id = window.location.pathname.split('/')[3];
 var usersEl = document.getElementById('user-list');
 
 var templates = {
+  table: fs.readFileSync(__dirname + '/views/table.html', 'utf8'),
+  sheetDetails: fs.readFileSync(__dirname + '/views/sheet-details.html', 'utf8'),
   modal: Handlebars.compile(
     fs.readFileSync(__dirname + '/views/modal.html', 'utf8')
   ),
@@ -31,11 +36,9 @@ var templates = {
   )
 };
 
-io.on('connect', function () {
+io.on('connect', function () {  
   io.emit('room', id);
-
   io.emit('user', user);
-
   var users = {};
 
   io.on('update-users', function (userlist) {
@@ -46,7 +49,6 @@ io.on('connect', function () {
 var remoteChange;
 
 io.on('change', function (change, rows, sort) {
-  console.log('sort? ', sort, !!rows);
   remoteChange = true;
   if (sort) editor.forceUpdate(rows);
   else editor.set(change);
@@ -69,47 +71,64 @@ io.on('cell-blur', function (id) {
   }
 });
 
-io.on('disconnect', function (a, b, c) {
-  console.log('disconnection.', a, b, c);
+io.on('disconnect', function () {
+  console.log('disconnection.');
 });
-
-/* get the table template */
-var template = fs.readFileSync(__dirname + '/views/table.html', 'utf8');
 
 /* create the table editor */
 window.editor = new TableEditor({
   el: 'main-content',
-  template: template
+  template: templates.table
 });
+
+var sheetDetails = new View({
+  el: 'sheet-details',
+  template: templates.sheetDetails,
+  data: { name: '', description: '' }
+});
+
+sheetDetails.on('change', function (change) {
+  if (remoteChange) return;
+  io.emit('sheet-details', change);
+});
+
+io.on('sheet-details', function (change) {
+  remoteChange = true;
+  sheetDetails.set(change);
+  remoteChange = false;
+});
+
+
 
 /* get the help message */
 var hello = document.getElementById('hello-message');
 
 /* request the sheet from the api */
-request({
-  uri: '/api/v2/sheets/' + id,
-  headers: { "Content-Type": "application/json" }
-}, function (err, resp, body) {
+flatsheet.sheet(id, function (err, sheet) {
   elClass(hello).add('hidden');
-  editor.import(JSON.parse(body).rows);
+  editor.import(sheet.rows);
+  sheetDetails.set(sheet);
 });
 
 
 /* listen for changes to the data and save the object to the db */
-editor.on('input', function (change) {
+editor.on('change', function (change) {
   if (remoteChange) return;
   if (editor.data.rows) var rows = editor.getRows();
-  io.emit('change', change, rows);
+  if (!sorting) io.emit('change', change, rows);
 });
 
-editor.on('dragenter', function () {
+var sorting;
 
+editor.on('dragstart', function () {
+  sorting = true;
 });
+
 
 editor.on('drop', function () {
-  console.log('dropped')
   var rows = editor.getRows();
-  io.emit('change', {}, rows, true);
+  io.emit('change', {}, rows, sorting);
+  sorting = false;
 });
 
 /* listener for adding a row */
@@ -123,10 +142,6 @@ on(document.body, '#add-column', 'click', function (e) {
   var name = window.prompt('New column name');
   if (name) editor.addColumn({ name: name, type: 'string' });
 });
-
-/* get elements for codebox and its textarea */
-var codeBox = document.getElementById('code-box');
-var textarea = codeBox.querySelector('textarea');
 
 /* listener for showing the data as json */
 on(document.body, '#show-json', 'click', function (e) {  
@@ -242,6 +257,10 @@ function cellFocus (e) {
     row.setAttribute('draggable', true);
   };
 }
+
+
+
+
 
 function startDownload (name, extension, content, attachment_type) {  
   if (!name || !extension || !content) return false;
