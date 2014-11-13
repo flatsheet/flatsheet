@@ -75,12 +75,11 @@ exports.install = function (server, prefix) {
   
   server.route(prefix + '/destroy/:id', function (req, res, opts) {
     if (auth(res, { prefix: prefix, id: opts.params.id })) {
-    
-      if (req.method === 'DELETE') {
-        server.sheets.destroy(opts.params.id, function (a, b, c) {
-          console.log(a, b, c);
-        });
-      }
+      server.sheets.destroy(opts.params.id, function (err) {
+        if (err) console.error(err);
+        res.writeHead(302, { 'Location': '/' });
+        return res.end();
+      });
       
     }
   });
