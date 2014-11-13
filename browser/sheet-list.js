@@ -24,3 +24,10 @@ on(document.body, '#new-blank-sheet', 'click', function (e) {
 on(document.body, '#close-modal', 'click', function (e) {
   dom.remove('#modal');
 });
+
+on(document.body, '.destroy-sheet', 'click', function (e) {
+  e.preventDefault();
+  var form = e.target.parentNode;
+  var msg = "Wait. Do you really want to completely destroy all data in this sheet?"
+  if (window.confirm(msg)) form.submit();
+});
