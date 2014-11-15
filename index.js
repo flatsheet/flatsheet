@@ -285,9 +285,20 @@ Server.prototype.createViews = function () {
 
   fs.readdir(this.viewsDir, function (err, files) {
     files.forEach(function (file) {
-      self.views[file.split('.')[0]] = getView(self.viewsDir + file);
+      self.addView(file);
     });
   });
+}
+
+
+/*
+* Add a view to the list of views
+*/
+
+Server.prototype.addView = function (file, viewsDir) {
+  var dir = viewsDir || this.viewsDir;
+  this.views[file.split('.')[0]] = getView(dir + file);
+  console.log(this.views)
 }
 
 

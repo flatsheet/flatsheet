@@ -35,7 +35,7 @@ Open issues represent current todo list: [github.com/flatsheet/flatsheet/issues]
 - Change directory `cd flatsheet`
 - Create a package.json file with `npm init`
 - Install flatsheet-server with npm: `npm install flatsheet-server --save`
-- Install the response module: `npm install respone --save`
+- Install the response module: `npm install response --save`
 
 ### File/folder setup
 - Create a server.js file with this code:
@@ -96,10 +96,9 @@ SENDGRID_PASS=yourpassword
 - Go to `http://127.0.0.1:3333` and log in with the admin account credentials.
 
 ### Create a sheet
-
-#### Through the UI
 - Log in
 - Click the **New blank sheet** button
+- Fill out the name and description
 
 ### Invite users
 - Navigate to `http://127.0.0.1:3333/account/invite`

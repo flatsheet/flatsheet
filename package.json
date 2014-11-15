@@ -1,7 +1,7 @@
 {
   "name": "flatsheet-server",
   "description": "a multi-user, realtime editor for tabular data",
-  "version": "0.2.2",
+  "version": "0.2.5",
   "repository": {
     "url": "git://github.com/flatsheet/flatsheet.git"
   },
@@ -65,6 +65,7 @@
     "socket.io-emitter": "^0.2.0",
     "st": "^0.5.1",
     "table-editor": "^0.7.5",
+    "through2": "^0.6.3",
     "uuid": "^1.4.1",
     "xhr": "^1.15.0"
   },
