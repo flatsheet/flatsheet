@@ -5,6 +5,3 @@ tmp
 data/
 data/*
 !tests/data
-public/*
-!public/.gitkeep
-config.js
