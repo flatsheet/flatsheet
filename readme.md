@@ -38,6 +38,7 @@ Open issues represent current todo list: [github.com/flatsheet/flatsheet/issues]
 - Install the response module: `npm install response --save`
 
 ### File/folder setup
+- Create a folder named `data`: `mkdir data`
 - Create a server.js file with this code:
 
 ```
@@ -48,7 +49,8 @@ var server = require('flatsheet-server')({
     email: 'hi@example.com',
     url: 'http://127.0.0.1:3333',
     contact: 'your full name'
-  }
+  },
+  db: __dirname + '/data/db'
 });
 
 server.route('/', function (req, res) {
