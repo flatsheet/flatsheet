@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var Sheets = require('../sheets');
+var Sheets = require('../models/sheets');
 
 var fs = require('fs');
 var level = require('level-party');

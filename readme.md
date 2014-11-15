@@ -31,38 +31,75 @@ Open issues represent current todo list: [github.com/flatsheet/flatsheet/issues]
 
 ### Installation
 
-- Clone this repository `git@github.com:flatsheet/flatsheet.git`
+- Create a directory name `flatsheet` for your project (or whatever you like)
 - Change directory `cd flatsheet`
-- Install dependencies with `npm install`
+- Create a package.json file with `npm init`
+- Install flatsheet-server with npm: `npm install flatsheet-server --save`
+- Install the response module: `npm install respone --save`
 
 ### File/folder setup
-- Navigate to the root directory of the project and run `mkdir data` to create the directory the db will live in.
-- Copy the example config file:
-  - `cp config.example.js config.js`
-  - Edit the values to suit your purpose
-- Generate js & css files for public folder: `npm run bundle`
+- Create a server.js file with this code:
+
+```
+var response = require('response');
+var server = require('flatsheet-server')({
+  site: {
+    title: 'flatsheet',
+    email: 'hi@example.com',
+    url: 'http://127.0.0.1:3333',
+    contact: 'your full name'
+  }
+});
+
+server.route('/', function (req, res) {
+  if (!res.account) {
+    return response()
+      .html(server.render('index', {
+        account: { username: 'friend' }
+      }))
+      .pipe(res);
+  }
+  else {
+    res.writeHead(302, { 'Location': '/sheet/list' });
+    res.end();
+  }
+});
+
+server.listen((process.env.PORT || 3333), function () {
+  console.log('server started at 127.0.0.1:' + (process.env.PORT || 3333));
+});
+```
+
+- Create a .env file for secret config like sendgrid username/password:
+
+```
+SENDGRID_USER=yourusername
+SENDGRID_PASS=yourpassword
+```
+
+- Add a `flatsheet` script and a `start` script to the `scripts` field in your package.json file:
+
+```
+"scripts": {
+  "flatsheet": "flatsheet",
+  "start": "node server.js"
+},
+```
 
 ### Create an admin user
-- Create an admin account by running `./bin/flatsheet account create-admin`. You'll be prompted for email, username, & password.
-- You can run `./bin/flatsheet account list` to see that your admin account was created.
+- Create an admin account by running `npm run flatsheet account create-admin`. You'll be prompted for email, username, & password.
+- You can run `npm run flatsheet account list` to see that your admin account was created.
+
+### Start the server
+- Now run `npm start` to start the server.
+- In development you can watch the css & js using `npm run watch`.
+- Go to `http://127.0.0.1:3333` and log in with the admin account credentials.
 
 ### Create a sheet
 
 #### Through the UI
 - Log in
 - Click the **New blank sheet** button
-
-#### From the command line
-- Import a json file: `./bin/flatsheet sheet add tests/data/coworking.json`
-- Check out that coworking.json example file. Make sure your file has the same format
-- Then you can run `./bin/flatsheet sheet list` to see that your sheet has been added.
-
-### Start the server
-- Now run `npm start` to start the server.
-- In development you can watch the css & js using `npm run watch`.
-- Go to `http://127.0.0.1:3333` and log in with the admin account credentials.
-- You should now see the example data set, and be able to click it to go to the editor.
-- **NOTE: the editor in this version is not currently fully functional!**
 
 ### Invite users
 - Navigate to `http://127.0.0.1:3333/account/invite`
