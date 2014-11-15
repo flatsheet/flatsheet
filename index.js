@@ -298,7 +298,6 @@ Server.prototype.createViews = function () {
 Server.prototype.addView = function (file, viewsDir) {
   var dir = viewsDir || this.viewsDir;
   this.views[file.split('.')[0]] = getView(dir + file);
-  console.log(this.views)
 }
 
 
