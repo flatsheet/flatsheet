@@ -5,7 +5,9 @@
   "repository": {
     "url": "git://github.com/flatsheet/flatsheet.git"
   },
-  "bin": { "flatsheet": "./bin/flatsheet" },
+  "bin": {
+    "flatsheet": "./bin/flatsheet"
+  },
   "main": "server.js",
   "scripts": {
     "test": "tape test.js",
@@ -44,6 +46,7 @@
     "handlebars-layouts": "^0.3.3",
     "jsonpretty": "0.0.1",
     "level": "^0.18.0",
+    "level-party": "^1.0.1",
     "level-session": "^0.3.1",
     "level-sublevel": "^6.3.4",
     "nodemailer": "^1.2.2",
