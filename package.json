@@ -1,7 +1,7 @@
 {
   "name": "flatsheet-server",
   "description": "a multi-user, realtime editor for tabular data",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "repository": {
     "url": "git://github.com/flatsheet/flatsheet.git"
   },
@@ -33,6 +33,7 @@
     "component-closest": "^0.1.4",
     "component-delegate": "^0.2.3",
     "cookies": "^0.5.0",
+    "corsify": "^2.0.0",
     "dom-event": "0.0.0",
     "dom-tree": "0.0.1",
     "domify": "^1.3.1",

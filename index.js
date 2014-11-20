@@ -15,6 +15,7 @@ var nodemailer = require('nodemailer');
 var sgTransport = require('nodemailer-sendgrid-transport');
 var extend = require('extend');
 var dotenv = require('dotenv');
+var corsify = require('corsify');
 
 var getView = require('./util/get-view')(Handlebars);
 var Sheets = require('./models/sheets');
@@ -143,6 +144,14 @@ function Server (opts) {
   this.viewData = {
     site: this.site
   };
+  
+  opts.cors || (opts.cors = {});
+  
+  this.cors = corsify({
+    'Access-Control-Allow-Origin': opts.cors['Access-Control-Allow-Origin'] || '*',
+    'Access-Control-Allow-Methods': opts.cors['Access-Control-Allow-Methods'] || 'GET, POST, PUT, DELETE',
+    'Access-Control-Allow-Headers': opts.cors['Access-Control-Allow-Headers'] || 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Authorization'
+  });
 
 
   /*
@@ -190,13 +199,13 @@ Server.prototype.createServer = function () {
   *  Set up server with sessions, path matching for router, and static files
   */
 
-  this.server = http.createServer(function (req, res) {
+  this.server = http.createServer(self.cors(function (req, res) {
     if (staticFiles(req, res)) return;
-
+    
     self.session(req, res, function () {
       self.router(req, res);
     });
-  });
+  }));
 
   var io = socketio(this.server);
   var rooms = {};
