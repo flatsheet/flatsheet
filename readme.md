@@ -41,7 +41,7 @@ Open issues represent current todo list: [github.com/flatsheet/flatsheet/issues]
 - Create a folder named `data`: `mkdir data`
 - Create a server.js file with this code:
 
-```
+```javascript
 var response = require('response');
 var server = require('flatsheet-server')({
   site: {
@@ -81,7 +81,7 @@ SENDGRID_PASS=yourpassword
 
 - Add a `flatsheet` script and a `start` script to the `scripts` field in your package.json file:
 
-```
+```json
 "scripts": {
   "flatsheet": "flatsheet",
   "start": "node server.js"
