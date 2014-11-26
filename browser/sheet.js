@@ -72,7 +72,7 @@ io.on('cell-blur', function (id) {
 });
 
 io.on('disconnect', function () {
-  console.log('disconnection.');
+  //console.log('disconnection.');
 });
 
 /* create the table editor */

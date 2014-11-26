@@ -148,7 +148,7 @@ input[type="submit"]:focus {
 }
 
 a.button {
-  padding: 6px 10px;
+  display: inline-block;
 }
 
 a.button:hover {
