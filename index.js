@@ -1,7 +1,9 @@
 var fs = require('fs');
 var url = require('url');
+var path = require('path');
 var http = require('http');
 var st = require('st');
+var mkdirp = require('mkdirp');
 var Router = require('routes-router');
 var response = require('response');
 var Handlebars = require('handlebars');
@@ -62,61 +64,44 @@ Handlebars.registerHelper('plus1', function(value, options) {
 function Server (opts) {
   if (!(this instanceof Server)) return new Server(opts);
   opts || (opts = {});
+  var self = this;
   
   var envFile = fs.readFileSync((opts.dir || process.cwd()) + '/.env');
   var secrets = dotenv.parse(envFile);
 
   this.site = opts.site;
+  
 
   /*
   * Set path for static files
   */
 
   this.staticFiles = opts.staticFiles || __dirname + '/public';
+  
+  mkdirp(this.staticFiles, function (err) {
+    if (err) console.error(err)
+  });
+
+  /*
+  * Set path for db
+  */
+
+  this.dataDir = opts.dataDir || path.join(process.cwd(), '/data');
+  
+  
+  mkdirp(this.dataDir, function (err) {
+    if (err) console.error(err)
+    else self.createDB();
+  });
 
   /*
   * Create leveldb using level-sublevel
   */
 
-  this.db = level(opts.db || __dirname + '/data/db');
+  this.db = level(path.join(this.dataDir, 'db'));
 
 
-  /*
-  * Create sublevel for sheets
-  */
-
-  this.sheets = Sheets(sublevel(this.db).sublevel('sheets', {
-    valueEncoding: 'json'
-  }));
-
-
-  /*
-  * Create sublevel for sessions using level-session
-  */
-
-  this.session = levelSession({
-    db: sublevel(this.db).sublevel('sessions')
-  });
-
-
-  /*
-  * Set up accountdown with accountdown-basic for account management
-  */
-
-  this.accounts = accountdown(this.db, {
-    login: { basic: require('accountdown-basic') },
-    keyEncoding: 'buffer',
-    valueEncoding: 'json'
-  });
-
-
-  /*
-  * Invites sublevel
-  */
-
-  this.invites = sublevel(this.db).sublevel('invites', {
-    valueEncoding: 'json'
-  });
+  
 
 
   /*
@@ -171,6 +156,50 @@ function Server (opts) {
     accounts.install(this);
     sessions.install(this);
   }
+}
+
+/*
+*  Method for creating db levels
+*/
+
+Server.prototype.createDB = function () {
+  
+  /*
+  * Create sublevel for sheets
+  */
+  
+  this.sheets = Sheets(sublevel(this.db).sublevel('sheets', {
+    valueEncoding: 'json'
+  }));
+  
+  
+  /*
+  * Create sublevel for sessions using level-session
+  */
+  
+  this.session = levelSession({
+    db: sublevel(this.db).sublevel('sessions')
+  });
+  
+  
+  /*
+  * Set up accountdown with accountdown-basic for account management
+  */
+  
+  this.accounts = accountdown(this.db, {
+    login: { basic: require('accountdown-basic') },
+    keyEncoding: 'buffer',
+    valueEncoding: 'json'
+  });
+  
+  
+  /*
+  * Invites sublevel
+  */
+  
+  this.invites = sublevel(this.db).sublevel('invites', {
+    valueEncoding: 'json'
+  });
 }
 
 

@@ -43,7 +43,7 @@ Open issues represent current todo list: [github.com/flatsheet/flatsheet/issues]
 
 ```javascript
 var response = require('response');
-var server = require('flatsheet-server')({
+var server = require('flatsheet')({
   site: {
     title: 'flatsheet',
     email: 'hi@example.com',

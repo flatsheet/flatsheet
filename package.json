@@ -1,5 +1,5 @@
 {
-  "name": "flatsheet-server",
+  "name": "flatsheet",
   "description": "a multi-user, realtime editor for tabular data",
   "version": "0.2.8",
   "repository": {
@@ -17,7 +17,7 @@
     "bundle-js": "browserify -g brfs browser/sheet.js -o public/sheet.js && browserify -g brfs browser/sheet-list.js -o public/sheet-list.js",
     "bundle": "npm run bundle-js & npm run bundle-css",
     "watch": "npm run watch-js & npm run watch-css",
-    "start": "nodemon --watch public --watch server.js --watch index.js index.js"
+    "start": "nodemon --watch public --watch server.js --watch index.js server.js"
   },
   "browserify": {
     "transform": [
@@ -42,7 +42,7 @@
     "dotenv": "^0.4.0",
     "element-class": "^0.1.1",
     "extend": "^1.3.0",
-    "flatsheet": "^1.1.1",
+    "flatsheet-api-client": "^1.1.2",
     "handlebars": "~2.0",
     "handlebars-layouts": "^0.3.3",
     "jsonpretty": "0.0.1",
@@ -51,6 +51,7 @@
     "level-session": "^0.3.1",
     "level-sublevel": "^6.3.4",
     "minimist": "^1.1.0",
+    "mkdirp": "^0.5.0",
     "nodemailer": "^1.2.2",
     "nodemailer-sendgrid-transport": "0.0.2",
     "nodemon": "^1.2.1",
