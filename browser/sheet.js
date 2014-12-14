@@ -15,7 +15,7 @@ var siblings = require('siblings');
 var io = require('socket.io-client')();
 var View = require('ractive');
 
-var flatsheet = require('flatsheet')({ 
+var flatsheet = require('flatsheet-api-client')({ 
   host: 'http://' + window.location.host
 });
 
