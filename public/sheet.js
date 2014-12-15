@@ -16,7 +16,7 @@ var siblings = require('siblings');
 var io = require('socket.io-client')();
 var View = require('ractive');
 
-var flatsheet = require('flatsheet')({ 
+var flatsheet = require('flatsheet-api-client')({ 
   host: 'http://' + window.location.host
 });
 
@@ -280,7 +280,7 @@ function startDownload (name, extension, content, attachment_type) {
   body.removeChild(anchor_tag);
 }
 
-},{"comma-separated-values":9,"component-closest":10,"component-delegate":13,"dom-tree":16,"domify":25,"domquery":26,"element-class":57,"flatsheet":58,"handlebars":74,"jsonpretty":75,"ractive":76,"siblings":77,"socket.io-client":79,"table-editor":123,"url":8,"xhr":126}],2:[function(require,module,exports){
+},{"comma-separated-values":9,"component-closest":10,"component-delegate":13,"dom-tree":16,"domify":25,"domquery":26,"element-class":57,"flatsheet-api-client":58,"handlebars":74,"jsonpretty":75,"ractive":76,"siblings":77,"socket.io-client":79,"table-editor":123,"url":8,"xhr":126}],2:[function(require,module,exports){
 /*
 	ractive.js v0.6.1
 	2014-10-25 - commit 3a576eb3 
