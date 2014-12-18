@@ -91,6 +91,9 @@ exports.install = function (server, prefix) {
       });
       
       busboy.on('finish', function() {
+        if (!sheet.name) sheet.name = 'New sheet';
+        if (!sheet.description) sheet.description = 'A cool new sheet.';
+        
         server.sheets.create(sheet, function (err, sheet, token) {
           if (err) console.error(err);
           res.writeHead(302, { 'Location': '/sheet/edit/' + token });
