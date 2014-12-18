@@ -2,7 +2,8 @@ var response = require('response');
 var JSONStream = require('JSONStream');
 var jsonBody = require('body/json');
 var formBody = require('body/form');
-var socketio = require('socket.io');
+var Busboy = require('busboy');
+var csv = require('csv-parser');
 
 var auth = require('../util/check-auth');
 
@@ -59,10 +60,10 @@ exports.install = function (server, prefix) {
 
   server.route(prefix + '/new', function (req, res, opts) {
     if (auth(res, { prefix: prefix, id: opts.params.id })) {
-      
+
       formBody(req, res, function (err, body) {
         var data = body;
-        data.rows = [];
+        data.rows = 
         server.sheets.create(data, function (err, sheet, token) {
           if (err) console.error(err);
           res.writeHead(302, { 'Location': '/sheet/edit/' + token });
@@ -70,6 +71,34 @@ exports.install = function (server, prefix) {
         })
       });
       
+    };
+  });
+
+  server.route(prefix + '/new/csv', function (req, res, opts) {
+    if (auth(res, { prefix: prefix, id: opts.params.id })) {
+      var sheet = { rows: [] };
+      
+      var busboy = new Busboy({ headers: req.headers });
+      
+      busboy.on('file', function (fieldname, file, filename, enc, mime) {
+        file.pipe(csv()).on('data', function (data) {
+          sheet.rows.push(data);
+        });
+      });
+      
+      busboy.on('field', function(fieldname, val) {
+        sheet[fieldname] = val
+      });
+      
+      busboy.on('finish', function() {
+        server.sheets.create(sheet, function (err, sheet, token) {
+          if (err) console.error(err);
+          res.writeHead(302, { 'Location': '/sheet/edit/' + token });
+          return res.end();
+        })
+      });
+
+      req.pipe(busboy);
     };
   });
   
@@ -94,3 +123,5 @@ exports.install = function (server, prefix) {
     return res.end();
   });
 }
+
+

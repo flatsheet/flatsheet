@@ -11,6 +11,9 @@ var templates = {
   ),
   newSheet: Handlebars.compile(
     "<h1>Create new blank sheet</h1>\n<form action=\"/sheet/new\" method=\"post\">\n  <input type=\"text\" name=\"name\" placeholder=\"name of sheet\"><br>\n  <input type=\"text\" name=\"description\" placeholder=\"description\"><br>\n  <input type=\"submit\" value=\"Create sheet\">\n</form>\n"
+  ),
+  newSheetFromCSV: Handlebars.compile(
+    "<h1>Create sheet from CSV file</h1>\n<form action=\"/sheet/new/csv\" method=\"post\" enctype=\"multipart/form-data\">\n  <input type=\"text\" name=\"name\" placeholder=\"name of sheet\"><br>\n  <input type=\"text\" name=\"description\" placeholder=\"description\"><br>\n  <input type=\"file\" name=\"csv-file\"><br>\n  <br>\n  <input type=\"submit\" value=\"Create sheet\">\n</form>\n"
   )
 };
 
@@ -19,6 +22,14 @@ on(document.body, '#new-blank-sheet', 'click', function (e) {
     content: templates.newSheet()
   });
 
+  dom.add(document.body, domify(modal));
+});
+
+on(document.body, '#import-csv', 'click', function (e) {
+  var modal = templates.modal({
+    content: templates.newSheetFromCSV()
+  });
+  
   dom.add(document.body, domify(modal));
 });
 

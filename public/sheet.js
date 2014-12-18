@@ -280,7 +280,7 @@ function startDownload (name, extension, content, attachment_type) {
   body.removeChild(anchor_tag);
 }
 
-},{"comma-separated-values":9,"component-closest":10,"component-delegate":13,"dom-tree":16,"domify":25,"domquery":26,"element-class":57,"flatsheet-api-client":58,"handlebars":74,"jsonpretty":75,"ractive":76,"siblings":77,"socket.io-client":79,"table-editor":123,"url":8,"xhr":126}],2:[function(require,module,exports){
+},{"comma-separated-values":9,"component-closest":10,"component-delegate":13,"dom-tree":16,"domify":25,"domquery":26,"element-class":57,"flatsheet-api-client":58,"handlebars":74,"jsonpretty":75,"ractive":76,"siblings":77,"socket.io-client":79,"table-editor":126,"url":8,"xhr":129}],2:[function(require,module,exports){
 /*
 	ractive.js v0.6.1
 	2014-10-25 - commit 3a576eb3 
@@ -16097,239 +16097,427 @@ function isNullOrUndefined(arg) {
 (function() {
   'use strict';
 
-  var PRESENT = function(possible) {
-        return typeof possible !== "undefined";
-      },
-      FLOAT = /^(\-|\+)?([0-9]+(\.[0-9]+)?|Infinity)$/,
-      BOOL = function(possible) {
-        possible = possible.toLowerCase();
-        return (possible === "true" || possible === "false");
-      };
+  var ESCAPE_DELIMITERS = ['|', '^'],
+      CELL_DELIMITERS = [',', ';', '\t', '|', '^'],
+      LINE_DELIMITERS = ['\r\n', '\r', '\n'];
 
-  var Builder = function(type, schema, sample, shouldCast) {
-    var code = "return ",
-        cast = shouldCast ? function(element, index) {
-          if (FLOAT.test(element)) {
-            return "Number(values[" + index + "]),";
-          } else if (BOOL(element)) {
-            return "Boolean(values[" + index + "].toLowerCase() === 'true'),";
-          } else {
-            return "String(values[" + index + "]),";
-          }
-        } : function(element, index) {
-          return "values[" + index + "],";
-        },
-        _index;
-
-    if (type === "object") {
-      code += "{";
-      for (_index = 0; _index < schema.length; ++_index) {
-        code += '"' + schema[_index] + '": ' + cast(sample[_index], _index);
-      }
-      code = code.slice(0, -1) + "}";
-    } else {
-      code += "[";
-      for (_index = 0; _index < schema.length; ++_index) {
-        code += cast(sample[_index], _index);
-      }
-      code = code.slice(0, -1) + "]";
-    }
-    return new Function("values", code);
-  };
-
-  var CSV = function(data, set) {
-    set = PRESENT(set) ? set : {};
-
-    this.options = {
-      async: PRESENT(set.async) ? set.async : false,
-      cast: PRESENT(set.cast) ? set.cast : true,
-      line: PRESENT(set.line) ? set.line : '\r\n',
-      delimiter: PRESENT(set.delimiter) ? set.delimiter : ',',
-      header: PRESENT(set.header) ? set.header : false,
-      done: PRESENT(set.done) ? set.done : undefined
-    };
-    this.data = data;
-
-    if (this.data instanceof Array) return this;
-
-    for (var _i = 0; _i < this.options.line.length; _i++) {
-      var _dataChar = data.charCodeAt(data.length - this.options.line.length + _i),
-          _lineChar = this.options.line.charCodeAt(_i);
-      if (_dataChar != _lineChar) this.data += this.options.line.charAt(_i);
-    }
-
-    return this;
-  };
-
-  CSV.prototype.set = function(option, value) {
-    this.options[option] = value;
-    return this;
-  };
-
-  CSV.prototype.encode = function(stream) {
-    if (this.data.length === 0) return '';
-
-    var data = this.data,
-        response = [],
-        delimiter = this.options.delimiter,
-        kind = data[0] instanceof Array ? 'array' : 'object',
-        header = this.options.header,
-        complete = this.options.done,
-
-        stringify = function(value) {
-          if (!value) return null;
-          return (typeof value !== 'string') ? value : '"' + value.replace(/\"/g, '""') + '"';
-        },
-
-        sendLine = stream ? function(line) {
-          stream(line.join(delimiter));
-        } : function(line) {
-          response.push(line.join(delimiter));
-        },
-
-        _dataLength = data.length,
-        _index, _keys, fields, _fieldsLength, line, record;
-
-    if (kind === "object") {
-      fields = Object.keys(data[0]);
-      _fieldsLength = fields.length;
-    } else {
-      _fieldsLength = data[0].length;
-    }
-
-    record = new Array(_fieldsLength);
-
-    if (header) {
-      var columns = header instanceof Array ? header : fields;
-      for (_keys = 0; _keys < _fieldsLength; ++_keys) {
-        record[_keys] = stringify(columns[_keys]);
-      }
-      sendLine(record);
-    }
-
-    if (kind === "object") {
-      for (_index = 0; _index < _dataLength; ++_index) {
-        line = data[_index];
-        for (_keys = 0; _keys < _fieldsLength; ++_keys) {
-          record[_keys] = stringify(line[fields[_keys]]);
-        }
-        sendLine(record);
-      }
-    } else {
-      for (_index = 0; _index < _dataLength; ++_index) {
-        line = data[_index];
-        for (_keys = 0; _keys < _fieldsLength; ++_keys) {
-          record[_keys] = stringify(line[_keys]);
-        }
-        sendLine(record);
-      }
-    }
-
-    // Return as appropriate
-    response = response.join(this.options.line);
-    if (complete) complete(response);
-    return response;
-  };
-
-  CSV.prototype.parse = function(stream) {
-    if (this.data.trim().length === 0) return [];
-
-    var data = this.data,
-        response = [],
-        complete = this.options.done,
-        shouldCast = this.options.cast,
-        header = this.options.header,
-        fields = header instanceof Array ? header : [],
-
-        _line = this.options.line,
-        _fieldsLength = fields.length,
-
-        current = { row: [], cell: "" },
-        flag = { escaped: false, quote: false, cell: true },
-
-        Record,
-        saveCell = function(cell) {
-          current.row.push(
-            (flag.escaped ? cell.slice(1, -1).replace(/""/g, '"') : cell).trim()
-          );
-          current.cell = "";
-          flag = { escaped: false, quote: false, cell: true };
-        },
-        saveLastCell = _line.length === 1 ? saveCell : function(cell) {
-          saveCell(cell.slice(0, 1 - _line.length));
-        },
-        apply = stream ? function() {
-          stream(new Record(current.row));
-        } : function() {
-          response.push(new Record(current.row));
-        },
-        sendRow = function() {
-          if (header) {
-            if (_fieldsLength) {
-              Record = new Builder("object", fields, current.row, shouldCast);
-              apply();
-              sendRow = apply;
-            } else {
-              fields = current.row, _fieldsLength = fields.length;
-            }
-          } else {
-            if (!Record) Record = new Builder("array", current.row, current.row, shouldCast);
-            apply();
-            sendRow = apply;
-          }
-        },
-
-        start,
-        _index,
-        _dataLength = data.length,
-        _lineDelim = _line.charCodeAt(_line.length - 1),
-        _cellDelim = this.options.delimiter.charCodeAt(0),
-        currentChar;
-
-    for (start = 0, _index = 0; _index <= _dataLength; ++_index) {
-      currentChar = data.charCodeAt(_index);
-      if (flag.cell) {
-        flag.cell = false;
-        if (currentChar === 34) {
-          flag.escaped = true;
-          continue;
-        }
-      }
-      if (flag.escaped && currentChar === 34) {
-        flag.quote = !flag.quote;
-        continue;
-      }
-      if ((flag.escaped && flag.quote) || !flag.escaped) {
-        if (currentChar === _cellDelim) {
-          saveCell(current.cell + data.slice(start, _index));
-          start = _index + 1;
-        } else if (currentChar === _lineDelim) {
-          saveLastCell(current.cell + data.slice(start, _index));
-          start = _index + 1;
-          sendRow();
-          current.row = [];
-        }
-      }
-    }
-    // Return as appropriate
-    if (complete) complete(response);
-    return response;
-  };
-
-  CSV.prototype.forEach = function(stream) {
-    return this.data instanceof Array ? this.encode(stream) : this.parse(stream);
-  };
-
-  // Define this module
-  if (typeof define === "function" && define.amd) {
-    define(function() { return CSV; });
-  } else if (typeof module === "object" && module.exports) {
-    module.exports = CSV;
-  } else if (window && this === window) {
-    this.CSV = CSV;
+  function isObject(object) {
+    var type = typeof object;
+    return type === 'function' || type === 'object' && !!object;
+  }
+  var isArray = Array.isArray || function(object) {
+    return toString.call(object) === '[object Array]';
+  }
+  function isString(object) {
+    return typeof object === 'string';
+  }
+  function isNumber(object) {
+    return !isNaN(Number(object));
+  }
+  function isBoolean(value) {
+    return value == false || value == true;
+  }
+  function isNull(value) {
+    return value == null;
+  }
+  function isPresent(value) {
+    return value != null;
   }
 
-}).call(this);
+  function fallback(value, fallback) {
+    return isPresent(value) ? value : fallback;
+  }
+
+  function forEach(collection, iterator) {
+    for (var _i = 0, _len = collection.length; _i < _len; _i += 1) {
+      if (iterator(collection[_i], _i) === false) break;
+    }
+  }
+
+  function buildCell(index) {
+    return 'attrs[' + index + ']';
+  }
+
+  function castCell(value, index) {
+    if (isNumber(value)) {
+      return 'Number(' + buildCell(index) + ')';
+    } else if (isBoolean(value)) {
+      return 'Boolean(' + buildCell(index) + ' == true)';
+    } else {
+      return 'String(' + buildCell(index) + ')';
+    }
+  }
+
+  function buildConstructor(cast, values, attrs) {
+    var definition = [];
+    if (arguments.length == 2) {
+      if (cast) {
+        if (isArray(cast)) {
+          forEach(values, function(value, index) {
+            definition.push(cast[index] + '(' + buildCell(index) + ')');
+          });
+        } else {
+          forEach(values, function(value, index) {
+            definition.push(castCell(value, index));
+          });
+        }
+      } else {
+        forEach(values, function(value, index) {
+          definition.push(buildCell(index));
+        });
+      }
+      definition = 'return [' + definition.join(',') + ']';
+    } else {
+      if (cast) {
+        if (isArray(cast)) {
+          forEach(values, function(value, index) {
+            definition.push('"' + attrs[index] + '": ' + cast[index] + '(' + buildCell(index) + ')');
+          });
+        } else {
+          forEach(values, function(value, index) {
+            definition.push('"' + attrs[index] + '": ' + castCell(value, index));
+          });
+        }
+      } else {
+        forEach(values, function(value, index) {
+          definition.push('"' + attrs[index] + '": ' + buildCell(index));
+        });
+      }
+      definition = 'return {' + definition.join(',') + '}';
+    }
+    return new Function('attrs', definition);
+  }
+
+  function detectDelimiter(string, delimiters) {
+    var count = 0,
+        detected;
+
+    forEach(delimiters, function(delimiter) {
+      var needle = delimiter,
+          matches;
+      if (ESCAPE_DELIMITERS.indexOf(delimiter) != -1) {
+        needle = '\\' + needle;
+      }
+      matches = string.match(new RegExp(needle, 'g'));
+      if (matches && matches.length > count) {
+        count = matches.length;
+        detected = delimiter;
+      }
+    });
+    return (detected || delimiters[0]);
+  }
+
+  var CSV = (function() {
+    function CSV(data, options) {
+      if (!options) options = {};
+
+      if (isArray(data)) {
+        this.mode = 'encode';
+      } else if (isString(data)) {
+        this.mode = 'parse';
+      } else {
+        throw new Error("Incompatible format!");
+      }
+
+      this.data = data;
+
+      this.options = {
+        header: fallback(options.header, false),
+        cast: fallback(options.cast, true)
+      }
+
+      var lineDelimiter = options.lineDelimiter || options.line,
+          cellDelimiter = options.cellDelimiter || options.delimiter;
+
+      if (this.isParser()) {
+        this.options.lineDelimiter = lineDelimiter || detectDelimiter(this.data, LINE_DELIMITERS);
+        this.options.cellDelimiter = cellDelimiter || detectDelimiter(this.data, CELL_DELIMITERS);
+        this.data = normalizeCSV(this.data, this.options.lineDelimiter);
+      } else if (this.isEncoder()) {
+        this.options.lineDelimiter = lineDelimiter || '\r\n';
+        this.options.cellDelimiter = cellDelimiter || ',';
+      }
+    }
+
+    function invoke(method, constructor, attributes) {
+      method(new constructor(attributes));
+    }
+
+    function normalizeCSV(text, lineDelimiter) {
+      if (text.slice(-lineDelimiter.length) != lineDelimiter) text += lineDelimiter;
+      return text;
+    }
+
+    CSV.prototype.set = function(setting, value) {
+      return this.options[setting] = value;
+    }
+
+    CSV.prototype.isParser = function() {
+      return this.mode == 'parse';
+    }
+
+    CSV.prototype.isEncoder = function() {
+      return this.mode == 'encode';
+    }
+
+    CSV.prototype.parse = function(callback) {
+      if (this.mode != 'parse') return;
+
+      if (this.data.trim().length === 0) return [];
+
+      var data = this.data,
+          options = this.options,
+          header = options.header,
+          current = { cell: '', line: [] },
+          flag, record, response;
+
+      if (!callback) {
+        response = [];
+        callback = function(record) {
+          response.push(record);
+        }
+      }
+
+      function resetFlags() {
+        flag = { escaped: false, quote: false, cell: true };
+      }
+      function resetCell() {
+        current.cell = '';
+      }
+      function resetLine() {
+        current.line = [];
+      }
+
+      function saveCell(cell) {
+        current.line.push(flag.escaped ? cell.slice(1, -1).replace(/""/g, '"') : cell);
+        resetCell();
+        resetFlags();
+      }
+      function saveLastCell(cell) {
+        saveCell(cell.slice(0, 1 - options.lineDelimiter.length));
+      }
+      function saveLine() {
+        if (header) {
+          if (isArray(header)) {
+            record = buildConstructor(options.cast, current.line, header);
+            saveLine = function() { invoke(callback, record, current.line); };
+            saveLine();
+          } else {
+            header = current.line;
+          }
+        } else {
+          if (!record) {
+            record = buildConstructor(options.cast, current.line);
+          }
+          saveLine = function() { invoke(callback, record, current.line); };
+          saveLine();
+        }
+      }
+
+      if (options.lineDelimiter.length == 1) saveLastCell = saveCell;
+
+      var dataLength = data.length,
+          cellDelimiter = options.cellDelimiter.charCodeAt(0),
+          lineDelimiter = options.lineDelimiter.charCodeAt(options.lineDelimiter.length - 1),
+          _i, _c, _ch;
+
+      resetFlags();
+
+      for (_i = 0, _c = 0; _i < dataLength; _i++) {
+        _ch = data.charCodeAt(_i);
+
+        if (flag.cell) {
+          flag.cell = false;
+          if (_ch == 34) {
+            flag.escaped = true;
+            continue;
+          }
+        }
+
+        if (flag.escaped && _ch == 34) {
+          flag.quote = !flag.quote;
+          continue;
+        }
+
+        if ((flag.escaped && flag.quote) || !flag.escaped) {
+          if (_ch == cellDelimiter) {
+            saveCell(current.cell + data.slice(_c, _i));
+            _c = _i + 1;
+          } else if (_ch == lineDelimiter) {
+            saveLastCell(current.cell + data.slice(_c, _i));
+            _c = _i + 1;
+            saveLine();
+            resetLine();
+          }
+        }
+      }
+
+      if (response) {
+        return response;
+      } else {
+        return this;
+      }
+    }
+
+    function serializeType(object) {
+      if (isArray(object)) {
+        return 'array';
+      } else if (isObject(object)) {
+        return 'object';
+      } else if (isString(object)) {
+        return 'string';
+      } else if (isNull(object)) {
+        return 'null';
+      } else {
+        return 'primitive';
+      }
+    }
+
+    CSV.prototype.serialize = {
+      "object": function(object) {
+        var that = this,
+            attributes = Object.keys(object),
+            serialized = Array(attributes.length);
+        forEach(attributes, function(attr, index) {
+          serialized[index] = that[serializeType(object[attr])](object[attr]);
+        });
+        return serialized;
+      },
+      "array": function(array) {
+        var that = this,
+            serialized = Array(array.length);
+        forEach(array, function(value, index) {
+          serialized[index] = that[serializeType(value)](value);
+        });
+        return serialized;
+      },
+      "string": function(string) {
+        return '"' + String(string).replace(/"/g, '""') + '"';
+      },
+      "null": function(value) {
+        return '';
+      },
+      "primitive": function(value) {
+        return value;
+      }
+    }
+
+    CSV.prototype.encode = function(callback) {
+      if (this.mode != 'encode') return;
+
+      if (this.data.length == 0) return '';
+
+      var data = this.data,
+          options = this.options,
+          header = options.header,
+          sample = data[0],
+          serialize = this.serialize,
+          offset = 0,
+          attributes, response;
+
+      if (!callback) {
+        response = Array(data.length);
+        callback = function(record, index) {
+          response[index + offset] = record;
+        }
+      }
+
+      function serializeLine(record) {
+        return record.join(options.cellDelimiter);
+      }
+
+      if (header) {
+        if (!isArray(header)) {
+          attributes = Object.keys(sample);
+          header = attributes;
+        }
+        callback(serializeLine(serialize.array(header)), 0);
+        offset = 1;
+      }
+
+      var recordType = serializeType(sample),
+          map;
+
+      if (recordType == 'array') {
+        if (isArray(options.cast)) {
+          map = Array(options.cast.length);
+          forEach(options.cast, function(type, index) {
+            map[index] = type.toLowerCase();
+          });
+        } else {
+          map = Array(sample.length);
+          forEach(sample, function(value, index) {
+            map[index] = serializeType(value);
+          });
+        }
+        forEach(data, function(record, recordIndex) {
+          var serializedRecord = Array(map.length);
+          forEach(record, function(value, valueIndex) {
+            serializedRecord[valueIndex] = serialize[map[valueIndex]](value);
+          });
+          callback(serializeLine(serializedRecord), recordIndex);
+        });
+      } else if (recordType == 'object') {
+        attributes = Object.keys(sample);
+        if (isArray(options.cast)) {
+          map = Array(options.cast.length);
+          forEach(options.cast, function(type, index) {
+            map[index] = type.toLowerCase();
+          });
+        } else {
+          map = Array(attributes.length);
+          forEach(attributes, function(attr, index) {
+            map[index] = serializeType(sample[attr]);
+          });
+        }
+        forEach(data, function(record, recordIndex) {
+          var serializedRecord = Array(attributes.length);
+          forEach(attributes, function(attr, attrIndex) {
+            serializedRecord[attrIndex] = serialize[map[attrIndex]](record[attr]);
+          });
+          callback(serializeLine(serializedRecord), recordIndex);
+        });
+      }
+
+      if (response) {
+        return response.join(options.lineDelimiter);
+      } else {
+        return this;
+      }
+    }
+
+    CSV.prototype.forEach = function(callback) {
+      return this[this.mode](callback);
+    }
+
+    return CSV;
+  })();
+
+  CSV.parse = function(data, options) {
+    return new CSV(data, options).parse();
+  }
+
+  CSV.encode = function(data, options) {
+    return new CSV(data, options).encode();
+  }
+
+  CSV.forEach = function(data, options, callback) {
+    if (arguments.length == 2) {
+      callback = options;
+    }
+    return new CSV(data, options).forEach(callback);
+  }
+
+  if (typeof define === "function" && define.amd) {
+    define('CSV', [], function() {
+      return CSV;
+    });
+  } else if (typeof module === "object" && module.exports) {
+    module.exports = CSV;
+  } else if (window) {
+    window.CSV = CSV;
+  }
+})();
 
 },{}],10:[function(require,module,exports){
 var matches = require('matches-selector')
@@ -17956,7 +18144,6 @@ function type(el) {
 }
 
 },{"component-type":48}],48:[function(require,module,exports){
-
 /**
  * toString ref.
  */
@@ -17973,18 +18160,21 @@ var toString = Object.prototype.toString;
 
 module.exports = function(val){
   switch (toString.call(val)) {
-    case '[object Function]': return 'function';
     case '[object Date]': return 'date';
     case '[object RegExp]': return 'regexp';
     case '[object Arguments]': return 'arguments';
     case '[object Array]': return 'array';
-    case '[object String]': return 'string';
+    case '[object Error]': return 'error';
   }
 
   if (val === null) return 'null';
   if (val === undefined) return 'undefined';
+  if (val !== val) return 'nan';
   if (val && val.nodeType === 1) return 'element';
-  if (val === Object(val)) return 'object';
+
+  val = val.valueOf
+    ? val.valueOf()
+    : Object.prototype.valueOf.apply(val)
 
   return typeof val;
 };
@@ -18291,7 +18481,7 @@ Flatsheet.prototype.req = function req (method, path, params, cb) {
 Flatsheet.prototype.fullUrl = function fullUrl (path, params) {
   return this.host + '/api' + this.apiVersion + path + '/';
 };
-},{"request":126}],59:[function(require,module,exports){
+},{"request":129}],59:[function(require,module,exports){
 "use strict";
 /*globals Handlebars: true */
 var Handlebars = require("./handlebars.runtime")["default"];
@@ -21653,7 +21843,7 @@ exports.connect = lookup;
 exports.Manager = require('./manager');
 exports.Socket = require('./socket');
 
-},{"./manager":81,"./socket":83,"./url":84,"debug":87,"socket.io-parser":118}],81:[function(require,module,exports){
+},{"./manager":81,"./socket":83,"./url":84,"debug":87,"socket.io-parser":121}],81:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -22128,7 +22318,7 @@ Manager.prototype.onreconnect = function(){
   this.emitAll('reconnect', attempt);
 };
 
-},{"./on":82,"./socket":83,"./url":84,"component-bind":85,"component-emitter":86,"debug":87,"engine.io-client":88,"indexof":114,"object-component":115,"socket.io-parser":118}],82:[function(require,module,exports){
+},{"./on":82,"./socket":83,"./url":84,"component-bind":85,"component-emitter":86,"debug":87,"engine.io-client":88,"indexof":117,"object-component":118,"socket.io-parser":121}],82:[function(require,module,exports){
 
 /**
  * Module exports.
@@ -22540,7 +22730,7 @@ Socket.prototype.disconnect = function(){
   return this;
 };
 
-},{"./on":82,"component-bind":85,"component-emitter":86,"debug":87,"has-binary":112,"socket.io-parser":118,"to-array":122}],84:[function(require,module,exports){
+},{"./on":82,"component-bind":85,"component-emitter":86,"debug":87,"has-binary":115,"socket.io-parser":121,"to-array":125}],84:[function(require,module,exports){
 (function (global){
 
 /**
@@ -22617,7 +22807,7 @@ function url(uri, loc){
 }
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"debug":87,"parseuri":116}],85:[function(require,module,exports){
+},{"debug":87,"parseuri":119}],85:[function(require,module,exports){
 /**
  * Slice reference.
  */
@@ -22963,7 +23153,7 @@ module.exports = require('./socket');
  */
 module.exports.parser = require('engine.io-parser');
 
-},{"./socket":90,"engine.io-parser":99}],90:[function(require,module,exports){
+},{"./socket":90,"engine.io-parser":102}],90:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies.
@@ -23650,7 +23840,7 @@ Socket.prototype.filterUpgrades = function (upgrades) {
 };
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./transport":91,"./transports":92,"component-emitter":86,"debug":87,"engine.io-parser":99,"indexof":114,"parsejson":108,"parseqs":109,"parseuri":110}],91:[function(require,module,exports){
+},{"./transport":91,"./transports":92,"component-emitter":86,"debug":99,"engine.io-parser":102,"indexof":117,"parsejson":111,"parseqs":112,"parseuri":113}],91:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -23802,7 +23992,7 @@ Transport.prototype.onClose = function () {
   this.emit('close');
 };
 
-},{"component-emitter":86,"engine.io-parser":99}],92:[function(require,module,exports){
+},{"component-emitter":86,"engine.io-parser":102}],92:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies
@@ -23936,7 +24126,7 @@ function JSONPPolling (opts) {
   if (global.document && global.addEventListener) {
     global.addEventListener('beforeunload', function () {
       if (self.script) self.script.onerror = empty;
-    });
+    }, false);
   }
 }
 
@@ -24438,7 +24628,7 @@ if (global.document) {
   if (global.attachEvent) {
     global.attachEvent('onunload', unloadHandler);
   } else if (global.addEventListener) {
-    global.addEventListener('beforeunload', unloadHandler);
+    global.addEventListener('beforeunload', unloadHandler, false);
   }
 }
 
@@ -24451,7 +24641,7 @@ function unloadHandler() {
 }
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling":95,"component-emitter":86,"component-inherit":98,"debug":87,"xmlhttprequest":97}],95:[function(require,module,exports){
+},{"./polling":95,"component-emitter":86,"component-inherit":98,"debug":99,"xmlhttprequest":97}],95:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -24698,7 +24888,7 @@ Polling.prototype.uri = function(){
   return schema + '://' + this.hostname + port + this.path + query;
 };
 
-},{"../transport":91,"component-inherit":98,"debug":87,"engine.io-parser":99,"parseqs":109,"xmlhttprequest":97}],96:[function(require,module,exports){
+},{"../transport":91,"component-inherit":98,"debug":99,"engine.io-parser":102,"parseqs":112,"xmlhttprequest":97}],96:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -24929,7 +25119,7 @@ WS.prototype.check = function(){
   return !!WebSocket && !('__initialize' in WebSocket && this.name === WS.prototype.name);
 };
 
-},{"../transport":91,"component-inherit":98,"debug":87,"engine.io-parser":99,"parseqs":109,"ws":111}],97:[function(require,module,exports){
+},{"../transport":91,"component-inherit":98,"debug":99,"engine.io-parser":102,"parseqs":112,"ws":114}],97:[function(require,module,exports){
 // browser shim for xmlhttprequest module
 var hasCORS = require('has-cors');
 
@@ -24967,7 +25157,7 @@ module.exports = function(opts) {
   }
 }
 
-},{"has-cors":106}],98:[function(require,module,exports){
+},{"has-cors":109}],98:[function(require,module,exports){
 
 module.exports = function(a, b){
   var fn = function(){};
@@ -24976,6 +25166,467 @@ module.exports = function(a, b){
   a.prototype.constructor = a;
 };
 },{}],99:[function(require,module,exports){
+
+/**
+ * This is the web browser implementation of `debug()`.
+ *
+ * Expose `debug()` as the module.
+ */
+
+exports = module.exports = require('./debug');
+exports.log = log;
+exports.formatArgs = formatArgs;
+exports.save = save;
+exports.load = load;
+exports.useColors = useColors;
+
+/**
+ * Colors.
+ */
+
+exports.colors = [
+  'lightseagreen',
+  'forestgreen',
+  'goldenrod',
+  'dodgerblue',
+  'darkorchid',
+  'crimson'
+];
+
+/**
+ * Currently only WebKit-based Web Inspectors, Firefox >= v31,
+ * and the Firebug extension (any Firefox version) are known
+ * to support "%c" CSS customizations.
+ *
+ * TODO: add a `localStorage` variable to explicitly enable/disable colors
+ */
+
+function useColors() {
+  // is webkit? http://stackoverflow.com/a/16459606/376773
+  return ('WebkitAppearance' in document.documentElement.style) ||
+    // is firebug? http://stackoverflow.com/a/398120/376773
+    (window.console && (console.firebug || (console.exception && console.table))) ||
+    // is firefox >= v31?
+    // https://developer.mozilla.org/en-US/docs/Tools/Web_Console#Styling_messages
+    (navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/) && parseInt(RegExp.$1, 10) >= 31);
+}
+
+/**
+ * Map %j to `JSON.stringify()`, since no Web Inspectors do that by default.
+ */
+
+exports.formatters.j = function(v) {
+  return JSON.stringify(v);
+};
+
+
+/**
+ * Colorize log arguments if enabled.
+ *
+ * @api public
+ */
+
+function formatArgs() {
+  var args = arguments;
+  var useColors = this.useColors;
+
+  args[0] = (useColors ? '%c' : '')
+    + this.namespace
+    + (useColors ? ' %c' : ' ')
+    + args[0]
+    + (useColors ? '%c ' : ' ')
+    + '+' + exports.humanize(this.diff);
+
+  if (!useColors) return args;
+
+  var c = 'color: ' + this.color;
+  args = [args[0], c, 'color: inherit'].concat(Array.prototype.slice.call(args, 1));
+
+  // the final "%c" is somewhat tricky, because there could be other
+  // arguments passed either before or after the %c, so we need to
+  // figure out the correct index to insert the CSS into
+  var index = 0;
+  var lastC = 0;
+  args[0].replace(/%[a-z%]/g, function(match) {
+    if ('%%' === match) return;
+    index++;
+    if ('%c' === match) {
+      // we only are interested in the *last* %c
+      // (the user may have provided their own)
+      lastC = index;
+    }
+  });
+
+  args.splice(lastC, 0, c);
+  return args;
+}
+
+/**
+ * Invokes `console.log()` when available.
+ * No-op when `console.log` is not a "function".
+ *
+ * @api public
+ */
+
+function log() {
+  // This hackery is required for IE8,
+  // where the `console.log` function doesn't have 'apply'
+  return 'object' == typeof console
+    && 'function' == typeof console.log
+    && Function.prototype.apply.call(console.log, console, arguments);
+}
+
+/**
+ * Save `namespaces`.
+ *
+ * @param {String} namespaces
+ * @api private
+ */
+
+function save(namespaces) {
+  try {
+    if (null == namespaces) {
+      localStorage.removeItem('debug');
+    } else {
+      localStorage.debug = namespaces;
+    }
+  } catch(e) {}
+}
+
+/**
+ * Load `namespaces`.
+ *
+ * @return {String} returns the previously persisted debug modes
+ * @api private
+ */
+
+function load() {
+  var r;
+  try {
+    r = localStorage.debug;
+  } catch(e) {}
+  return r;
+}
+
+/**
+ * Enable namespaces listed in `localStorage.debug` initially.
+ */
+
+exports.enable(load());
+
+},{"./debug":100}],100:[function(require,module,exports){
+
+/**
+ * This is the common logic for both the Node.js and web browser
+ * implementations of `debug()`.
+ *
+ * Expose `debug()` as the module.
+ */
+
+exports = module.exports = debug;
+exports.coerce = coerce;
+exports.disable = disable;
+exports.enable = enable;
+exports.enabled = enabled;
+exports.humanize = require('ms');
+
+/**
+ * The currently active debug mode names, and names to skip.
+ */
+
+exports.names = [];
+exports.skips = [];
+
+/**
+ * Map of special "%n" handling functions, for the debug "format" argument.
+ *
+ * Valid key names are a single, lowercased letter, i.e. "n".
+ */
+
+exports.formatters = {};
+
+/**
+ * Previously assigned color.
+ */
+
+var prevColor = 0;
+
+/**
+ * Previous log timestamp.
+ */
+
+var prevTime;
+
+/**
+ * Select a color.
+ *
+ * @return {Number}
+ * @api private
+ */
+
+function selectColor() {
+  return exports.colors[prevColor++ % exports.colors.length];
+}
+
+/**
+ * Create a debugger with the given `namespace`.
+ *
+ * @param {String} namespace
+ * @return {Function}
+ * @api public
+ */
+
+function debug(namespace) {
+
+  // define the `disabled` version
+  function disabled() {
+  }
+  disabled.enabled = false;
+
+  // define the `enabled` version
+  function enabled() {
+
+    var self = enabled;
+
+    // set `diff` timestamp
+    var curr = +new Date();
+    var ms = curr - (prevTime || curr);
+    self.diff = ms;
+    self.prev = prevTime;
+    self.curr = curr;
+    prevTime = curr;
+
+    // add the `color` if not set
+    if (null == self.useColors) self.useColors = exports.useColors();
+    if (null == self.color && self.useColors) self.color = selectColor();
+
+    var args = Array.prototype.slice.call(arguments);
+
+    args[0] = exports.coerce(args[0]);
+
+    if ('string' !== typeof args[0]) {
+      // anything else let's inspect with %o
+      args = ['%o'].concat(args);
+    }
+
+    // apply any `formatters` transformations
+    var index = 0;
+    args[0] = args[0].replace(/%([a-z%])/g, function(match, format) {
+      // if we encounter an escaped % then don't increase the array index
+      if (match === '%%') return match;
+      index++;
+      var formatter = exports.formatters[format];
+      if ('function' === typeof formatter) {
+        var val = args[index];
+        match = formatter.call(self, val);
+
+        // now we need to remove `args[index]` since it's inlined in the `format`
+        args.splice(index, 1);
+        index--;
+      }
+      return match;
+    });
+
+    if ('function' === typeof exports.formatArgs) {
+      args = exports.formatArgs.apply(self, args);
+    }
+    var logFn = enabled.log || exports.log || console.log.bind(console);
+    logFn.apply(self, args);
+  }
+  enabled.enabled = true;
+
+  var fn = exports.enabled(namespace) ? enabled : disabled;
+
+  fn.namespace = namespace;
+
+  return fn;
+}
+
+/**
+ * Enables a debug mode by namespaces. This can include modes
+ * separated by a colon and wildcards.
+ *
+ * @param {String} namespaces
+ * @api public
+ */
+
+function enable(namespaces) {
+  exports.save(namespaces);
+
+  var split = (namespaces || '').split(/[\s,]+/);
+  var len = split.length;
+
+  for (var i = 0; i < len; i++) {
+    if (!split[i]) continue; // ignore empty strings
+    namespaces = split[i].replace(/\*/g, '.*?');
+    if (namespaces[0] === '-') {
+      exports.skips.push(new RegExp('^' + namespaces.substr(1) + '$'));
+    } else {
+      exports.names.push(new RegExp('^' + namespaces + '$'));
+    }
+  }
+}
+
+/**
+ * Disable debug output.
+ *
+ * @api public
+ */
+
+function disable() {
+  exports.enable('');
+}
+
+/**
+ * Returns true if the given mode name is enabled, false otherwise.
+ *
+ * @param {String} name
+ * @return {Boolean}
+ * @api public
+ */
+
+function enabled(name) {
+  var i, len;
+  for (i = 0, len = exports.skips.length; i < len; i++) {
+    if (exports.skips[i].test(name)) {
+      return false;
+    }
+  }
+  for (i = 0, len = exports.names.length; i < len; i++) {
+    if (exports.names[i].test(name)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Coerce `val`.
+ *
+ * @param {Mixed} val
+ * @return {Mixed}
+ * @api private
+ */
+
+function coerce(val) {
+  if (val instanceof Error) return val.stack || val.message;
+  return val;
+}
+
+},{"ms":101}],101:[function(require,module,exports){
+/**
+ * Helpers.
+ */
+
+var s = 1000;
+var m = s * 60;
+var h = m * 60;
+var d = h * 24;
+var y = d * 365.25;
+
+/**
+ * Parse or format the given `val`.
+ *
+ * Options:
+ *
+ *  - `long` verbose formatting [false]
+ *
+ * @param {String|Number} val
+ * @param {Object} options
+ * @return {String|Number}
+ * @api public
+ */
+
+module.exports = function(val, options){
+  options = options || {};
+  if ('string' == typeof val) return parse(val);
+  return options.long
+    ? long(val)
+    : short(val);
+};
+
+/**
+ * Parse the given `str` and return milliseconds.
+ *
+ * @param {String} str
+ * @return {Number}
+ * @api private
+ */
+
+function parse(str) {
+  var match = /^((?:\d+)?\.?\d+) *(ms|seconds?|s|minutes?|m|hours?|h|days?|d|years?|y)?$/i.exec(str);
+  if (!match) return;
+  var n = parseFloat(match[1]);
+  var type = (match[2] || 'ms').toLowerCase();
+  switch (type) {
+    case 'years':
+    case 'year':
+    case 'y':
+      return n * y;
+    case 'days':
+    case 'day':
+    case 'd':
+      return n * d;
+    case 'hours':
+    case 'hour':
+    case 'h':
+      return n * h;
+    case 'minutes':
+    case 'minute':
+    case 'm':
+      return n * m;
+    case 'seconds':
+    case 'second':
+    case 's':
+      return n * s;
+    case 'ms':
+      return n;
+  }
+}
+
+/**
+ * Short format for `ms`.
+ *
+ * @param {Number} ms
+ * @return {String}
+ * @api private
+ */
+
+function short(ms) {
+  if (ms >= d) return Math.round(ms / d) + 'd';
+  if (ms >= h) return Math.round(ms / h) + 'h';
+  if (ms >= m) return Math.round(ms / m) + 'm';
+  if (ms >= s) return Math.round(ms / s) + 's';
+  return ms + 'ms';
+}
+
+/**
+ * Long format for `ms`.
+ *
+ * @param {Number} ms
+ * @return {String}
+ * @api private
+ */
+
+function long(ms) {
+  return plural(ms, d, 'day')
+    || plural(ms, h, 'hour')
+    || plural(ms, m, 'minute')
+    || plural(ms, s, 'second')
+    || ms + ' ms';
+}
+
+/**
+ * Pluralization helper.
+ */
+
+function plural(ms, n, name) {
+  if (ms < n) return;
+  if (ms < n * 1.5) return Math.floor(ms / n) + ' ' + name;
+  return Math.ceil(ms / n) + ' ' + name + 's';
+}
+
+},{}],102:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies.
@@ -25545,7 +26196,7 @@ exports.decodePayloadAsBinary = function (data, binaryType, callback) {
 };
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./keys":100,"after":101,"arraybuffer.slice":102,"base64-arraybuffer":103,"blob":104,"utf8":105}],100:[function(require,module,exports){
+},{"./keys":103,"after":104,"arraybuffer.slice":105,"base64-arraybuffer":106,"blob":107,"utf8":108}],103:[function(require,module,exports){
 
 /**
  * Gets the keys for an object.
@@ -25566,7 +26217,7 @@ module.exports = Object.keys || function keys (obj){
   return arr;
 };
 
-},{}],101:[function(require,module,exports){
+},{}],104:[function(require,module,exports){
 module.exports = after
 
 function after(count, callback, err_cb) {
@@ -25596,7 +26247,7 @@ function after(count, callback, err_cb) {
 
 function noop() {}
 
-},{}],102:[function(require,module,exports){
+},{}],105:[function(require,module,exports){
 /**
  * An abstraction for slicing an arraybuffer even when
  * ArrayBuffer.prototype.slice is not supported
@@ -25627,7 +26278,7 @@ module.exports = function(arraybuffer, start, end) {
   return result.buffer;
 };
 
-},{}],103:[function(require,module,exports){
+},{}],106:[function(require,module,exports){
 /*
  * base64-arraybuffer
  * https://github.com/niklasvh/base64-arraybuffer
@@ -25688,7 +26339,7 @@ module.exports = function(arraybuffer, start, end) {
   };
 })("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
 
-},{}],104:[function(require,module,exports){
+},{}],107:[function(require,module,exports){
 (function (global){
 /**
  * Create a blob builder even when vendor prefixes exist
@@ -25741,7 +26392,7 @@ module.exports = (function() {
 })();
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],105:[function(require,module,exports){
+},{}],108:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/utf8js v2.0.0 by @mathias */
 ;(function(root) {
@@ -25984,7 +26635,7 @@ module.exports = (function() {
 }(this));
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],106:[function(require,module,exports){
+},{}],109:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -26009,7 +26660,7 @@ try {
   module.exports = false;
 }
 
-},{"global":107}],107:[function(require,module,exports){
+},{"global":110}],110:[function(require,module,exports){
 
 /**
  * Returns `this`. Execute this without a "context" (i.e. without it being
@@ -26019,7 +26670,7 @@ try {
 
 module.exports = (function () { return this; })();
 
-},{}],108:[function(require,module,exports){
+},{}],111:[function(require,module,exports){
 (function (global){
 /**
  * JSON parse.
@@ -26054,7 +26705,7 @@ module.exports = function parsejson(data) {
   }
 };
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],109:[function(require,module,exports){
+},{}],112:[function(require,module,exports){
 /**
  * Compiles a querystring
  * Returns string representation of the object
@@ -26093,7 +26744,7 @@ exports.decode = function(qs){
   return qry;
 };
 
-},{}],110:[function(require,module,exports){
+},{}],113:[function(require,module,exports){
 /**
  * Parses an URI
  *
@@ -26134,7 +26785,7 @@ module.exports = function parseuri(str) {
     return uri;
 };
 
-},{}],111:[function(require,module,exports){
+},{}],114:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -26179,7 +26830,7 @@ function ws(uri, protocols, opts) {
 
 if (WebSocket) ws.prototype = WebSocket.prototype;
 
-},{}],112:[function(require,module,exports){
+},{}],115:[function(require,module,exports){
 (function (global){
 
 /*
@@ -26241,14 +26892,14 @@ function hasBinary(data) {
 }
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"isarray":113}],113:[function(require,module,exports){
+},{"isarray":116}],116:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],114:[function(require,module,exports){
+},{}],117:[function(require,module,exports){
 module.exports=require(39)
-},{}],115:[function(require,module,exports){
+},{}],118:[function(require,module,exports){
 
 /**
  * HOP ref.
@@ -26333,7 +26984,7 @@ exports.length = function(obj){
 exports.isEmpty = function(obj){
   return 0 == exports.length(obj);
 };
-},{}],116:[function(require,module,exports){
+},{}],119:[function(require,module,exports){
 /**
  * Parses an URI
  *
@@ -26360,7 +27011,7 @@ module.exports = function parseuri(str) {
   return uri;
 };
 
-},{}],117:[function(require,module,exports){
+},{}],120:[function(require,module,exports){
 (function (global){
 /*global Blob,File*/
 
@@ -26505,7 +27156,7 @@ exports.removeBlobs = function(data, callback) {
 };
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./is-buffer":119,"isarray":120}],118:[function(require,module,exports){
+},{"./is-buffer":122,"isarray":123}],121:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -26903,7 +27554,7 @@ function error(data){
   };
 }
 
-},{"./binary":117,"./is-buffer":119,"component-emitter":86,"debug":87,"isarray":120,"json3":121}],119:[function(require,module,exports){
+},{"./binary":120,"./is-buffer":122,"component-emitter":86,"debug":87,"isarray":123,"json3":124}],122:[function(require,module,exports){
 (function (global){
 
 module.exports = isBuf;
@@ -26920,9 +27571,9 @@ function isBuf(obj) {
 }
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],120:[function(require,module,exports){
-module.exports=require(113)
-},{}],121:[function(require,module,exports){
+},{}],123:[function(require,module,exports){
+module.exports=require(116)
+},{}],124:[function(require,module,exports){
 /*! JSON v3.2.6 | http://bestiejs.github.io/json3 | Copyright 2012-2013, Kit Cambridge | http://kit.mit-license.org */
 ;(function (window) {
   // Convenience aliases.
@@ -27785,7 +28436,7 @@ module.exports=require(113)
   }
 }(this));
 
-},{}],122:[function(require,module,exports){
+},{}],125:[function(require,module,exports){
 module.exports = toArray
 
 function toArray(list, index) {
@@ -27800,7 +28451,7 @@ function toArray(list, index) {
     return array
 }
 
-},{}],123:[function(require,module,exports){
+},{}],126:[function(require,module,exports){
 (function (process){
 var removeElement = require('remove-element');
 var Ractive = require('ractive');
@@ -27857,7 +28508,7 @@ module.exports = Ractive.extend({
 
       return row;
     });
-    
+
     this.set({
       columns: columns,
       columnIdByName: columnIdByName,
@@ -27982,7 +28633,6 @@ module.exports = Ractive.extend({
   * moved disappear on dragenter.
   */
   forceUpdate: function (rows) {
-    console.log(!!rows, rows)
     if (!rows) var rows = this.getRows();
     this.clear();
     this.import(rows);
@@ -27991,7 +28641,7 @@ module.exports = Ractive.extend({
 });
 
 }).call(this,require("FWaASH"))
-},{"FWaASH":3,"Ractive-decorators-sortable":124,"ractive":76,"remove-element":125}],124:[function(require,module,exports){
+},{"FWaASH":3,"Ractive-decorators-sortable":127,"ractive":76,"remove-element":128}],127:[function(require,module,exports){
 /*
 
 	Ractive-decorators-sortable
@@ -28204,7 +28854,7 @@ module.exports = Ractive.extend({
 	Ractive.decorators.sortable = sortable;
 
 }));
-},{"Ractive":2}],125:[function(require,module,exports){
+},{"Ractive":2}],128:[function(require,module,exports){
 module.exports = remove
 
 function remove(element) {
@@ -28216,7 +28866,7 @@ function remove(element) {
   return element
 }
 
-},{}],126:[function(require,module,exports){
+},{}],129:[function(require,module,exports){
 var window = require("global/window")
 var once = require("once")
 var parseHeaders = require('parse-headers')
@@ -28250,7 +28900,7 @@ function createXHR(options, callback) {
         }
     }
 
-    var uri = xhr.url = options.uri || options.url;
+    var uri = xhr.url = options.uri || options.url
     var method = xhr.method = options.method || "GET"
     var body = options.body || options.data
     var headers = xhr.headers = options.headers || {}
@@ -28295,7 +28945,7 @@ function createXHR(options, callback) {
             }
         }
     } else if (options.headers) {
-        throw new Error("Headers cannot be set on an XDomainRequest object");
+        throw new Error("Headers cannot be set on an XDomainRequest object")
     }
 
     if ("responseType" in options) {
@@ -28349,23 +28999,28 @@ function createXHR(options, callback) {
                 messages[String(status).charAt(0)]
             error = new Error(message)
             error.statusCode = status
-        };
+        }
 
-        return error;
+        return error
     }
 
     // will load the data & process the response in a special response object
     function loadResponse() {
-        var status = getStatusCode();
-        var error = errorFromStatusCode(status);
+        var status = getStatusCode()
+        var error = errorFromStatusCode(status)
         var response = {
             body: getBody(),
             statusCode: status,
             statusText: xhr.statusText,
-            headers: parseHeaders(xhr.getAllResponseHeaders())
-        };
+            raw: xhr
+        }
+        if(xhr.getAllResponseHeaders){ //remember xhr can in fact be XDR for CORS in IE
+            response.headers = parseHeaders(xhr.getAllResponseHeaders())
+        } else {
+            response.headers = {}
+        }
 
-        callback(error, response, response.body);
+        callback(error, response, response.body)
     }
 
     // will load the data and add some response properties to the source xhr
@@ -28374,10 +29029,11 @@ function createXHR(options, callback) {
         var status = getStatusCode()
         var error = errorFromStatusCode(status)
 
-        xhr.status = xhr.statusCode = status;
-        xhr.body = getBody();
+        xhr.status = xhr.statusCode = status
+        xhr.body = getBody()
+        xhr.headers = parseHeaders(xhr.getAllResponseHeaders())
 
-        callback(error, xhr, xhr.body);
+        callback(error, xhr, xhr.body)
     }
 
     function error(evt) {
@@ -28388,18 +29044,20 @@ function createXHR(options, callback) {
 
 function noop() {}
 
-},{"global/window":127,"once":128,"parse-headers":132}],127:[function(require,module,exports){
+},{"global/window":130,"once":131,"parse-headers":135}],130:[function(require,module,exports){
 (function (global){
 if (typeof window !== "undefined") {
-    module.exports = window
+    module.exports = window;
 } else if (typeof global !== "undefined") {
-    module.exports = global
+    module.exports = global;
+} else if (typeof self !== "undefined"){
+    module.exports = self;
 } else {
-    module.exports = {}
+    module.exports = {};
 }
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],128:[function(require,module,exports){
+},{}],131:[function(require,module,exports){
 module.exports = once
 
 once.proto = once(function () {
@@ -28420,7 +29078,7 @@ function once (fn) {
   }
 }
 
-},{}],129:[function(require,module,exports){
+},{}],132:[function(require,module,exports){
 var isFunction = require('is-function')
 
 module.exports = forEach
@@ -28468,7 +29126,7 @@ function forEachObject(object, iterator, context) {
     }
 }
 
-},{"is-function":130}],130:[function(require,module,exports){
+},{"is-function":133}],133:[function(require,module,exports){
 module.exports = isFunction
 
 var toString = Object.prototype.toString
@@ -28485,11 +29143,14 @@ function isFunction (fn) {
       fn === window.prompt))
 };
 
-},{}],131:[function(require,module,exports){
+},{}],134:[function(require,module,exports){
 module.exports=require(56)
-},{}],132:[function(require,module,exports){
+},{}],135:[function(require,module,exports){
 var trim = require('trim')
   , forEach = require('for-each')
+  , isArray = function(arg) {
+      return Object.prototype.toString.call(arg) === '[object Array]';
+    }
 
 module.exports = function (headers) {
   if (!headers)
@@ -28501,12 +29162,19 @@ module.exports = function (headers) {
       trim(headers).split('\n')
     , function (row) {
         var index = row.indexOf(':')
+          , key = trim(row.slice(0, index)).toLowerCase()
+          , value = trim(row.slice(index + 1))
 
-        result[trim(row.slice(0, index)).toLowerCase()] =
-          trim(row.slice(index + 1))
+        if (typeof(result[key]) === 'undefined') {
+          result[key] = value
+        } else if (isArray(result[key])) {
+          result[key].push(value)
+        } else {
+          result[key] = [ result[key], value ]
+        }
       }
   )
 
   return result
 }
-},{"for-each":129,"trim":131}]},{},[1])
+},{"for-each":132,"trim":134}]},{},[1])

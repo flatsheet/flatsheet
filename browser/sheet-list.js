@@ -10,6 +10,9 @@ var templates = {
   ),
   newSheet: Handlebars.compile(
     fs.readFileSync(__dirname + '/views/new-blank-sheet.html', 'utf8')
+  ),
+  newSheetFromCSV: Handlebars.compile(
+    fs.readFileSync(__dirname + '/views/csv-import.html', 'utf8')
   )
 };
 
@@ -18,6 +21,14 @@ on(document.body, '#new-blank-sheet', 'click', function (e) {
     content: templates.newSheet()
   });
 
+  dom.add(document.body, domify(modal));
+});
+
+on(document.body, '#import-csv', 'click', function (e) {
+  var modal = templates.modal({
+    content: templates.newSheetFromCSV()
+  });
+  
   dom.add(document.body, domify(modal));
 });
 
