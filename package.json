@@ -8,7 +8,7 @@
   "bin": {
     "flatsheet": "./bin/flatsheet"
   },
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
     "test": "tape test.js",
     "bundle-css": "rework-npm browser/style.css | myth | cleancss -o public/style.css",
