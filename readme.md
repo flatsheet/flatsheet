@@ -34,7 +34,7 @@ Open issues represent current todo list: [github.com/flatsheet/flatsheet/issues]
 - Create a directory name `flatsheet` for your project (or whatever you like)
 - Change directory `cd flatsheet`
 - Create a package.json file with `npm init`
-- Install flatsheet-server with npm: `npm install flatsheet --save`
+- Install flatsheet with npm: `npm install flatsheet --save`
 - Install the response module: `npm install response --save`
 
 ### File/folder setup
