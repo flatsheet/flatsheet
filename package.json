@@ -10,6 +10,7 @@
   },
   "main": "index.js",
   "scripts": {
+    "flatsheet": "./bin/flatsheet",
     "test": "tape test.js",
     "bundle-css": "rework-npm browser/style.css | myth | cleancss -o public/style.css",
     "watch-css": "gazer -p 'browser/style.css' 'rework-npm browser/style.css | myth > public/style.css'",
