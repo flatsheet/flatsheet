@@ -110,7 +110,6 @@ flatsheet.sheet(id, function (err, sheet) {
   sheetDetails.set(sheet);
 });
 
-
 /* listen for changes to the data and save the object to the db */
 editor.on('change', function (change) {
   if (remoteChange) return;
