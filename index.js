@@ -10,7 +10,7 @@ var Handlebars = require('handlebars');
 var hbsLayouts = require('handlebars-layouts')(Handlebars);
 var level = require('level-party');
 var accountdown = require('accountdown');
-var sublevel = require('level-sublevel');
+var sublevel = require('subleveldown');
 var levelSession   = require('level-session');
 var socketio = require('socket.io');
 var nodemailer = require('nodemailer');
@@ -94,15 +94,6 @@ function Server (opts) {
     else self.createDB();
   });
 
-  /*
-  * Create leveldb using level-sublevel
-  */
-
-  this.db = level(path.join(this.dataDir, 'db'));
-
-
-  
-
 
   /*
   * Email
@@ -165,10 +156,17 @@ function Server (opts) {
 Server.prototype.createDB = function () {
   
   /*
+  * Create leveldb using level
+  */
+  
+  this.db = level(path.join(this.dataDir, 'db'));
+  
+  
+  /*
   * Create sublevel for sheets
   */
   
-  this.sheets = Sheets(sublevel(this.db).sublevel('sheets', {
+  this.sheets = Sheets(sublevel(this.db, 'sheets', {
     valueEncoding: 'json'
   }));
   
@@ -178,7 +176,7 @@ Server.prototype.createDB = function () {
   */
   
   this.session = levelSession({
-    db: sublevel(this.db).sublevel('sessions')
+    db: sublevel(this.db, 'sessions')
   });
   
   
@@ -186,7 +184,7 @@ Server.prototype.createDB = function () {
   * Set up accountdown with accountdown-basic for account management
   */
   
-  this.accounts = accountdown(this.db, {
+  this.accounts = accountdown(sublevel(this.db, 'accounts'), {
     login: { basic: require('accountdown-basic') },
     keyEncoding: 'buffer',
     valueEncoding: 'json'
@@ -197,7 +195,7 @@ Server.prototype.createDB = function () {
   * Invites sublevel
   */
   
-  this.invites = sublevel(this.db).sublevel('invites', {
+  this.invites = sublevel(this.db, 'invites', {
     valueEncoding: 'json'
   });
 }

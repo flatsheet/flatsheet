@@ -8,6 +8,8 @@ var server = require('./index')({
   }
 });
 
+console.log(server.dataDir)
+
 server.route('/', function (req, res) {
   if (!res.account) {
     return response()

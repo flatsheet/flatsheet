@@ -4,7 +4,7 @@ var Sheets = require('../models/sheets');
 
 var fs = require('fs');
 var level = require('level-party');
-var sublevel = require('level-sublevel');
+var sublevel = require('subleveldown');
 var minimist = require('minimist');
 var JSONStream = require('JSONStream');
 var accountdown = require('accountdown');
@@ -19,13 +19,13 @@ var sub = argv._[1];
 
 var db = level('./data/db');
 
-var accounts = accountdown(db, {
+var accounts = accountdown(sublevel(db, 'accounts'), {
   login: { basic: require('accountdown-basic') },
   keyEncoding: 'buffer',
   valueEncoding: 'json'
 });
 
-var sheets = Sheets(sublevel(db).sublevel('sheets', {
+var sheets = Sheets(sublevel(db, 'sheets', {
   valueEncoding: 'json'
 }));
 
