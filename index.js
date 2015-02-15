@@ -10,14 +10,15 @@ var Handlebars = require('handlebars');
 var hbsLayouts = require('handlebars-layouts')(Handlebars);
 var level = require('level-party');
 var accountdown = require('accountdown');
+var cookieAuth = require('cookie-auth');
 var sublevel = require('subleveldown');
-var levelSession   = require('level-session');
 var socketio = require('socket.io');
 var nodemailer = require('nodemailer');
 var sgTransport = require('nodemailer-sendgrid-transport');
 var extend = require('extend');
 var dotenv = require('dotenv');
 var corsify = require('corsify');
+var anyBody = require('body/any');
 
 var getView = require('./util/get-view')(Handlebars);
 var Sheets = require('./models/sheets');
@@ -172,11 +173,20 @@ Server.prototype.createDB = function () {
   
   
   /*
-  * Create sublevel for sessions using level-session
+  * Create sublevel for sessions using cookie-auth
   */
   
-  this.session = levelSession({
-    db: sublevel(this.db, 'sessions')
+  this.auth = cookieAuth({
+    name: opts.site.title, 
+    sessions: sublevel(this.db, 'sessions'),
+    authenticator: function (req, res, cb) {
+      anyBody(req, res, function (err, body) {
+        self.users.verify('basic', body, function (err, ok, id) {
+          if (err) return cb(err);
+          else cb();
+        });
+      });
+    }
   });
   
   
@@ -189,12 +199,12 @@ Server.prototype.createDB = function () {
     keyEncoding: 'buffer',
     valueEncoding: 'json'
   });
-  
-  
+
+
   /*
   * Invites sublevel
   */
-  
+
   this.invites = sublevel(this.db, 'invites', {
     valueEncoding: 'json'
   });
@@ -286,6 +296,42 @@ Server.prototype.createServer = function () {
   });
 }
 
+Server.prototype.getUserBySession = function (req, cb) {
+  var self = this;
+
+  this.auth.getSession(req, function (sessionError, session) {
+    if (sessionError) return cb(sessionError);
+    self.users.get(session.data.username, function (userError, user) {
+      if (userError) return cb(userError);
+      cb(null, { username: user.username, active: true }, session);
+    });
+  });
+}
+
+Server.prototype.authorizeSession = function (req, res, cb) {
+  this.getUserBySession(req, function (err, user, session) {
+    if (err) return redirect(res, '/', 302);
+    else cb(null, user, session);
+  });
+}
+
+Server.prototype.authorizeAPI = function (req, res, cb) {
+  var self = this;
+
+  if (!req.headers.authorization) return cb('Unauthorized');
+
+  var cred = req.headers.authorization.split(':');
+  var account = { username: cred[0], password: cred[1] };
+
+  self.users.verify('basic', account, function (err, ok, id) {
+    if (err) return cb(err);
+
+    self.users.get(id, function (userError, value) {
+      if (userError) return cb(userError);
+      cb(null, value);
+    });
+  });
+}
 
 /*
 *  listen method for starting the server

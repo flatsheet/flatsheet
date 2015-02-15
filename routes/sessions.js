@@ -1,6 +1,7 @@
 var response = require('response');
 var JSONStream = require('JSONStream');
 var formBody = require('body/form');
+var redirect = require('../util/redirect');
 
 exports.install = function (server, prefix) {
   var prefix = prefix || '/session';
@@ -13,18 +14,15 @@ exports.install = function (server, prefix) {
   server.route(prefix, function (req, res) {
     if (req.method === 'POST') {
       formBody(req, res, function (err, body) {
-        server.accounts.verify('basic', body, function (err, ok) {
-          if (err) return console.error(err);
+        var creds = { username: body.username, password: body.password };
 
-          if (ok) {
-            server.accounts.get(body.username, function (err, account) {
-              req.session.set(req.session.id, account, function (sessionerr) {
-                if (err) console.error(sessionerr);
-                res.writeHead(302, { 'Location': '/' });
-                res.end();
-              });
-            });
-          }
+        server.users.verify('basic', body, function (err, ok, id) {          
+          if (err) console.error(err);
+
+          server.auth.login(res, { username: id }, function (loginerr, data) {
+            if (loginerr) console.error(loginerr);
+            redirect(res, '/');
+          });
         });
       });
     }
@@ -36,12 +34,9 @@ exports.install = function (server, prefix) {
   */
 
   server.route(prefix + '/destroy', function (req, res) {
-    if (req.method === 'POST') {
-      req.session.destroy(function (err) {
-        if (err) console.error(err);
-        res.writeHead(302, { 'Location': '/' });
-        res.end();
-      });
-    }
+    server.auth.delete(req, function () {
+      server.auth.cookie.destroy(res);
+      redirect(res, '/');
+    });
   });
 }
