@@ -5,45 +5,39 @@ var formBody = require('body/form');
 var Busboy = require('busboy');
 var csv = require('csv-parser');
 
-var auth = require('../util/check-auth');
+var redirect = require('../util/redirect');
 
 exports.install = function (server, prefix) {
   var prefix = prefix || '/sheet';
 
   server.route(prefix + '/list', function (req, res, opts) {
-    if (auth(res, { prefix: prefix, id: opts.params.id })) {
+    server.authorizeSession(req, res, function (err, user, session) {
+      if (err) redirect(res, '/');
       
       server.sheets.list(function (err, list) {
         if (err) console.log(err);
         var ctx = { account: res.account, sheets: list };
         return response().html(server.render('sheet-list', ctx)).pipe(res);
       });
-      
-    }
+    });
   });
 
   server.route(prefix + '/edit/:id', function (req, res, opts) {
-    if (auth(res, { prefix: prefix, id: opts.params.id })) {
+    server.authorizeSession(req, res, function (err, user, session) {
+      if (err) return redirect(res, '/');
 
       server.sheets.fetch(opts.params.id, function (err, sheet) {
-        if (err) {
-          res.writeHead(302, { 'Location': '/' });
-          return res.end();
-        }
+        if (err) return redirect(res, '/404');
 
         var ctx = { account: res.account, sheet: sheet };
         return response().html(server.render('sheet-edit', ctx)).pipe(res);
       });
-      
-    }
+    });
   });
 
   server.route(prefix + '/view/:id', function (req, res, opts) {
     server.sheets.fetch(opts.params.id, function (err, sheet) {
-      if (err) {
-        res.writeHead(302, { 'Location': '/' });
-        return res.end();
-      }
+      if (err) redirect(res, '/404');
 
       var headers = [];
 
@@ -59,7 +53,8 @@ exports.install = function (server, prefix) {
   });
 
   server.route(prefix + '/new', function (req, res, opts) {
-    if (auth(res, { prefix: prefix, id: opts.params.id })) {
+    server.authorizeSession(req, res, function (err, user, session) {
+      if (err) redirect(res, '/');
 
       formBody(req, res, function (err, body) {
         var data = body;
@@ -71,11 +66,13 @@ exports.install = function (server, prefix) {
         })
       });
       
-    };
+    });
   });
 
   server.route(prefix + '/new/csv', function (req, res, opts) {
-    if (auth(res, { prefix: prefix, id: opts.params.id })) {
+    server.authorizeSession(req, res, function (err, user, session) {
+      if (err) redirect(res, '/');
+      
       var sheet = { rows: [] };
       
       var busboy = new Busboy({ headers: req.headers });
@@ -102,20 +99,24 @@ exports.install = function (server, prefix) {
       });
 
       req.pipe(busboy);
-    };
+    });
   });
   
   server.route(prefix + '/destroy/:id', function (req, res, opts) {
-    if (auth(res, { prefix: prefix, id: opts.params.id })) {
+    server.authorizeSession(req, res, function (err, user, session) {
+      if (err) redirect(res, '/');
+      
       server.sheets.destroy(opts.params.id, function (err) {
         if (err) console.error(err);
         res.writeHead(302, { 'Location': '/' });
         return res.end();
       });
-      
-    }
+    });
   });
   
+  server.route('/404', function (req, res, opts) {
+    return response().html(server.render('404')).pipe(res);
+  });
   
   /*
   * backwards campatibility for old sheet route

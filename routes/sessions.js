@@ -16,7 +16,7 @@ exports.install = function (server, prefix) {
       formBody(req, res, function (err, body) {
         var creds = { username: body.username, password: body.password };
 
-        server.users.verify('basic', body, function (err, ok, id) {          
+        server.accounts.verify('basic', body, function (err, ok, id) {          
           if (err) console.error(err);
 
           server.auth.login(res, { username: id }, function (loginerr, data) {

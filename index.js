@@ -21,6 +21,7 @@ var corsify = require('corsify');
 var anyBody = require('body/any');
 
 var getView = require('./util/get-view')(Handlebars);
+var redirect = require('./util/redirect');
 var Sheets = require('./models/sheets');
 
 var apiV2 = require('./routes/api-v2');
@@ -155,6 +156,7 @@ function Server (opts) {
 */
 
 Server.prototype.createDB = function () {
+  var self = this;
   
   /*
   * Create leveldb using level
@@ -177,7 +179,7 @@ Server.prototype.createDB = function () {
   */
   
   this.auth = cookieAuth({
-    name: opts.site.title, 
+    name: self.site.title, 
     sessions: sublevel(this.db, 'sessions'),
     authenticator: function (req, res, cb) {
       anyBody(req, res, function (err, body) {
@@ -238,10 +240,7 @@ Server.prototype.createServer = function () {
 
   this.server = http.createServer(self.cors(function (req, res) {
     if (staticFiles(req, res)) return;
-    
-    self.session(req, res, function () {
-      self.router(req, res);
-    });
+    self.router(req, res);
   }));
 
   var io = socketio(this.server);
@@ -301,7 +300,7 @@ Server.prototype.getUserBySession = function (req, cb) {
 
   this.auth.getSession(req, function (sessionError, session) {
     if (sessionError) return cb(sessionError);
-    self.users.get(session.data.username, function (userError, user) {
+    self.accounts.get(session.data.username, function (userError, user) {
       if (userError) return cb(userError);
       cb(null, { username: user.username, active: true }, session);
     });
@@ -350,7 +349,7 @@ Server.prototype.route = function (path, cb) {
   var self = this;
 
   this.router.addRoute(path, function (req, res, opts) {
-    req.session.get(req.session.id, function (err, account) {
+    self.getUserBySession(req, function (err, account) {
       self.viewData.account = res.account = account;
       cb.call(self, req, res, opts);
     });
