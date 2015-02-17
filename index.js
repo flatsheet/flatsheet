@@ -67,8 +67,14 @@ function Server (opts) {
   if (!(this instanceof Server)) return new Server(opts);
   opts || (opts = {});
   var self = this;
-  
-  var envFile = fs.readFileSync((opts.dir || process.cwd()) + '/.env');
+
+  var envFilePath = (opts.dir || process.cwd()) + '/.env';
+
+  if (!fs.existsSync(envFilePath)) {
+    fs.writeFileSync(envFilePath, '');
+  }
+
+  var envFile = fs.readFileSync(envFilePath);
   var secrets = dotenv.parse(envFile);
 
   this.site = opts.site;
