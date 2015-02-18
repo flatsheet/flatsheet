@@ -44,7 +44,7 @@ This is a good option for when you're using flatsheet in production, because you
 
 ### File/folder setup
 - Create a folder named `data`: `mkdir data`
-- Create a server.js file with this code:
+- Create a app.js file with this code:
 
 ```javascript
 var response = require('response');
@@ -55,7 +55,7 @@ var server = require('flatsheet')({
     url: 'http://127.0.0.1:3333',
     contact: 'your full name'
   },
-  db: __dirname + '/data/db'
+  db: __dirname + '/data'
 });
 
 server.route('/', function (req, res) {
@@ -89,7 +89,7 @@ SENDGRID_PASS=yourpassword
 ```json
 "scripts": {
   "flatsheet": "flatsheet",
-  "start": "node server.js"
+  "start": "node app.js"
 },
 ```
 
@@ -100,10 +100,10 @@ SENDGRID_PASS=yourpassword
   "name": "flatsheet-example",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "app.js",
   "scripts": {
     "flatsheet": "flatsheet",
-    "start": "node server.js"
+    "start": "node app.js"
   },
   "author": "",
   "license": "ISC"

@@ -5,7 +5,7 @@ var formBody = require('body/form');
 var Busboy = require('busboy');
 var csv = require('csv-parser');
 
-var redirect = require('../util/redirect');
+var redirect = require('../lib/redirect');
 
 exports.install = function (server, prefix) {
   var prefix = prefix || '/sheet';

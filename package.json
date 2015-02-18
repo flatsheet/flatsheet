@@ -1,14 +1,14 @@
 {
   "name": "flatsheet",
   "description": "a multi-user, realtime editor for tabular data",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "repository": {
     "url": "git://github.com/flatsheet/flatsheet.git"
   },
   "bin": {
     "flatsheet": "./bin/flatsheet"
   },
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
     "flatsheet": "./bin/flatsheet",
     "test": "tape test.js",
@@ -18,7 +18,7 @@
     "bundle-js": "browserify -g brfs browser/sheet.js -o public/sheet.js && browserify -g brfs browser/sheet-list.js -o public/sheet-list.js",
     "bundle": "npm run bundle-js & npm run bundle-css",
     "watch": "npm run watch-js & npm run watch-css",
-    "start": "nodemon --watch public --watch server.js --watch index.js server.js"
+    "start": "nodemon --watch public --watch app.js --watch index.js app.js"
   },
   "browserify": {
     "transform": [

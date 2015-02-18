@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.5.2 - February 18, 2015
+- Rename util to lib
+- move index.js into lib folder
+- rename server.js, the example usage of the module, to app.js
+- bring back ability to set path to db when using flatsheet as required module
+
+## v0.5.1 - February 18, 2015
+- Fix some issues with module names being uppercased, which ubuntu is not fond of.
+
 ## v0.5.0 - February 16, 2015
 - fixed some install instructions in the readme
 - switched from level-sublevel to subleveldown

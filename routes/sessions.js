@@ -1,7 +1,7 @@
 var response = require('response');
 var JSONStream = require('JSONStream');
 var formBody = require('body/form');
-var redirect = require('../util/redirect');
+var redirect = require('../lib/redirect');
 
 exports.install = function (server, prefix) {
   var prefix = prefix || '/session';
