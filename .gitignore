@@ -5,3 +5,4 @@ tmp
 data/
 data/*
 !tests/data
+.idea
