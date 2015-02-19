@@ -1,6 +1,6 @@
 # flatsheet
 
-> A realtime editor for curating data.
+> A realtime editor for curating data as a team. [flatsheet.io](http://flatsheet.io)
 
 [![Join the chat at https://gitter.im/flatsheet/flatsheet](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/flatsheet/flatsheet?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
