@@ -1,8 +1,8 @@
 # flatsheet
 
-[![Join the chat at https://gitter.im/flatsheet/flatsheet](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/flatsheet/flatsheet?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 > A realtime editor for curating data.
+
+[![Join the chat at https://gitter.im/flatsheet/flatsheet](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/flatsheet/flatsheet?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Current status
 
