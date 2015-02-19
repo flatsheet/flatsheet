@@ -12,15 +12,31 @@ exports.install = function (server, prefix) {
 
 
   /*
-  * Get list of accounts
+  * Get list of accounts (admin only)
   */
 
   server.route(prefix + '/list', function (req, res) {
-    if (req.method === 'GET') {
-      return server.accounts.list()
-        .pipe(JSONStream.stringify())
-        .pipe(res);
-    }
+    // check if the user is an admin
+    console.log("inside /list");
+    var cb = function (first, user, session) {
+      console.log("/list: current user: ");
+      console.log(user.username);
+      console.log("/list: are we admin: ");
+      console.log(user.admin);
+      if (user.admin) {
+        console.log("session is authorized");
+        if (req.method === 'GET') {
+          return server.accounts.list()
+              .pipe(JSONStream.stringify())
+              .pipe(res);
+        }
+      } else {
+        console.log("session is not authorized to view accounts list");
+        res.writeHead(302, { 'Location': '/' });
+        return res.end();
+      }
+    };
+    server.authorizeSession(req, res, cb);
   });
 
 
