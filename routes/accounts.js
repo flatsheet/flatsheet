@@ -18,25 +18,37 @@ exports.install = function (server, prefix) {
   server.route(prefix + '/list', function (req, res) {
     // check if the user is an admin
     console.log("inside /list");
-    var cb = function (first, user, session) {
+
+    server.authorizeSession(req, res, function (error, user, session) {
       console.log("/list: current user: ");
       console.log(user.username);
       console.log("/list: are we admin: ");
       console.log(user.admin);
-      if (user.admin) {
+      if (user.admin && !error) {
         console.log("session is authorized");
         if (req.method === 'GET') {
-          return server.accounts.list()
-              .pipe(JSONStream.stringify())
-              .pipe(res);
+          var results = [];
+          var stream = server.accounts.list();
+
+          stream
+            .on('data', function (data) {
+              results.push(data);
+            })
+            .on('error', function (err) {
+              return console.log(err);
+            })
+            .on('end', function () {
+              var ctx = {accounts: results};
+              return response().html(server.render('account-list', ctx)).pipe(res);
+            });
         }
       } else {
+        if (error) return console.log(error);
         console.log("session is not authorized to view accounts list");
         res.writeHead(302, { 'Location': '/' });
         return res.end();
       }
-    };
-    server.authorizeSession(req, res, cb);
+    });
   });
 
 
