@@ -7,6 +7,9 @@
     email: <input type="email" name="email"><br>
     username: <input type="text" name="username"><br>
     password: <input type="password" name="password"><br>
+      {{#if account.admin}}
+      admin: <input type="checkbox" name="admin" value=true><br>
+      {{/if}}
     <input type="submit" value="Create your account">
   </form>
 </div>

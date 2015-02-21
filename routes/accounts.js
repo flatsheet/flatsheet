@@ -66,6 +66,25 @@ exports.install = function (server, prefix) {
     }
   });
 
+  /*
+   *  Create an admin account (admin only)
+   */
+
+  server.route(prefix + '/create-admin', function (req, res) {
+    var cb = function (error, user, session) {
+      if (user.admin && !error) {
+        if (req.method === 'GET') {
+          return response()
+            .html(server.render('account-new')).pipe(res);
+        }
+      } else {
+        res.writeHead(302, { 'Location': '/' });
+        return res.end();
+      }
+    };
+    server.authorizeSession(req, res, cb);
+  });
+
 
   /*
   *  Create an account
@@ -81,7 +100,11 @@ exports.install = function (server, prefix) {
     }
 
     if (req.method === 'POST') {
+
       formBody(req, res, function (err, body) {
+        if (!body.admin) {
+          body.admin = false;
+        }
 
         var opts = {
           login: {
@@ -93,25 +116,57 @@ exports.install = function (server, prefix) {
           value: {
             email: body.email,
             username: body.username,
-            color: randomColor()
+            color: randomColor(),
+            admin: body.admin
           }
         };
 
+        // TODO: Once an account is deleted, the username is not available for a new account
         server.accounts.create(body.username, opts, function (err) {
 
           //todo: notification of error on page
           if (err) console.error(err);
 
-          req.session.set(req.session.id, opts.value, function (sessionerr) {
-            if (err) console.error(sessionerr);
-            res.writeHead(302, { 'Location': '/' });
-            return res.end();
-          });
+          // TODO: setting the session fails - req.session is undefined
+          //req.session.set(req.session.id, opts.value, function (sessionerr) {
+          //  if (err) console.error(sessionerr);
+          //  res.writeHead(302, { 'Location': '/' });
+          //  return res.end();
+          //});
+
+
+          res.writeHead(302, { 'Location': '/' });
+          return res.end();
 
         });
       });
     }
 
+  });
+
+  /*
+   * Delete an account (admin only)
+   */
+
+  server.route(prefix + '/delete/:username', function (req, res, opts) {
+    var cb = function (error, user, session) {
+      if (user.admin && !error) {
+        if (req.method === 'POST') {
+          server.accounts.remove(opts.params.username, function(err) {
+            return console.log(err);
+          });
+          res.writeHead(302, { 'Location': prefix + '/list' });
+          return res.end();
+        }
+      } else {
+        if (error) {
+          console.log(error);
+        }
+        res.writeHead(302, { 'Location': '/' });
+        return res.end();
+      }
+    };
+    server.authorizeSession(req, res, cb);
   });
 
 
