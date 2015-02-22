@@ -6,10 +6,8 @@ var formBody = require('body/form');
 var randomColor = require('random-color');
 var uuid = require('uuid').v1;
 
-
 exports.install = function (server, prefix) {
   var prefix = prefix || '/account';
-
 
   /*
   * Get list of accounts (admin only)
@@ -17,33 +15,33 @@ exports.install = function (server, prefix) {
 
   server.route(prefix + '/list', function (req, res) {
     server.authorizeSession(req, res, function (error, user, session) {
-      if (user.admin && !error) {
-        if (req.method === 'GET') {
-          var results = [];
-          var stream = server.accounts.list();
-
-          stream
-            .on('data', function (data) {
-              results.push(data);
-            })
-            .on('error', function (err) {
-              return console.log(err);
-            })
-            .on('end', function () {
-              var ctx = {accounts: results};
-              return response().html(server.render('account-list', ctx)).pipe(res);
-            });
-        }
-      } else {
+      if (!user.admin || error) {
         if (error) {
           console.log(error);
         }
-        res.writeHead(302, { 'Location': '/' });
+        res.writeHead(302, {'Location': '/'});
         return res.end();
+      }
+      if (req.method === 'GET') {
+        var results = [];
+        var stream = server.accounts.list();
+
+        stream
+          .on('data', function (data) {
+            results.push(data);
+          })
+          .on('error', function (err) {
+            return console.log(err);
+          })
+          .on('end', function () {
+            var ctx = {accounts: results};
+            console.log("ctx in accounts list:");
+            console.log(ctx);
+            return response().html(server.render('account-list', ctx)).pipe(res);
+          });
       }
     });
   });
-
 
   /*
   *  Sign in
@@ -59,6 +57,17 @@ exports.install = function (server, prefix) {
     }
   });
 
+  /*
+   * Utility functions
+   */
+  function generateUUID(){
+    var d = new Date().getTime();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = (d + Math.random()*16)%16 | 0;
+      d = Math.floor(d/16);
+      return (c=='x' ? r : (r&0x3|0x8)).toString(16);
+    });
+  }
   function logIfError(err) {
 
     // TODO: implement a notification of error on page
@@ -70,11 +79,8 @@ exports.install = function (server, prefix) {
     //  res.writeHead(302, { 'Location': '/' });
     //  return res.end();
     //});
-
-    //res.writeHead(302, { 'Location': prefix + '/list' });
-    //return res.end();
   }
-  function createAccountFromForm(err, body) {
+  function modifyAccountFromForm(err, body, accountOperation) {
     body.admin = !!body.admin; // ie 'true' => true
 
     var opts = {
@@ -91,9 +97,14 @@ exports.install = function (server, prefix) {
         admin: body.admin
       }
     };
+    accountOperation(body.username, opts, logIfError);
+  }
 
+  function createAccount(username, opts, cb) {
     // TODO: fix bug: Once an account is deleted, the username is not available for a new account
-    server.accounts.create(body.username, opts, logIfError);
+    //server.accounts.create(body.username, opts, logIfError);
+    //server.accounts.create(username, opts, cb);
+    server.accounts.create(generateUUID(), opts, cb);
   }
 
   /*
@@ -102,17 +113,19 @@ exports.install = function (server, prefix) {
 
   server.route(prefix + '/create-admin', function (req, res) {
     server.authorizeSession(req, res, function (error, user, session) {
-      if (user.admin && !error) {
-        if (req.method === 'GET') {
-          return response()
-            .html(server.render('account-new')).pipe(res);
-        }
-        if (req.method === 'POST') {
-          formBody(req, res, createAccountFromForm);
-          res.writeHead(302, { 'Location': prefix + '/list' });
-          return res.end();
-        }
-      } else {
+      if (!user.admin || error) {
+        if (error) console.log(error);
+        res.writeHead(302, { 'Location': prefix + '/list' });
+        return res.end();
+      }
+      if (req.method === 'GET') {
+        return response()
+          .html(server.render('account-new')).pipe(res);
+      }
+      if (req.method === 'POST') {
+        formBody(req, res, function(err, body) {
+          modifyAccountFromForm(err, body, createAccount);
+        });
         res.writeHead(302, { 'Location': prefix + '/list' });
         return res.end();
       }
@@ -130,13 +143,14 @@ exports.install = function (server, prefix) {
           return response().html(server.render('account-update')).pipe(res);
         });
       }
-
       else return response()
         .html(server.render('account-new')).pipe(res);
     }
 
     if (req.method === 'POST') {
-      formBody(req, res, createAccountFromForm);
+      formBody(req, res, function(err, body) {
+        modifyAccountFromForm(err, body, createAccount);
+      });
       res.writeHead(302, { 'Location': '/' });
       return res.end();
     }
@@ -146,11 +160,11 @@ exports.install = function (server, prefix) {
    * Delete an account (admin only)
    */
 
-  server.route(prefix + '/delete/:username', function (req, res, opts) {
-    var cb = function (error, user, session) {
+  server.route(prefix + '/delete/:id', function (req, res, opts) {
+    server.authorizeSession(req, res, function (error, user, session) {
       if (user.admin && !error) {
         if (req.method === 'POST') {
-          server.accounts.remove(opts.params.username, function(err) {
+          server.accounts.remove(opts.params.id, function(err) {
             return console.log(err);
           });
           res.writeHead(302, { 'Location': prefix + '/list' });
@@ -163,35 +177,101 @@ exports.install = function (server, prefix) {
         res.writeHead(302, { 'Location': '/' });
         return res.end();
       }
-    };
-    server.authorizeSession(req, res, cb);
+    });
   });
-
 
   /*
-  * Invite users to create accounts
+   * functions for updating an account
+   */
+
+  // TODO: Refactor this into 'modifyAccountFromForm'
+  function updateAccountFromForm(err, body, params) {
+    console.log("opts.params:");
+    console.log(params);
+    console.log("form body:");
+    console.log(body);
+    if (err) console.log(err);
+
+    console.log("Updating the account with form info...");
+
+    body.admin = !!body.admin; // ie 'true' => true
+    var opts = {
+      login: {
+        basic: {
+          username: body.username,
+          password: body.password // not defined
+        }
+      },
+      value: {
+        email: body.email,
+        username: body.username,
+        admin: body.admin
+      }
+    };
+
+    console.log("getting account value...");
+    server.accounts.get(params.username, function(err, value) {
+      for (var key in value) {
+        if (value.hasOwnProperty(key) && !opts.value.hasOwnProperty(key)) {
+          opts.value[key] = value[key];
+        }
+      }
+      console.log("value:");
+      console.log(value);
+
+      server.accounts.put(params.id, opts.value, logIfError);
+    });
+  }
+  function renderAccountUpdate(err, value, user, opts, res) {
+    var ctx = {account: value, isAdmin: user.admin, id: opts.params.id};
+    console.log("\nctx:");
+    console.log(ctx);
+    response()
+      .html(server.render('account-update', ctx)).pipe(res);
+  }
+
+  /*
+  * Update an account
   */
 
-  server.route(prefix + '/update', function (req, res) {
-    if (req.method === 'POST') {
-      formBody(req, res, function (err, body) {
-
-        server.accounts.update(body.username, {}, function (err) {
-
-          //todo: notification of error on page
-          if (err) console.error(err);
-
-          req.session.set(req.session.id, opts.value, function (sessionerr) {
-            if (err) console.error(sessionerr);
-            res.writeHead(302, { 'Location': '/' });
-            return res.end();
+  server.route(prefix + '/update/:id', function (req, res, opts) {
+    // When we are only changing the current account:
+    if (req.method === 'POST' && res.account.key === opts.params.id) {
+      console.log("Updating the accounts with server.accounts.update(..)");
+      // TODO: What is this 'update' method?
+      server.accounts.update(body.username, {}, logIfError);
+    }
+    server.authorizeSession(req, res, function (error, user, session) {
+      if (user.admin && !error) {
+        if (req.method === 'POST') {
+          console.log("\n\nupdating the account:");
+          console.log(opts.params.id);
+          formBody(req, res, function (err, body) {
+            updateAccountFromForm(err, body, opts.params);
+          });
+          res.writeHead(302, {'Location': prefix + '/list'});
+          return res.end();
+        }
+        if (req.method === 'GET') {
+          console.log("user:");
+          console.log(user);
+          server.accounts.get(opts.params.id, function (err, value) {
+            console.log("value:");
+            console.log(value);
+            renderAccountUpdate(err, value, user, opts, res);
           });
 
-        });
-      });
-    }
+        }
+      } else {
+        // If authorization fails:
+        if (error) {
+          console.log(error);
+        }
+        res.writeHead(302, {'Location': '/'});
+        return res.end();
+      }
+    });
   });
-
 
   /*
   * Invite users to create accounts
