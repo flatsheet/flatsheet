@@ -3,7 +3,11 @@
 {{#replace "body"}}
 <div class="container">
   <h1>Sign up</h1>
-  <form action="/account" method="post">
+    {{#if account.admin}}
+    <form action="/account/create-admin" method="post">
+    {{else}}
+    <form action="/account" method="post">
+    {{/if}}
     email: <input type="email" name="email"><br>
     username: <input type="text" name="username"><br>
     password: <input type="password" name="password"><br>

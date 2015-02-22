@@ -16,16 +16,8 @@ exports.install = function (server, prefix) {
   */
 
   server.route(prefix + '/list', function (req, res) {
-    // check if the user is an admin
-    console.log("inside /list");
-
     server.authorizeSession(req, res, function (error, user, session) {
-      console.log("/list: current user: ");
-      console.log(user.username);
-      console.log("/list: are we admin: ");
-      console.log(user.admin);
       if (user.admin && !error) {
-        console.log("session is authorized");
         if (req.method === 'GET') {
           var results = [];
           var stream = server.accounts.list();
@@ -43,8 +35,9 @@ exports.install = function (server, prefix) {
             });
         }
       } else {
-        if (error) return console.log(error);
-        console.log("session is not authorized to view accounts list");
+        if (error) {
+          console.log(error);
+        }
         res.writeHead(302, { 'Location': '/' });
         return res.end();
       }
@@ -66,25 +59,65 @@ exports.install = function (server, prefix) {
     }
   });
 
+  function logIfError(err) {
+
+    // TODO: implement a notification of error on page
+    if (err) console.error(err);
+
+    // TODO: do we need this? setting the session here fails - req.session is undefined
+    //req.session.set(req.session.id, opts.value, function (sessionerr) {
+    //  if (err) console.error(sessionerr);
+    //  res.writeHead(302, { 'Location': '/' });
+    //  return res.end();
+    //});
+
+    //res.writeHead(302, { 'Location': prefix + '/list' });
+    //return res.end();
+  }
+  function createAccountFromForm(err, body) {
+    body.admin = !!body.admin; // ie 'true' => true
+
+    var opts = {
+      login: {
+        basic: {
+          username: body.username,
+          password: body.password
+        }
+      },
+      value: {
+        email: body.email,
+        username: body.username,
+        color: randomColor(),
+        admin: body.admin
+      }
+    };
+
+    // TODO: fix bug: Once an account is deleted, the username is not available for a new account
+    server.accounts.create(body.username, opts, logIfError);
+  }
+
   /*
    *  Create an admin account (admin only)
    */
 
   server.route(prefix + '/create-admin', function (req, res) {
-    var cb = function (error, user, session) {
+    server.authorizeSession(req, res, function (error, user, session) {
       if (user.admin && !error) {
         if (req.method === 'GET') {
           return response()
             .html(server.render('account-new')).pipe(res);
         }
+        if (req.method === 'POST') {
+          formBody(req, res, createAccountFromForm);
+          res.writeHead(302, { 'Location': prefix + '/list' });
+          return res.end();
+        }
       } else {
-        res.writeHead(302, { 'Location': '/' });
+        res.writeHead(302, { 'Location': prefix + '/list' });
         return res.end();
       }
-    };
-    server.authorizeSession(req, res, cb);
+    });
   });
-
 
   /*
   *  Create an account
@@ -92,56 +125,21 @@ exports.install = function (server, prefix) {
 
   server.route(prefix, function (req, res) {
     if (req.method === 'GET') {
-      if (res.account) response()
-        .html(server.render('account-update')).pipe(res);
+      if (res.account) {
+        server.getUserBySession(req, function (err, user, session) {
+          return response().html(server.render('account-update')).pipe(res);
+        });
+      }
 
       else return response()
         .html(server.render('account-new')).pipe(res);
     }
 
     if (req.method === 'POST') {
-
-      formBody(req, res, function (err, body) {
-        if (!body.admin) {
-          body.admin = false;
-        }
-
-        var opts = {
-          login: {
-            basic: {
-              username: body.username,
-              password: body.password
-            }
-          },
-          value: {
-            email: body.email,
-            username: body.username,
-            color: randomColor(),
-            admin: body.admin
-          }
-        };
-
-        // TODO: Once an account is deleted, the username is not available for a new account
-        server.accounts.create(body.username, opts, function (err) {
-
-          //todo: notification of error on page
-          if (err) console.error(err);
-
-          // TODO: setting the session fails - req.session is undefined
-          //req.session.set(req.session.id, opts.value, function (sessionerr) {
-          //  if (err) console.error(sessionerr);
-          //  res.writeHead(302, { 'Location': '/' });
-          //  return res.end();
-          //});
-
-
-          res.writeHead(302, { 'Location': '/' });
-          return res.end();
-
-        });
-      });
+      formBody(req, res, createAccountFromForm);
+      res.writeHead(302, { 'Location': '/' });
+      return res.end();
     }
-
   });
 
   /*
