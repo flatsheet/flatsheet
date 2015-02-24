@@ -35,8 +35,6 @@ exports.install = function (server, prefix) {
           })
           .on('end', function () {
             var ctx = {accounts: results};
-            console.log("ctx in accounts list:");
-            console.log(ctx);
             return response().html(server.render('account-list', ctx)).pipe(res);
           });
       }
@@ -186,13 +184,7 @@ exports.install = function (server, prefix) {
 
   // TODO: Refactor this into 'modifyAccountFromForm'
   function updateAccountFromForm(err, body, params) {
-    console.log("opts.params:");
-    console.log(params);
-    console.log("form body:");
-    console.log(body);
     if (err) console.log(err);
-
-    console.log("Updating the account with form info...");
 
     body.admin = !!body.admin; // ie 'true' => true
     var opts = {
@@ -209,23 +201,17 @@ exports.install = function (server, prefix) {
       }
     };
 
-    console.log("getting account value...");
     server.accounts.get(params.username, function(err, value) {
       for (var key in value) {
         if (value.hasOwnProperty(key) && !opts.value.hasOwnProperty(key)) {
           opts.value[key] = value[key];
         }
       }
-      console.log("value:");
-      console.log(value);
-
       server.accounts.put(params.id, opts.value, logIfError);
     });
   }
   function renderAccountUpdate(err, value, user, opts, res) {
     var ctx = {account: value, isAdmin: user.admin, id: opts.params.id};
-    console.log("\nctx:");
-    console.log(ctx);
     response()
       .html(server.render('account-update', ctx)).pipe(res);
   }
@@ -237,15 +223,12 @@ exports.install = function (server, prefix) {
   server.route(prefix + '/update/:id', function (req, res, opts) {
     // When we are only changing the current account:
     if (req.method === 'POST' && res.account.key === opts.params.id) {
-      console.log("Updating the accounts with server.accounts.update(..)");
       // TODO: What is this 'update' method?
       server.accounts.update(body.username, {}, logIfError);
     }
     server.authorizeSession(req, res, function (error, user, session) {
       if (user.admin && !error) {
         if (req.method === 'POST') {
-          console.log("\n\nupdating the account:");
-          console.log(opts.params.id);
           formBody(req, res, function (err, body) {
             updateAccountFromForm(err, body, opts.params);
           });
@@ -253,11 +236,7 @@ exports.install = function (server, prefix) {
           return res.end();
         }
         if (req.method === 'GET') {
-          console.log("user:");
-          console.log(user);
           server.accounts.get(opts.params.id, function (err, value) {
-            console.log("value:");
-            console.log(value);
             renderAccountUpdate(err, value, user, opts, res);
           });
 
