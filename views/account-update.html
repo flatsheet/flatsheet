@@ -3,7 +3,7 @@
 {{#replace "body"}}
 <div class="container">
     <h1>Update account for username: {{ account.username }}</h1>
-    <form action="/account/update/{{ id }}" method="post">
+    <form action="/accounts/update/{{ id }}" method="post">
         username: <input type="text" name="username" placeholder={{ account.username }} value={{ account.username }}><br>
         email: <input type="email" name="email" placeholder={{ account.email }} value={{ account.email }}><br>
         {{#if isAdmin}}

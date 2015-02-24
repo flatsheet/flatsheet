@@ -7,13 +7,13 @@ var randomColor = require('random-color');
 var uuid = require('uuid').v1;
 
 exports.install = function (server, prefix) {
-  var prefix = prefix || '/account';
+  var prefix = prefix || '/accounts';
 
   /*
   * Get list of accounts (admin only)
   */
 
-  server.route(prefix + '/list', function (req, res) {
+  server.route(prefix, function (req, res) {
     server.authorizeSession(req, res, function (error, user, session) {
       if (!user.admin || error) {
         if (error) {
@@ -115,7 +115,7 @@ exports.install = function (server, prefix) {
     server.authorizeSession(req, res, function (error, user, session) {
       if (!user.admin || error) {
         if (error) console.log(error);
-        res.writeHead(302, { 'Location': prefix + '/list' });
+        res.writeHead(302, { 'Location': prefix });
         return res.end();
       }
       if (req.method === 'GET') {
@@ -126,7 +126,7 @@ exports.install = function (server, prefix) {
         formBody(req, res, function(err, body) {
           modifyAccountFromForm(err, body, createAccount);
         });
-        res.writeHead(302, { 'Location': prefix + '/list' });
+        res.writeHead(302, { 'Location': prefix });
         return res.end();
       }
     });
@@ -136,7 +136,7 @@ exports.install = function (server, prefix) {
   *  Create an account
   */
 
-  server.route(prefix, function (req, res) {
+  server.route(prefix + '/create', function (req, res) {
     if (req.method === 'GET') {
       if (res.account) {
         server.getUserBySession(req, function (err, user, session) {
@@ -167,7 +167,7 @@ exports.install = function (server, prefix) {
           server.accounts.remove(opts.params.id, function(err) {
             return console.log(err);
           });
-          res.writeHead(302, { 'Location': prefix + '/list' });
+          res.writeHead(302, { 'Location': prefix });
           return res.end();
         }
       } else {
@@ -249,7 +249,7 @@ exports.install = function (server, prefix) {
           formBody(req, res, function (err, body) {
             updateAccountFromForm(err, body, opts.params);
           });
-          res.writeHead(302, {'Location': prefix + '/list'});
+          res.writeHead(302, {'Location': prefix });
           return res.end();
         }
         if (req.method === 'GET') {

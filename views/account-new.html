@@ -4,9 +4,9 @@
 <div class="container">
   <h1>Sign up</h1>
     {{#if account.admin}}
-    <form action="/account/create-admin" method="post">
+    <form action="/accounts/create-admin" method="post">
     {{else}}
-    <form action="/account" method="post">
+    <form action="/accounts/create" method="post">
     {{/if}}
     email: <input type="email" name="email"><br>
     username: <input type="text" name="username"><br>

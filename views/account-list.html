@@ -7,14 +7,14 @@
         <h1>Account list (admin access only):</h1>
         {{#each accounts}}
         <div class="list-item clearfix">
-            <a href="/account/update/{{ key }}">
+            <a href="/accounts/update/{{ key }}">
                 <div class="list-item-info">
                     <h3 class="list-item-name">username: {{ value.username }}</h3>
                     <div class="list-item-description">email: {{ value.email }}</div>
                 </div>
 
                 <div class="list-item-actions">
-                    <form action="/account/delete/{{ key }}" method="post">
+                    <form action="/accounts/delete/{{ key }}" method="post">
                         <button type="submit" class="destroy-sheet">
                             <i class="fa fa-trash-o"></i> destroy
                         </button>
@@ -24,7 +24,7 @@
         </div>
         {{/each }}
     </div>
-    <form action="/account/create-admin" method="get">
+    <form action="/accounts/create-admin" method="get">
         <button type="submit" class="destroy-sheet">
             <i class="fa fa-plus"></i> create new account
         </button>
