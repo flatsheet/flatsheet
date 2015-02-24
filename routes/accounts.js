@@ -162,9 +162,7 @@ exports.install = function (server, prefix) {
     server.authorizeSession(req, res, function (error, user, session) {
       if (user.admin && !error) {
         if (req.method === 'POST') {
-          server.accounts.remove(opts.params.id, function(err) {
-            return console.log(err);
-          });
+          server.accounts.remove(opts.params.id, logIfError);
           res.writeHead(302, { 'Location': prefix });
           return res.end();
         }
@@ -367,4 +365,4 @@ exports.install = function (server, prefix) {
     }
   });
 
-}
+};
