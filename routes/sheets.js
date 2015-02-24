@@ -8,7 +8,7 @@ var csv = require('csv-parser');
 var redirect = require('../lib/redirect');
 
 exports.install = function (server, prefix) {
-  var prefix = prefix || '/sheet';
+  var prefix = prefix || '/sheets';
 
   server.route(prefix + '/list', function (req, res, opts) {
     server.authorizeSession(req, res, function (err, user, session) {
@@ -61,7 +61,7 @@ exports.install = function (server, prefix) {
         data.rows = 
         server.sheets.create(data, function (err, sheet, token) {
           if (err) console.error(err);
-          res.writeHead(302, { 'Location': '/sheet/edit/' + token });
+          res.writeHead(302, { 'Location': '/sheets/edit/' + token });
           return res.end();
         })
       });
@@ -93,7 +93,7 @@ exports.install = function (server, prefix) {
         
         server.sheets.create(sheet, function (err, sheet, token) {
           if (err) console.error(err);
-          res.writeHead(302, { 'Location': '/sheet/edit/' + token });
+          res.writeHead(302, { 'Location': '/sheets/edit/' + token });
           return res.end();
         })
       });

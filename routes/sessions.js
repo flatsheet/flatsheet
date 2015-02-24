@@ -4,7 +4,7 @@ var formBody = require('body/form');
 var redirect = require('../lib/redirect');
 
 exports.install = function (server, prefix) {
-  var prefix = prefix || '/session';
+  var prefix = prefix || '/sessions';
 
 
   /*
