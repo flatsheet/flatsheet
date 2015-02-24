@@ -1,4 +1,4 @@
-var qs = require('querystring')
+var qs = require('querystring');
 var url = require('url');
 var response = require('response');
 var JSONStream = require('JSONStream');
@@ -7,7 +7,7 @@ var randomColor = require('random-color');
 var uuid = require('uuid').v1;
 
 exports.install = function (server, prefix) {
-  var prefix = prefix || '/accounts';
+  prefix = prefix || '/accounts';
 
   /*
   * Get list of accounts (admin only)
