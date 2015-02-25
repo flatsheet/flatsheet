@@ -3,10 +3,9 @@
 {{#replace "body"}}
 <div class="container">
     <h1>Update account for username: {{ account.username }}</h1>
-    <form action="/accounts/update/{{ id }}" method="post">
-        username: <input type="text" name="username" placeholder={{ account.username }} value={{ account.username }}><br>
+    <form action="/accounts/update/{{ account.username }}" method="post">
         email: <input type="email" name="email" placeholder={{ account.email }} value={{ account.email }}><br>
-        {{#if isAdmin}}
+        {{#if editorAccount.admin}}
         admin: <input type="checkbox" name="admin" {{checked account.admin}}><br>
         {{/if}}
         <input type="submit" value="Update account">

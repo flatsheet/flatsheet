@@ -56,16 +56,9 @@ exports.install = function (server, prefix) {
   });
 
   /*
-   * Utility functions
+   * Utility functions and variables
+   * TODO: export these as a module
    */
-  function generateUUID(){
-    var d = new Date().getTime();
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      var r = (d + Math.random()*16)%16 | 0;
-      d = Math.floor(d/16);
-      return (c=='x' ? r : (r&0x3|0x8)).toString(16);
-    });
-  }
   function logIfError(err) {
 
     // TODO: implement a notification of error on page
@@ -78,31 +71,59 @@ exports.install = function (server, prefix) {
     //  return res.end();
     //});
   }
-  function modifyAccountFromForm(err, body, accountOperation) {
+
+  function createAccountFromForm(req, res) {
+    formBody(req, res, function(err, body) {
+      modifyAccountFromForm(err, body, body.username, createAccount);
+    });
+  }
+
+  function updateAccountFromForm(req, res, params) {
+    formBody(req, res, function(err, body) {
+      modifyAccountFromForm(err, body, params.username, updateAccount);
+    });
+  }
+  function createAccount(username, opts) {
+    server.accounts.create(username, opts, logIfError);
+  }
+  function updateAccount(username, opts) {
+    server.accounts.get(username, function (err, value) {
+      for (var key in value) {
+        if (value.hasOwnProperty(key) && !opts.value.hasOwnProperty(key)) {
+          opts.value[key] = value[key];
+        }
+      }
+      server.accounts.put(username, opts.value, logIfError);
+    });
+  }
+  function modifyAccountFromForm(err, body, username, accountOperation) {
     body.admin = !!body.admin; // ie 'true' => true
 
     var opts = {
       login: {
         basic: {
-          username: body.username,
+          username: username,
           password: body.password
         }
       },
       value: {
         email: body.email,
-        username: body.username,
         color: randomColor(),
         admin: body.admin
       }
     };
-    accountOperation(body.username, opts, logIfError);
+    accountOperation(username, opts);
   }
-
-  function createAccount(username, opts, cb) {
-    // TODO: fix bug: Once an account is deleted, the username is not available for a new account
-    //server.accounts.create(body.username, opts, logIfError);
-    //server.accounts.create(username, opts, cb);
-    server.accounts.create(generateUUID(), opts, cb);
+  function renderAccountUpdateForm(res, username, user) {
+    server.accounts.get(username, function (err, value) {
+      if (err) {
+        return console.log(err);
+      }
+      value['username'] = username;
+      var ctx = { account: value, editorAccount: user };
+      response()
+        .html(server.render('account-update', ctx)).pipe(res);
+    });
   }
 
   /*
@@ -121,9 +142,8 @@ exports.install = function (server, prefix) {
           .html(server.render('account-new')).pipe(res);
       }
       if (req.method === 'POST') {
-        formBody(req, res, function(err, body) {
-          modifyAccountFromForm(err, body, createAccount);
-        });
+        createAccountFromForm(req, res);
+
         res.writeHead(302, { 'Location': prefix });
         return res.end();
       }
@@ -146,9 +166,7 @@ exports.install = function (server, prefix) {
     }
 
     if (req.method === 'POST') {
-      formBody(req, res, function(err, body) {
-        modifyAccountFromForm(err, body, createAccount);
-      });
+      createAccountFromForm(req, res);
       res.writeHead(302, { 'Location': '/' });
       return res.end();
     }
@@ -158,11 +176,11 @@ exports.install = function (server, prefix) {
    * Delete an account (admin only)
    */
 
-  server.route(prefix + '/delete/:id', function (req, res, opts) {
+  server.route(prefix + '/delete/:username', function (req, res, opts) {
     server.authorizeSession(req, res, function (error, user, session) {
       if (user.admin && !error) {
         if (req.method === 'POST') {
-          server.accounts.remove(opts.params.id, logIfError);
+          server.accounts.remove(opts.params.username, logIfError);
           res.writeHead(302, { 'Location': prefix });
           return res.end();
         }
@@ -177,67 +195,27 @@ exports.install = function (server, prefix) {
   });
 
   /*
-   * functions for updating an account
-   */
-
-  // TODO: Refactor this into 'modifyAccountFromForm'
-  function updateAccountFromForm(err, body, params) {
-    if (err) console.log(err);
-
-    body.admin = !!body.admin; // ie 'true' => true
-    var opts = {
-      login: {
-        basic: {
-          username: body.username,
-          password: body.password // not defined
-        }
-      },
-      value: {
-        email: body.email,
-        username: body.username,
-        admin: body.admin
-      }
-    };
-
-    server.accounts.get(params.username, function(err, value) {
-      for (var key in value) {
-        if (value.hasOwnProperty(key) && !opts.value.hasOwnProperty(key)) {
-          opts.value[key] = value[key];
-        }
-      }
-      server.accounts.put(params.id, opts.value, logIfError);
-    });
-  }
-  function renderAccountUpdate(err, value, user, opts, res) {
-    var ctx = {account: value, isAdmin: user.admin, id: opts.params.id};
-    response()
-      .html(server.render('account-update', ctx)).pipe(res);
-  }
-
-  /*
   * Update an account
   */
 
-  server.route(prefix + '/update/:id', function (req, res, opts) {
+  server.route(prefix + '/update/:username', function (req, res, opts) {
     // When we are only changing the current account:
-    if (req.method === 'POST' && res.account.key === opts.params.id) {
-      // TODO: What is this 'update' method?
-      server.accounts.update(body.username, {}, logIfError);
+    if (req.method === 'POST' && res.account.key === opts.params.username) {
+      updateAccountFromForm(req, res, opts.params);
     }
     server.authorizeSession(req, res, function (error, user, session) {
-      if (user.admin && !error) {
+      if (error) {
+        return logIfError(error);
+      }
+      if (user.admin) {
         if (req.method === 'POST') {
-          formBody(req, res, function (err, body) {
-            updateAccountFromForm(err, body, opts.params);
-          });
+          updateAccountFromForm(req, res, opts.params);
           res.writeHead(302, {'Location': prefix });
           return res.end();
         }
         if (req.method === 'GET') {
-          server.accounts.get(opts.params.id, function (err, value) {
-            renderAccountUpdate(err, value, user, opts, res);
-          });
-
+          //Display the account update form
+          renderAccountUpdateForm(res, opts.params.username, user)
         }
       } else {
         // If authorization fails:
