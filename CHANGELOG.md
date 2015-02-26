@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.0 February 26, 2015
+## v0.6.0 - February 26, 2015
 - make accounts, sheets, sessions routes plural
 - update accountdown to ^4.0.0
 - allow admins to create, edit, and delete accounts through the ui
