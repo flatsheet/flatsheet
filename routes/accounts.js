@@ -201,11 +201,8 @@ exports.install = function (server, prefix) {
   */
 
   server.route(prefix + '/update/:username', function (req, res, opts) {
-    // When we are only changing the current account:
-    if (req.method === 'POST' && res.account.key === opts.params.username) {
-      updateAccountFromForm(req, res, opts.params);
-    }
     server.authorizeSession(req, res, function (error, user, session) {
+      // If authentification fails
       if (error) {
         return logIfError(error);
       }
@@ -216,13 +213,18 @@ exports.install = function (server, prefix) {
           return res.end();
         }
         if (req.method === 'GET') {
-          //Display the account update form
           renderAccountUpdateForm(res, opts.params.username, user)
         }
       } else {
-        // If authorization fails:
-        if (error) {
-          console.log(error);
+        if (res.account.key !== opts.params.username) {
+          return console.log("You must be admin to update an account which is not yours");
+        }
+        // When we are only changing the current account:
+        if (req.method === 'POST' ) {
+          updateAccountFromForm(req, res, opts.params);
+        }
+        if (req.method === 'GET') {
+          renderAccountUpdateForm(res, opts.params.username, user)
         }
         res.writeHead(302, {'Location': '/'});
         return res.end();
