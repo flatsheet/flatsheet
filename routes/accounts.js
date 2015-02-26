@@ -83,12 +83,14 @@ exports.install = function (server, prefix) {
       modifyAccountFromForm(err, body, params.username, updateAccount);
     });
   }
-  function createAccount(username, opts) {
-    server.accounts.create(username, opts, logIfError);
+  function createAccount(opts) {
+    server.accounts.create(opts.login.basic.username, opts, logIfError);
   }
-  function updateAccount(username, opts) {
+  function updateAccount(opts) {
+    var username = opts.login.basic.username;
     server.accounts.get(username, function (err, value) {
-      for (var key in value) {
+      delete opts.value.color; // We don't want to replace the color
+      for (var key in value) { // Add existing features from the original value
         if (value.hasOwnProperty(key) && !opts.value.hasOwnProperty(key)) {
           opts.value[key] = value[key];
         }
@@ -107,19 +109,19 @@ exports.install = function (server, prefix) {
         }
       },
       value: {
-        email: body.email,
+        admin: body.admin,
         color: randomColor(),
-        admin: body.admin
+        email: body.email,
+        username: username
       }
     };
-    accountOperation(username, opts);
+    accountOperation(opts);
   }
   function renderAccountUpdateForm(res, username, user) {
     server.accounts.get(username, function (err, value) {
       if (err) {
         return console.log(err);
       }
-      value['username'] = username;
       var ctx = { account: value, editorAccount: user };
       response()
         .html(server.render('account-update', ctx)).pipe(res);
