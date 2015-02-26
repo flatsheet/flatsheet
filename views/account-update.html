@@ -2,12 +2,14 @@
 
 {{#replace "body"}}
 <div class="container">
-  <h1>Your account</h1>
-  <form action="/account/update" method="post">
-    username: <input type="text" name="username"><br>
-    email: <input type="email" name="email"><br>
-    <input type="submit" value="Create account">
-  </form>
+    <h1>Update account for username: {{ editingAccount.username }}</h1>
+    <form action="/accounts/update/{{ editingAccount.username }}" method="post">
+        email: <input type="email" name="email" placeholder={{ editingAccount.email }} value={{ editingAccount.email }}><br>
+        {{#if account.admin}}
+        admin: <input type="checkbox" name="admin" {{checked editingAccount.admin}}><br>
+        {{/if}}
+        <input type="submit" value="Update account">
+    </form>
 </div>
 {{/replace}}
 
