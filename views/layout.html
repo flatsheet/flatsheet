@@ -15,6 +15,9 @@
     <h1 class="site-title"><a href="/"><i class="fa fa-table" style="font-size:80%; margin-right:3px;"></i> {{ site.title }}</a></h1>
     <ul class="main-nav">
       <li><a href="/">dashboard</a></li>
+      {{#if account.admin}}
+      <li><a href="/accounts">manage accounts</a></li>
+      {{/if}}
       {{#if account.active}}
       <li><a href="/accounts/invite">invite users</a></li>
       {{/if}}
