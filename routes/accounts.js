@@ -122,7 +122,7 @@ exports.install = function (server, prefix) {
       if (err) {
         return console.log(err);
       }
-      var ctx = { account: value, editorAccount: user };
+      var ctx = { editingAccount: value, account: user };
       response()
         .html(server.render('account-update', ctx)).pipe(res);
     });
