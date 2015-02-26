@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.6.0 February 26, 2015
+- make accounts, sheets, sessions routes plural
+- update accountdown to ^4.0.0
+- allow admins to create, edit, and delete accounts through the ui
+
 ## v0.5.2 - February 18, 2015
 - Rename util to lib
 - move index.js into lib folder

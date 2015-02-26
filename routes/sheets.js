@@ -10,7 +10,7 @@ var redirect = require('../lib/redirect');
 exports.install = function (server, prefix) {
   var prefix = prefix || '/sheets';
 
-  server.route(prefix + '/list', function (req, res, opts) {
+  server.route(prefix, function (req, res, opts) {
     server.authorizeSession(req, res, function (err, user, session) {
       if (err) redirect(res, '/');
       

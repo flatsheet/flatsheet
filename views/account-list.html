@@ -2,9 +2,14 @@
 
 {{#replace "body"}}
 <div class="container">
+    <form action="/accounts/create-admin" method="get">
+        <button type="submit" class="destroy-sheet">
+            <i class="fa fa-plus"></i> create new account
+        </button>
+    </form>
     <hr>
     <div class="sheet-list">
-        <h1>Account list (admin access only):</h1>
+        <h1>Account list</h1>
         {{#each accounts}}
         <div class="list-item clearfix">
             <a href="/accounts/update/{{ key }}">
@@ -24,12 +29,6 @@
         </div>
         {{/each }}
     </div>
-    <form action="/accounts/create-admin" method="get">
-        <button type="submit" class="destroy-sheet">
-            <i class="fa fa-plus"></i> create new account
-        </button>
-    </form>
-
 </div>
 
 {{/replace}}

@@ -401,7 +401,7 @@ process.chdir = function (dir) {
 	/*--------------------------------------------------------------------------*/
 
 	/**
-	 * A generic error libity function.
+	 * A generic error utility function.
 	 * @private
 	 * @param {String} type The error type.
 	 * @returns {Error} Throws a `RangeError` with the applicable error message.
@@ -411,7 +411,7 @@ process.chdir = function (dir) {
 	}
 
 	/**
-	 * A generic `Array#map` libity function.
+	 * A generic `Array#map` utility function.
 	 * @private
 	 * @param {Array} array The array to iterate over.
 	 * @param {Function} callback The function that gets called for every array
@@ -4180,18 +4180,18 @@ var base = require("./handlebars/base");
 // (This is done to easily share code between commonjs and browse envs)
 var SafeString = require("./handlebars/safe-string")["default"];
 var Exception = require("./handlebars/exception")["default"];
-var libs = require("./handlebars/libs");
+var Utils = require("./handlebars/utils");
 var runtime = require("./handlebars/runtime");
 
 // For compatibility and usage outside of module systems, make the Handlebars object a namespace
 var create = function() {
   var hb = new base.HandlebarsEnvironment();
 
-  libs.extend(hb, base);
+  Utils.extend(hb, base);
   hb.SafeString = SafeString;
   hb.Exception = Exception;
-  hb.libs = libs;
-  hb.escapeExpression = libs.escapeExpression;
+  hb.Utils = Utils;
+  hb.escapeExpression = Utils.escapeExpression;
 
   hb.VM = runtime;
   hb.template = function(spec) {
@@ -4207,9 +4207,9 @@ Handlebars.create = create;
 Handlebars['default'] = Handlebars;
 
 exports["default"] = Handlebars;
-},{"./handlebars/base":60,"./handlebars/exception":69,"./handlebars/runtime":70,"./handlebars/safe-string":71,"./handlebars/libs":72}],60:[function(require,module,exports){
+},{"./handlebars/base":60,"./handlebars/exception":69,"./handlebars/runtime":70,"./handlebars/safe-string":71,"./handlebars/utils":72}],60:[function(require,module,exports){
 "use strict";
-var libs = require("./libs");
+var Utils = require("./utils");
 var Exception = require("./exception")["default"];
 
 var VERSION = "2.0.0";
@@ -4224,9 +4224,9 @@ var REVISION_CHANGES = {
   6: '>= 2.0.0-beta.1'
 };
 exports.REVISION_CHANGES = REVISION_CHANGES;
-var isArray = libs.isArray,
-    isFunction = libs.isFunction,
-    toString = libs.toString,
+var isArray = Utils.isArray,
+    isFunction = Utils.isFunction,
+    toString = Utils.toString,
     objectType = '[object Object]';
 
 function HandlebarsEnvironment(helpers, partials) {
@@ -4245,7 +4245,7 @@ exports.HandlebarsEnvironment = HandlebarsEnvironment;HandlebarsEnvironment.prot
   registerHelper: function(name, fn) {
     if (toString.call(name) === objectType) {
       if (fn) { throw new Exception('Arg not supported with multiple helpers'); }
-      libs.extend(this.helpers, name);
+      Utils.extend(this.helpers, name);
     } else {
       this.helpers[name] = fn;
     }
@@ -4256,7 +4256,7 @@ exports.HandlebarsEnvironment = HandlebarsEnvironment;HandlebarsEnvironment.prot
 
   registerPartial: function(name, partial) {
     if (toString.call(name) === objectType) {
-      libs.extend(this.partials,  name);
+      Utils.extend(this.partials,  name);
     } else {
       this.partials[name] = partial;
     }
@@ -4298,7 +4298,7 @@ function registerDefaultHelpers(instance) {
     } else {
       if (options.data && options.ids) {
         var data = createFrame(options.data);
-        data.contextPath = libs.appendContextPath(options.data.contextPath, options.name);
+        data.contextPath = Utils.appendContextPath(options.data.contextPath, options.name);
         options = {data: data};
       }
 
@@ -4316,7 +4316,7 @@ function registerDefaultHelpers(instance) {
 
     var contextPath;
     if (options.data && options.ids) {
-      contextPath = libs.appendContextPath(options.data.contextPath, options.ids[0]) + '.';
+      contextPath = Utils.appendContextPath(options.data.contextPath, options.ids[0]) + '.';
     }
 
     if (isFunction(context)) { context = context.call(this); }
@@ -4371,7 +4371,7 @@ function registerDefaultHelpers(instance) {
     // Default behavior is to render the positive path if the value is truthy and not empty.
     // The `includeZero` option may be set to treat the condtional as purely not empty based on the
     // behavior of isEmpty. Effectively this determines if 0 is handled by the positive path or negative.
-    if ((!options.hash.includeZero && !conditional) || libs.isEmpty(conditional)) {
+    if ((!options.hash.includeZero && !conditional) || Utils.isEmpty(conditional)) {
       return options.inverse(this);
     } else {
       return options.fn(this);
@@ -4387,10 +4387,10 @@ function registerDefaultHelpers(instance) {
 
     var fn = options.fn;
 
-    if (!libs.isEmpty(context)) {
+    if (!Utils.isEmpty(context)) {
       if (options.data && options.ids) {
         var data = createFrame(options.data);
-        data.contextPath = libs.appendContextPath(options.data.contextPath, options.ids[0]);
+        data.contextPath = Utils.appendContextPath(options.data.contextPath, options.ids[0]);
         options = {data:data};
       }
 
@@ -4434,12 +4434,12 @@ exports.logger = logger;
 var log = logger.log;
 exports.log = log;
 var createFrame = function(object) {
-  var frame = libs.extend({}, object);
+  var frame = Utils.extend({}, object);
   frame._parent = object;
   return frame;
 };
 exports.createFrame = createFrame;
-},{"./exception":69,"./libs":72}],61:[function(require,module,exports){
+},{"./exception":69,"./utils":72}],61:[function(require,module,exports){
 "use strict";
 var Exception = require("../exception")["default"];
 
@@ -4659,7 +4659,7 @@ exports["default"] = AST;
 var parser = require("./parser")["default"];
 var AST = require("./ast")["default"];
 var Helpers = require("./helpers");
-var extend = require("../libs").extend;
+var extend = require("../utils").extend;
 
 exports.parser = parser;
 
@@ -4676,10 +4676,10 @@ function parse(input) {
 }
 
 exports.parse = parse;
-},{"../libs":72,"./ast":61,"./helpers":64,"./parser":66}],63:[function(require,module,exports){
+},{"../utils":72,"./ast":61,"./helpers":64,"./parser":66}],63:[function(require,module,exports){
 "use strict";
 var Exception = require("../exception")["default"];
-var isArray = require("../libs").isArray;
+var isArray = require("../utils").isArray;
 
 var slice = [].slice;
 
@@ -5129,7 +5129,7 @@ exports.compile = compile;function argEquals(a, b) {
     return true;
   }
 }
-},{"../exception":69,"../libs":72}],64:[function(require,module,exports){
+},{"../exception":69,"../utils":72}],64:[function(require,module,exports){
 "use strict";
 var Exception = require("../exception")["default"];
 
@@ -6969,7 +6969,7 @@ Exception.prototype = new Error();
 exports["default"] = Exception;
 },{}],70:[function(require,module,exports){
 "use strict";
-var libs = require("./libs");
+var Utils = require("./utils");
 var Exception = require("./exception")["default"];
 var COMPILER_REVISION = require("./base").COMPILER_REVISION;
 var REVISION_CHANGES = require("./base").REVISION_CHANGES;
@@ -7010,7 +7010,7 @@ function template(templateSpec, env) {
 
   var invokePartialWrapper = function(partial, indent, name, context, hash, helpers, partials, data, depths) {
     if (hash) {
-      context = libs.extend({}, context, hash);
+      context = Utils.extend({}, context, hash);
     }
 
     var result = env.VM.invokePartial.call(this, partial, name, context, helpers, partials, data, depths);
@@ -7052,7 +7052,7 @@ function template(templateSpec, env) {
       return typeof current === 'function' ? current.call(context) : current;
     },
 
-    escapeExpression: libs.escapeExpression,
+    escapeExpression: Utils.escapeExpression,
     invokePartial: invokePartialWrapper,
 
     fn: function(i) {
@@ -7081,7 +7081,7 @@ function template(templateSpec, env) {
       var ret = param || common;
 
       if (param && common && (param !== common)) {
-        ret = libs.extend({}, common, param);
+        ret = Utils.extend({}, common, param);
       }
 
       return ret;
@@ -7161,7 +7161,7 @@ exports.noop = noop;function initData(context, data) {
   }
   return data;
 }
-},{"./base":60,"./exception":69,"./libs":72}],71:[function(require,module,exports){
+},{"./base":60,"./exception":69,"./utils":72}],71:[function(require,module,exports){
 "use strict";
 // Build out our basic SafeString type
 function SafeString(string) {
@@ -7428,10 +7428,10 @@ function printVal(o, indent) {
 	/* circular.js */
 	var circular = [];
 
-	/* libs/hasOwnProperty.js */
+	/* utils/hasOwnProperty.js */
 	var hasOwn = Object.prototype.hasOwnProperty;
 
-	/* libs/isArray.js */
+	/* utils/isArray.js */
 	var isArray = function() {
 
 		var toString = Object.prototype.toString;
@@ -7441,7 +7441,7 @@ function printVal(o, indent) {
 		};
 	}();
 
-	/* libs/isObject.js */
+	/* utils/isObject.js */
 	var isObject = function() {
 
 		var toString = Object.prototype.toString;
@@ -7450,7 +7450,7 @@ function printVal(o, indent) {
 		};
 	}();
 
-	/* libs/isNumeric.js */
+	/* utils/isNumeric.js */
 	var isNumeric = function( thing ) {
 		return !isNaN( parseFloat( thing ) ) && isFinite( thing );
 	};
@@ -7557,7 +7557,7 @@ function printVal(o, indent) {
 		return svg;
 	}();
 
-	/* libs/warn.js */
+	/* utils/warn.js */
 	var warn = function() {
 
 		/* global console */
@@ -7596,7 +7596,7 @@ function printVal(o, indent) {
 		methodDeprecated: 'The method "{deprecated}" has been deprecated in favor of "{replacement}" and will likely be removed in a future release. See http://docs.ractivejs.org/latest/migrating for more information.'
 	};
 
-	/* libs/log.js */
+	/* utils/log.js */
 	var log = function( consolewarn, errors ) {
 
 		var log = {
@@ -7687,7 +7687,7 @@ function printVal(o, indent) {
 		return Hook;
 	}( log );
 
-	/* libs/removeFromArray.js */
+	/* utils/removeFromArray.js */
 	var removeFromArray = function( array, member ) {
 		var index = array.indexOf( member );
 		if ( index !== -1 ) {
@@ -7695,7 +7695,7 @@ function printVal(o, indent) {
 		}
 	};
 
-	/* libs/Promise.js */
+	/* utils/Promise.js */
 	var Promise = function() {
 
 		var __export;
@@ -7872,7 +7872,7 @@ function printVal(o, indent) {
 		return __export;
 	}();
 
-	/* libs/normaliseRef.js */
+	/* utils/normaliseRef.js */
 	var normaliseRef = function() {
 
 		var regex = /\[\s*(\*|[0-9]|[1-9][0-9]+)\s*\]/g;
@@ -7891,7 +7891,7 @@ function printVal(o, indent) {
 		return '';
 	};
 
-	/* libs/isEqual.js */
+	/* utils/isEqual.js */
 	var isEqual = function( a, b ) {
 		if ( a === null && b === null ) {
 			return true;
@@ -8355,7 +8355,7 @@ function printVal(o, indent) {
 		return __export;
 	}( circular, Ractive$shared_hooks_Hook, removeFromArray, Promise, resolveRef, TransitionManager );
 
-	/* libs/createBranch.js */
+	/* utils/createBranch.js */
 	var createBranch = function() {
 
 		var numeric = /^\s*[0-9]+\s*$/;
@@ -8554,7 +8554,7 @@ function printVal(o, indent) {
 		xmlns: 'http://www.w3.org/2000/xmlns/'
 	};
 
-	/* libs/createElement.js */
+	/* utils/createElement.js */
 	var createElement = function( svg, namespaces ) {
 
 		var createElement;
@@ -8584,7 +8584,7 @@ function printVal(o, indent) {
 		return isClient;
 	}();
 
-	/* libs/defineProperty.js */
+	/* utils/defineProperty.js */
 	var defineProperty = function( isClient ) {
 
 		var defineProperty;
@@ -8608,7 +8608,7 @@ function printVal(o, indent) {
 		return defineProperty;
 	}( isClient );
 
-	/* libs/defineProperties.js */
+	/* utils/defineProperties.js */
 	var defineProperties = function( createElement, defineProperty, isClient ) {
 
 		var defineProperties;
@@ -8668,7 +8668,7 @@ function printVal(o, indent) {
 		};
 	}( Ractive$shared_add );
 
-	/* libs/normaliseKeypath.js */
+	/* utils/normaliseKeypath.js */
 	var normaliseKeypath = function( normaliseRef ) {
 
 		var leadingDot = /^\.+/;
@@ -8685,7 +8685,7 @@ function printVal(o, indent) {
 		'webkit'
 	];
 
-	/* libs/requestAnimationFrame.js */
+	/* utils/requestAnimationFrame.js */
 	var requestAnimationFrame = function( vendors ) {
 
 		var requestAnimationFrame;
@@ -8721,7 +8721,7 @@ function printVal(o, indent) {
 		return requestAnimationFrame;
 	}( vendors );
 
-	/* libs/getTime.js */
+	/* utils/getTime.js */
 	var getTime = function() {
 
 		var getTime;
@@ -8874,7 +8874,7 @@ function printVal(o, indent) {
 		return cssConfig;
 	}( transform );
 
-	/* libs/wrapMethod.js */
+	/* utils/wrapMethod.js */
 	var wrapMethod = function() {
 
 		var __export;
@@ -9074,7 +9074,7 @@ function printVal(o, indent) {
 		SECTION_IF_WITH: 54
 	};
 
-	/* libs/create.js */
+	/* utils/create.js */
 	var create = function() {
 
 		var create;
@@ -9737,7 +9737,7 @@ function printVal(o, indent) {
 		};
 	}( types, logicalOr, parse_Parser_expressions_shared_errors );
 
-	/* parse/Parser/libs/flattenExpression.js */
+	/* parse/Parser/utils/flattenExpression.js */
 	var flattenExpression = function( types, isObject ) {
 
 		var __export;
@@ -10387,7 +10387,7 @@ function printVal(o, indent) {
 		return voidElementNames;
 	}();
 
-	/* parse/converters/libs/getLowestIndex.js */
+	/* parse/converters/utils/getLowestIndex.js */
 	var getLowestIndex = function( haystack, needles ) {
 		var i, index, lowest;
 		i = needles.length;
@@ -10955,7 +10955,7 @@ function printVal(o, indent) {
 		return __export;
 	}( getLowestIndex, mustache, decodeCharacterReferences );
 
-	/* libs/parseJSON.js */
+	/* utils/parseJSON.js */
 	var parseJSON = function( Parser, getStringLiteral, getKey ) {
 
 		var JsonParser, specials, specialsPattern, numberPattern, placeholderPattern, placeholderAtStartPattern, onlyWhitespace;
@@ -11381,7 +11381,7 @@ function printVal(o, indent) {
 		return __export;
 	}( types, voidElementNames, mustache, comment, text, closingTag, attribute, processDirective );
 
-	/* parse/libs/trimWhitespace.js */
+	/* parse/utils/trimWhitespace.js */
 	var trimWhitespace = function() {
 
 		var leadingWhitespace = /^[ \t\f\r\n]+/,
@@ -11413,7 +11413,7 @@ function printVal(o, indent) {
 		};
 	}();
 
-	/* parse/libs/stripStandalones.js */
+	/* parse/utils/stripStandalones.js */
 	var stripStandalones = function( types ) {
 
 		var __export;
@@ -11470,7 +11470,7 @@ function printVal(o, indent) {
 		return __export;
 	}( types );
 
-	/* libs/escapeRegExp.js */
+	/* utils/escapeRegExp.js */
 	var escapeRegExp = function() {
 
 		var pattern = /[-/\\^$*+?.()|[\]{}]/g;
@@ -11967,10 +11967,10 @@ function printVal(o, indent) {
 		return registries;
 	}( optionGroup, Registry );
 
-	/* libs/noop.js */
+	/* utils/noop.js */
 	var noop = function() {};
 
-	/* libs/wrapPrototypeMethod.js */
+	/* utils/wrapPrototypeMethod.js */
 	var wrapPrototypeMethod = function( noop ) {
 
 		var __export;
@@ -12428,7 +12428,7 @@ function printVal(o, indent) {
 		return this.fragment.find( selector );
 	};
 
-	/* libs/matches.js */
+	/* utils/matches.js */
 	var matches = function( isClient, vendors, createElement ) {
 
 		var matches, div, methodNames, unprefixed, prefixed, i, j, makeFunction;
@@ -12732,7 +12732,7 @@ function printVal(o, indent) {
 		return this.fragment.findComponent( selector );
 	};
 
-	/* libs/getPotentialWildcardMatches.js */
+	/* utils/getPotentialWildcardMatches.js */
 	var getPotentialWildcardMatches = function() {
 
 		var __export;
@@ -12901,7 +12901,7 @@ function printVal(o, indent) {
 		};
 	}( normaliseKeypath, resolveRef );
 
-	/* libs/getElement.js */
+	/* utils/getElement.js */
 	var getElement = function getElement( input ) {
 		var output;
 		if ( !input || typeof input === 'boolean' ) {
@@ -13804,7 +13804,7 @@ function printVal(o, indent) {
 		return __export;
 	}( parseJSON );
 
-	/* libs/escapeHtml.js */
+	/* utils/escapeHtml.js */
 	var escapeHtml = function() {
 
 		var lessThan = /</g;
@@ -13815,7 +13815,7 @@ function printVal(o, indent) {
 		};
 	}();
 
-	/* libs/detachNode.js */
+	/* utils/detachNode.js */
 	var detachNode = function detachNode( node ) {
 		if ( node && node.parentNode ) {
 			node.parentNode.removeChild( node );
@@ -13877,12 +13877,12 @@ function printVal(o, indent) {
 		return this.value;
 	};
 
-	/* virtualdom/items/shared/libs/startsWithKeypath.js */
+	/* virtualdom/items/shared/utils/startsWithKeypath.js */
 	var startsWithKeypath = function startsWithKeypath( target, keypath ) {
 		return target && keypath && target.substr( 0, keypath.length + 1 ) === keypath + '.';
 	};
 
-	/* virtualdom/items/shared/libs/getNewKeypath.js */
+	/* virtualdom/items/shared/utils/getNewKeypath.js */
 	var getNewKeypath = function( startsWithKeypath ) {
 
 		return function getNewKeypath( targetKeypath, oldKeypath, newKeypath ) {
@@ -14682,7 +14682,7 @@ function printVal(o, indent) {
 		return docFrag;
 	};
 
-	/* libs/isArrayLike.js */
+	/* utils/isArrayLike.js */
 	var isArrayLike = function() {
 
 		var pattern = /^\[object (?:Array|FileList)\]$/,
@@ -15213,7 +15213,7 @@ function printVal(o, indent) {
 		return __export;
 	}( namespaces, createElement );
 
-	/* libs/toArray.js */
+	/* utils/toArray.js */
 	var toArray = function toArray( arrayLike ) {
 		var array = [],
 			i = arrayLike.length;
@@ -15734,7 +15734,7 @@ function printVal(o, indent) {
 		}
 	};
 
-	/* libs/arrayContains.js */
+	/* utils/arrayContains.js */
 	var arrayContains = function arrayContains( array, value ) {
 		for ( var i = 0, c = array.length; i < c; i++ ) {
 			if ( array[ i ] == value ) {
@@ -16098,7 +16098,7 @@ function printVal(o, indent) {
 		};
 	}( ConditionalAttribute );
 
-	/* libs/extend.js */
+	/* utils/extend.js */
 	var extend = function( target ) {
 		var SLICE$0 = Array.prototype.slice;
 		var sources = SLICE$0.call( arguments, 1 );
@@ -16524,7 +16524,7 @@ function printVal(o, indent) {
 		return SelectBinding;
 	}( runloop, Binding, handleDomEvent );
 
-	/* libs/arrayContentsMatch.js */
+	/* utils/arrayContentsMatch.js */
 	var arrayContentsMatch = function( isArray ) {
 
 		return function( a, b ) {
@@ -17339,7 +17339,7 @@ function printVal(o, indent) {
 		};
 	}( types, enforceCase, virtualdom_items_Element$init_createAttributes, virtualdom_items_Element$init_createConditionalAttributes, virtualdom_items_Element$init_createTwowayBinding, virtualdom_items_Element$init_createEventHandlers, Decorator, bubble, init, circular );
 
-	/* virtualdom/items/shared/libs/startsWith.js */
+	/* virtualdom/items/shared/utils/startsWith.js */
 	var startsWith = function( startsWithKeypath ) {
 
 		return function startsWith( target, keypath ) {
@@ -17347,7 +17347,7 @@ function printVal(o, indent) {
 		};
 	}( startsWithKeypath );
 
-	/* virtualdom/items/shared/libs/assignNewKeypath.js */
+	/* virtualdom/items/shared/utils/assignNewKeypath.js */
 	var assignNewKeypath = function( startsWith, getNewKeypath ) {
 
 		return function assignNewKeypath( target, property, oldKeypath, newKeypath ) {
@@ -17475,7 +17475,7 @@ function printVal(o, indent) {
 		};
 	}( log, config, circular );
 
-	/* libs/camelCase.js */
+	/* utils/camelCase.js */
 	var camelCase = function( hyphenatedStr ) {
 		return hyphenatedStr.replace( /-([a-zA-Z])/g, function( match, $1 ) {
 			return $1.toUpperCase();
@@ -17943,7 +17943,7 @@ function printVal(o, indent) {
 		return animateStyle;
 	}( legacy, isClient, warn, Promise, prefix, virtualdom_items_Element_Transition$animateStyle_createTransitions, virtualdom_items_Element_Transition$animateStyle_visibility );
 
-	/* libs/fillGaps.js */
+	/* utils/fillGaps.js */
 	var fillGaps = function( target ) {
 		var SLICE$0 = Array.prototype.slice;
 		var sources = SLICE$0.call( arguments, 1 );
@@ -19938,7 +19938,7 @@ function printVal(o, indent) {
 		};
 	}( Ractive$add, Ractive$animate, Ractive$detach, Ractive$find, Ractive$findAll, Ractive$findAllComponents, Ractive$findComponent, Ractive$fire, Ractive$get, Ractive$insert, Ractive$merge, Ractive$observe, Ractive$off, Ractive$on, Ractive$pop, Ractive$push, Ractive$render, Ractive$reset, Ractive$resetTemplate, Ractive$reverse, Ractive$set, Ractive$shift, Ractive$sort, Ractive$splice, Ractive$subtract, Ractive$teardown, Ractive$toggle, Ractive$toHTML, Ractive$unrender, Ractive$unshift, Ractive$update, Ractive$updateModel );
 
-	/* libs/getGuid.js */
+	/* utils/getGuid.js */
 	var getGuid = function() {
 		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace( /[xy]/g, function( c ) {
 			var r, v;
@@ -19948,7 +19948,7 @@ function printVal(o, indent) {
 		} );
 	};
 
-	/* libs/getNextNumber.js */
+	/* utils/getNextNumber.js */
 	var getNextNumber = function() {
 
 		var i = 0;
@@ -28041,7 +28041,7 @@ module.exports=require(109)
     // Detect incomplete support for accessing string characters by index.
     var charIndexBuggy = has("bug-string-char-index");
 
-    // Define additional libity methods if the `Date` methods are buggy.
+    // Define additional utility methods if the `Date` methods are buggy.
     if (!isExtended) {
       var floor = Math.floor;
       // A mapping between the months of the year and the number of days between
