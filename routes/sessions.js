@@ -14,15 +14,18 @@ exports.install = function (server, prefix) {
   server.route(prefix, function (req, res) {
     if (req.method === 'POST') {
       formBody(req, res, function (err, body) {
-        var creds = { username: body.username, password: body.password };
 
-        server.accounts.verify('basic', body, function (err, ok, id) {          
-          if (err) console.error(err);
-
-          server.auth.login(res, { username: id }, function (loginerr, data) {
-            if (loginerr) console.error(loginerr);
-            redirect(res, '/');
-          });
+        server.accounts.verify('basic', body, function (err, ok, id) {
+          if (err) {
+            console.error(err);
+          } else if (!ok) {
+            console.error("Password is incorrect!");
+          } else {
+            server.auth.login(res, { username: id }, function (loginerr, data) {
+              if (loginerr) console.error(loginerr);
+            });
+          }
+          redirect(res, '/');
         });
       });
     }
