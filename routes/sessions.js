@@ -19,7 +19,7 @@ exports.install = function (server, prefix) {
           if (err) {
             console.error(err);
           } else if (!ok) {
-            console.error("Password is incorrect!");
+            // TODO: notify user about incorrect password, and offer reset password option (issue #47)
           } else {
             server.auth.login(res, { username: id }, function (loginerr, data) {
               if (loginerr) console.error(loginerr);
