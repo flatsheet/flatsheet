@@ -135,7 +135,7 @@ SENDGRID_PASS=yourpassword
 - Fill out the name and description
 
 ### Invite users
-- Navigate to `http://127.0.0.1:3333/account/invite`
+- Navigate to `http://127.0.0.1:3333/accounts/invite`
 - Enter email addresses, one address per line
 - Click "Send invitation"
 - Users will receive an email with a link they can click to create accounts

@@ -7,14 +7,14 @@
 
   {{#if emails}}
   <div class="invited-emails">
-    <h3>Invited emails:
+    <h3>Invited emails:</h3>
     {{#each emails}}
       <p>{{this}}</p>
     {{/each}}
   </div>
   {{/if}}
 
-  <form action="/account/invite" method="post">
+  <form action="/accounts/invite" method="post">
     <textarea name="emails" class="invite-emails" placeholder="one email per line"></textarea><br>
     <input type="submit" value="Send invitation">
   </form>
