@@ -13,7 +13,6 @@ var through = require('through2');
 var prompt = require('prompt');
 
 var argv = minimist(process.argv.slice(2));
-var sheets = new Sheets();
 var cmd = argv._[0];
 var sub = argv._[1];
 
