@@ -13,12 +13,17 @@ exports.install = function (server, prefix) {
   server.route(prefix, function (req, res, opts) {
     server.authorizeSession(req, res, function (err, user, session) {
       if (err) redirect(res, '/');
-      
-      server.sheets.list(function (err, list) {
+
+      var renderSheets = function (err, list) {
         if (err) console.log(err);
         var ctx = { account: res.account, sheets: list };
         return response().html(server.render('sheet-list', ctx)).pipe(res);
-      });
+      };
+      if (user.admin) {
+        server.sheets.list(renderSheets);
+      } else {
+        server.sheets.listAccessible(user.username, renderSheets);
+      }
     });
   });
 
@@ -58,7 +63,10 @@ exports.install = function (server, prefix) {
 
       formBody(req, res, function (err, body) {
         var data = body;
-        data.rows = 
+        data['accessible_by'] = {};
+        data.accessible_by[user.username] = true;
+
+        data.rows =
         server.sheets.create(data, function (err, sheet, token) {
           if (err) console.error(err);
           res.writeHead(302, { 'Location': '/sheets/edit/' + token });
