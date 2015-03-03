@@ -64,12 +64,6 @@ exports.install = function (server, prefix) {
     // TODO: implement a notification of error on page
     if (err) console.error(err);
 
-    // TODO: do we need this? setting the session here fails - req.session is undefined
-    //req.session.set(req.session.id, opts.value, function (sessionerr) {
-    //  if (err) console.error(sessionerr);
-    //  res.writeHead(302, { 'Location': '/' });
-    //  return res.end();
-    //});
   }
 
   function createAccountFromForm(req, res) {
@@ -332,16 +326,15 @@ exports.install = function (server, prefix) {
         };
 
         server.accounts.create(body.username, opts, function (err) {
-
           //todo: notification of error on page
-          if (err) console.error(err);
+          if (err) return console.error(err);
 
-          req.session.set(req.session.id, opts.value, function (sessionerr) {
-            if (err) console.error(sessionerr);
+          server.auth.login(res, { username: body.username }, function (loginerr, data) {
+            if (loginerr) console.error(loginerr);
+
             res.writeHead(302, { 'Location': '/' });
             return res.end();
           });
-
         });
       });
     }
