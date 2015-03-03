@@ -256,7 +256,7 @@ exports.install = function (server, prefix) {
               if (err) console.log(new Error(err));
 
               var data = {
-                url: server.site.url + '/account/accept?token=' + token,
+                url: server.site.url + '/accounts/accept?token=' + token,
                 from: server.site.email,
                 fromname: server.site.contact
               };
