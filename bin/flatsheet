@@ -26,7 +26,7 @@ function ready () {
   else if (cmd === 'sheets') return sheets();
   else {
     console.log('command not found')
-    process.exit()
+    flatsheet.db.close()
   }
 }
 
@@ -58,7 +58,7 @@ function accounts () {
 
       flatsheet.accounts.create(result.username, opts, function (err) {
         if (err) console.error(err);
-        process.exit()
+        flatsheet.db.close()
       });
     });
 
@@ -67,7 +67,7 @@ function accounts () {
   if (sub === 'list') {
     var l = flatsheet.accounts.list();
     l.on('data', console.log);
-    l.on('end', function () { process.exit(); });
+    l.on('end', function () { flatsheet.db.close(); });
   }
 
   if (sub === 'delete-all') {
@@ -83,7 +83,7 @@ function accounts () {
 
     function end () {
       console.log('All accounts deleted.');
-      process.exit();
+      flatsheet.db.close();
     }
   }
 }
@@ -94,14 +94,14 @@ function sheets () {
 
     flatsheet.sheets.create(JSON.parse(file), function (err) {
       if (err) return console.log(err);
-      process.exit();
+      flatsheet.db.close();
     });
   }
 
   if (sub === 'list') {
     var l = flatsheet.sheets.list();
     l.on('data', console.log);
-    l.on('end', function () { process.exit(); });
+    l.on('end', function () { flatsheet.db.close(); });
   }
 
   if (sub === 'fix-ids') {
@@ -122,14 +122,14 @@ function sheets () {
           console.log('destroyed ' + sheet.key);
         });
       });
-      process.exit();
+      flatsheet.db.close();
     });
   }
 
   if (sub === 'delete') {
     flatsheet.sheets.destroy(argv._[2], function () {
       console.log('sheet deleted.');
-      process.exit();
+      flatsheet.db.close();
     });
   }
 }
