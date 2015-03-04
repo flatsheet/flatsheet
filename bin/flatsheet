@@ -34,7 +34,7 @@ function accounts () {
   if (sub === 'create-admin') {
     var properties = [
       { name: 'email' },
-      { name: 'username', },
+      { name: 'username' },
       { name: 'password', hidden: true }
     ];
 
