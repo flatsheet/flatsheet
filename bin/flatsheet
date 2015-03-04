@@ -11,27 +11,26 @@ var accountdown = require('accountdown');
 var randomColor = require('random-color');
 var through = require('through2');
 var prompt = require('prompt');
+prompt.message = 'account';
 
 var argv = minimist(process.argv.slice(2));
 var cmd = argv._[0];
 var sub = argv._[1];
 
-var db = level('./data/db');
+var flatsheet = require('../lib/index')({
+  db: process.cwd() + '/data'
+}, ready);
 
-var accounts = accountdown(sublevel(db, 'accounts'), {
-  login: { basic: require('accountdown-basic') },
-  keyEncoding: 'buffer',
-  valueEncoding: 'json'
-});
+function ready () {
+  if (cmd === 'accounts') return accounts();
+  else if (cmd === 'sheets') return sheets();
+  else {
+    console.log('command not found')
+    process.exit()
+  }
+}
 
-var sheets = Sheets(sublevel(db, 'sheets', {
-  valueEncoding: 'json'
-}));
-
-if (cmd === 'account') return account();
-else if (cmd === 'sheet') return sheet();
-
-function account () {
+function accounts () {
   if (sub === 'create-admin') {
     var properties = [
       { name: 'email' },
@@ -57,27 +56,25 @@ function account () {
         }
       };
 
-      accounts.create(result.username, opts, function (err) {
-
-        //todo: notification of error
+      flatsheet.accounts.create(result.username, opts, function (err) {
         if (err) console.error(err);
-        db.close();
+        process.exit()
       });
     });
 
   }
 
   if (sub === 'list') {
-    var l = accounts.list();
+    var l = flatsheet.accounts.list();
     l.on('data', console.log);
-    l.on('end', function () { db.close(); });
+    l.on('end', function () { process.exit(); });
   }
 
   if (sub === 'delete-all') {
-    accounts.list().pipe(through.obj(write, end));
+    flatsheet.accounts.list().pipe(through.obj(write, end));
 
     function write (account, enc, next) {
-      accounts.remove(account.key, function (err) {
+      flatsheet.accounts.remove(account.key, function (err) {
         if (err) return console.error('something went wrong');
         console.log(account.key + ' removed');
         next();
@@ -85,33 +82,33 @@ function account () {
     }
 
     function end () {
-      db.close();
       console.log('All accounts deleted.');
+      process.exit();
     }
   }
 }
 
-function sheet () {
+function sheets () {
   if (sub === 'add') {
     var file = fs.readFileSync(argv._[2], 'utf8');
 
-    sheets.create(JSON.parse(file), function (err) {
+    flatsheet.sheets.create(JSON.parse(file), function (err) {
       if (err) return console.log(err);
-      db.close();
+      process.exit();
     });
   }
 
   if (sub === 'list') {
-    var l = sheets.list();
+    var l = flatsheet.sheets.list();
     l.on('data', console.log);
-    l.on('end', function () { db.close(); });
+    l.on('end', function () { process.exit(); });
   }
 
   if (sub === 'fix-ids') {
-    sheets.list({ keys:true, values:true }, function (err, results) {
+    flatsheet.sheets.list({ keys:true, values:true }, function (err, results) {
       results.forEach(function (sheet) {
         sheet.value.id = sheet.key;
-        sheets.update(sheet.key, sheet.value, function (err) {
+        flatsheet.sheets.update(sheet.key, sheet.value, function (err) {
           if (err) throw err;
         });
       });
@@ -119,20 +116,20 @@ function sheet () {
   }
   
   if (sub === 'delete-all') {
-    sheets.list({ keys:true, values:true }, function (err, results) {
+    flatsheet.sheets.list({ keys:true, values:true }, function (err, results) {
       results.forEach(function (sheet) {
-        sheets.destroy(sheet.key, function () {
+        flatsheet.sheets.destroy(sheet.key, function () {
           console.log('destroyed ' + sheet.key);
         });
       });
-      db.close();
+      process.exit();
     });
   }
 
   if (sub === 'delete') {
-    sheets.destroy(argv._[2], function () {
+    flatsheet.sheets.destroy(argv._[2], function () {
       console.log('sheet deleted.');
-      db.close();
+      process.exit();
     });
   }
 }

@@ -121,8 +121,8 @@ SENDGRID_PASS=yourpassword
 
 
 ### Create an admin user
-- Create an admin account by running `npm run flatsheet account create-admin`. You'll be prompted for email, username, & password.
-- You can run `npm run flatsheet account list` to see that your admin account was created.
+- Create an admin account by running `npm run flatsheet accounts create-admin`. You'll be prompted for email, username, & password.
+- You can run `npm run flatsheet accounts list` to see that your admin account was created.
 
 ### Start the server
 - Now run `npm start` to start the server.
