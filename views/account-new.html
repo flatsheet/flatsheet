@@ -2,19 +2,41 @@
 
 {{#replace "body"}}
 <div class="container">
-  <h1>Sign up</h1>
+  <h1 class="page-title">Sign up</h1>
+  
+  {{#if account.admin}}
+  <form action="/accounts/create-admin" method="post">
+  {{else}}
+  <form action="/accounts/create" method="post">
+  {{/if}}
+  
+    <fieldset>
+      <label for="email">email</label>
+      <input type="email" name="email">
+    </fieldset>
+    
+    <fieldset>
+      <label for="text">text</label>
+      <input type="text" name="username">
+    </fieldset>
+    
+    <fieldset>
+      <label for="password">password</label>
+      <input type="password" name="password">
+    </fieldset>
+    
     {{#if account.admin}}
-    <form action="/accounts/create-admin" method="post">
-    {{else}}
-    <form action="/accounts/create" method="post">
+    <fieldset>
+      <label for="admin">
+        <input type="checkbox" name="admin" value=true>
+        admin
+      </label>
+    </fieldset>
     {{/if}}
-    email: <input type="email" name="email"><br>
-    username: <input type="text" name="username"><br>
-    password: <input type="password" name="password"><br>
-      {{#if account.admin}}
-      admin: <input type="checkbox" name="admin" value=true><br>
-      {{/if}}
-    <input type="submit" value="Create your account">
+
+    <div class="form-actions">
+      <input type="submit" value="Create your account">
+    </div>
   </form>
 </div>
 {{/replace}}
