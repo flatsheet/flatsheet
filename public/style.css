@@ -913,6 +913,7 @@ table button.destroy:hover {
 
 #main-content {
   margin-left: -32px;
+  height: 500px;
 }
 
 .long-text-wrapper {
