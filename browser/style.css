@@ -149,6 +149,9 @@ input[type="text"].sheet-name {
 textarea.sheet-description {
   border: 0px;
   width: 100%;
+  height: 50px;
+  min-height: 50px;
+  padding: 0px;
 }
 
 .table-wrapper {
@@ -250,6 +253,15 @@ table button.destroy:hover {
   color: #013545;
   background-color: #efefea;
   border: 0px;
+}
+
+.editor-button,
+.button.editor-button {
+  font-size: 14px;
+  padding: 5px 11px;
+  line-height: 32px;
+  height: 42px;
+  color: #555;
 }
 
 #main-content {
@@ -506,7 +518,7 @@ input[type="button"] {
   letter-spacing: 0px;
 }
 
-.button.small {
+header .button.small {
   font-size: 16px;
 }
 
