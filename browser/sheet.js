@@ -14,6 +14,7 @@ var domquery = require('domquery');
 var siblings = require('siblings');
 var io = require('socket.io-client')();
 var View = require('ractive');
+var autoComplete = require('autocomplete-element');
 
 var flatsheet = require('flatsheet-api-client')({ 
   host: 'http://' + window.location.host
@@ -33,6 +34,9 @@ var templates = {
   ),
   editLongText: Handlebars.compile(
     fs.readFileSync(__dirname + '/views/editor-long-text.html', 'utf8')
+  ),
+  settings: Handlebars.compile(
+    fs.readFileSync(__dirname + '/views/sheet-settings.html', 'utf8')
   )
 };
 
@@ -166,7 +170,107 @@ on(document.body, '#destroy', 'click', function (e) {
   if (window.confirm(msg)) {
     editor.clear();
     elClass(hello).remove('hidden');
-  };
+  }
+});
+
+/* listener for settings button */
+on(document.body, '#settings', 'click', function (e) {
+  e.preventDefault();
+
+  var sheet = sheetDetails.get();
+  console.log("settings event: sheet details from Ractive:");
+  console.log(sheet);
+
+  //  var sheetDetails = new View({
+  //  el: 'sheet-details',
+  //  template: templates.sheetDetails,
+  //  data: { name: '', description: '' }
+  //});
+  //
+  //sheetDetails.on('change', function (change) {
+  //  if (remoteChange) return;
+  //  io.emit('sheet-details', change);
+  //});
+  //
+  //io.on('sheet-details', function (change) {
+  //  remoteChange = true;
+  //  sheetDetails.set(change);
+  //  remoteChange = false;
+  //});
+
+  //var input = document.querySelector('input');
+  //var usernames = accountUsernames.get();
+  //console.log("settings event: account usernames from Ractive:");
+  //console.log(usernames);
+  // Get an array of all accounts in the site
+  flatsheet.listAccounts(function (err, accounts) {
+    //console.log("getting accounts from the api:");
+    //console.log(accounts);
+    // verify type
+    //console.log("accounts type:");
+    //console.log(typeof(accounts));
+
+    // convert accounts array to an array of account usernames (currently usernames are used as keys)
+
+    //var accountsList = accounts.map(function(account) {return account.key});
+    // excluding admins and accounts that already have access
+    function accountsListFilter (account) {
+      return !(account.key in sheet.accessible_by) && !account.value.admin;
+    }
+    var suggestedAccessibleAccounts = accounts.filter(accountsListFilter).map(function(account) {return account.key});
+
+    //console.log("accountsList, filtered:");
+    //console.log(suggestedAccessibleAccounts);
+
+    // create our colors alongside each username
+    var usernamesToColors = accounts.reduce(function(newObject, user) {
+      newObject[user.key] = user.value.color;
+      return newObject;
+    }, {});
+    // TODO: Hold color information in the sheet
+    function mapUsersToColors(username) {
+      return {username: username, color: usernamesToColors[username]}
+    }
+    //console.log("sheets.accessibleBy:");
+    //console.log(sheet.accessible_by);
+    //console.log("type of sheets.accessible_by:");
+    //console.log(typeof(sheet.accessible_by));
+    //sheet.accessible_by = sheet.accessible_by.map(mapUsersToColors);
+    var accessibleBy= Object.keys(sheet.accessible_by).map(mapUsersToColors);
+    //var accessibleBy = sheet.accessible_by.map(function(username) {return {username:username});
+    //console.log("accessibleBy:");
+    //console.log(accessibleBy);
+    var sheetInfo = {id: sheet.id, name : sheet.name, description: sheet.description, accessible_by: accessibleBy};
+    //console.log("sheetInfo:");
+    //console.log(sheetInfo);
+
+    var modal = templates.modal({
+      //content: templates.settings({sheet: sheet, accounts: accounts})
+      //content: templates.settings({sheet: sheet})
+      content: templates.settings({sheet: sheetInfo})
+    });
+//var modal = templates.modal({
+//  content: templates.editLongText({ text: text, id: id })
+//});
+    dom.add(document.body, domify(modal));
+
+    // AUTO-COMPLETE
+    // EXAMPLE:
+    //console.log("Adding auto-complete element:");
+    var enteredText = document.querySelector('#autofill-usernames');
+    //console.log("input:");
+    //console.log(enteredText);
+
+    function toLowerCase (s) { return s.toLowerCase() }
+    autoComplete(enteredText, function (completionElement) {
+      if (!enteredText.value.length) return completionElement.suggest([]);
+      var matches = suggestedAccessibleAccounts.filter(function (accountUsername) {
+        // return matches if there is a substring prefix match
+        return toLowerCase(accountUsername.slice(0, enteredText.value.length)) === toLowerCase(enteredText.value);
+      });
+      completionElement.suggest(matches);
+    });
+  });
 });
 
 /* listener for the delete column button */
@@ -239,9 +343,12 @@ on(document.body, '#save-long-text-editor', 'click', function (e) {
 
 /* listener for closing a modal */
 on(document.body, '#close-modal', 'click', function (e) {
-  var id = document.querySelector('.expanded-cell-id').value;
+  //var id = document.querySelector('.expanded-cell-id').value;
+  // TODO: LMS: I'm not quite sure about the purpose of this call,
+  // but it prevents our 'settings' modal from closing, so I'm disabling it
+  // Also, shouldn't we emit a 'cell-focus' instead of 'cell-blur' when closing a modal?
+  //io.emit('cell-blur', id);
   dom.remove('#modal');
-  io.emit('cell-blur', id);
 });
 
 function cellFocus (e) {
