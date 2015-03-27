@@ -1,4 +1,9 @@
-@import "normalize-css";
+@import "normalize.css";
+@import "csskit";
+
+:root {
+  --blue: #015770;
+}
 
 html,
 body,
@@ -19,7 +24,7 @@ body {
 }
 
 body {
-  border-top: 3px solid #015770;
+  border-top: 3px solid var(--blue);
 }
 
 *,
@@ -105,69 +110,6 @@ img.headshot {
   font-family: Baskerville, sans-serif;
 }
 
-input[type=text],
-input[type=email],
-input[type=password] {
-  border: 1px solid #efefef;
-  padding: 0px 10px;
-  margin-top: 0px;
-  margin-bottom: 10px;
-  width: 300px;
-  height: 30px;
-}
-
-.icon,
-button,
-.button,
-input[type="submit"] {
-  font-family: 'Open Sans', 'Helvetica Neue', Helvetica, sans-serif;
-  background-color: #015770;
-  color: #fefefa;
-  border-radius: 2px;
-  border: 1px solid #015770;
-  font-weight: 400;
-  cursor: pointer;
-  font-size: 14px;
-  padding: 0px 10px;
-  height: 30px;
-  vertical-align: top;
-  -webkit-appearance: none;
-  -webkit-border-radius: 0;
-}
-
-.icon:hover,
-button:hover,
-button:focus,
-.button:hover,
-.button:focus,
-input[type="submit"]:hover,
-input[type="submit"]:focus {
-  background-color: #013545;
-  border-color: #013545;
-  color: #fff;
-}
-
-a.button {
-  display: inline-block;
-  line-height: 2;
-}
-
-a.button:hover {
-  text-decoration: none;
-}
-
-button.destroy {
-  color: color(#013545 tint(70%));
-  background-color: transparent;
-  border: 0px;
-}
-
-button.destroy:hover {
-  color: #013545;
-  background-color: #efefea;
-  border: 0px;
-}
-
 a.button i.fa {
   line-height: 30px;
 }
@@ -207,6 +149,9 @@ input[type="text"].sheet-name {
 textarea.sheet-description {
   border: 0px;
   width: 100%;
+  height: 20px;
+  min-height: 20px;
+  padding: 0px;
 }
 
 .table-wrapper {
@@ -214,7 +159,11 @@ textarea.sheet-description {
 }
 
 #table-editor {
-  margin-top: 30px;
+  margin-top: 0px;
+}
+
+#table-editor thead {
+
 }
 
 #table-editor thead th {
@@ -233,6 +182,10 @@ textarea.sheet-description {
   padding-left: 5px;
 }
 
+#table-editor tbody {
+  border-right: 1px solid #ccc;
+}
+
 #table-editor tbody td {
   width: 150px;
 }
@@ -243,12 +196,18 @@ textarea.sheet-description {
 
 #table-editor textarea {
   resize: none;
-  height: 28px;
-  line-height: 26px;
+  height: 32px;
+  line-height: 2;
   padding: 0px 0px 0px 5px;
   border: 1px solid #ccc;
   width: 150px;
   outline: 0;
+  margin: 0px;
+  border-right: 0px;
+  border-bottom: 0px;
+  border-radius: 0px;
+  min-height: 32px;
+  max-height: 32px;
 }
 
 #table-editor .expand-editor {
@@ -257,6 +216,10 @@ textarea.sheet-description {
   margin-top: -22px;
   margin-right: 5px;
   display: none;
+}
+
+#table-editor tr:last-child td {
+  border-bottom: 1px solid #ccc;
 }
 
 #table-editor td:hover > .expand-editor {
@@ -269,10 +232,45 @@ textarea.sheet-description {
   cursor: all-scroll;
   cursor: --webkit-grab;
   cursor: grab;
+  border-bottom: 0px;
+}
+
+table button.destroy {
+  color: color(#013545 tint(70%));
+  background-color: transparent;
+  border: 0px;
+  letter-spacing: normal;
+  line-height: 31px;
+  margin-bottom: 0px;
+  margin-left: 0px;
+  margin-right: 0px;
+  margin-top: 0px;
+  padding-bottom: 0px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 0px;
+  height: 31px;
+  font-size: 14px;
+}
+
+table button.destroy:hover {
+  color: #013545;
+  background-color: #efefea;
+  border: 0px;
+}
+
+.editor-button,
+.button.editor-button {
+  font-size: 14px;
+  padding: 5px 11px;
+  line-height: 32px;
+  height: 42px;
+  color: #555;
 }
 
 #main-content {
   margin-left: -32px;
+  height: 500px;
 }
 
 .long-text-wrapper {
@@ -322,15 +320,15 @@ textarea.sheet-description {
 }
 
 header {
-  padding: 10px;
+  padding: 5px;
   background-color: #f6f6f5;
   margin-bottom: 20px;
   border-bottom: 1px solid #e2e2e0;
 }
 
 header h1.site-title {
-  font-size: 20px;
-  margin-top: 10px;
+  font-size: 24px;
+  margin-top: 6px;
   line-height: 1;
   float: left;
   font-weight: 400;
@@ -350,11 +348,15 @@ header ul.main-nav {
   margin: 0px;
   padding: 0px;
   text-align: right;
+  margin: 5px 0px 0px 0px;
+  height: 40px;
 }
 
 header ul.main-nav li {
   display: inline-block;
   margin-left: 15px;
+  vertical-align: top;
+  text-transform: lowercase;
 }
 
 
@@ -407,6 +409,10 @@ header a.button {
 
 .container {
   margin: 0px 50px;
+}
+
+h1.page-title {
+  margin-bottom: 20px;
 }
 
 
@@ -499,6 +505,31 @@ header a.button {
   margin-bottom: 15px;
   padding: 10px;
   border: 1px solid #e2e2e0;
+}
+
+
+/*
+* FORMS
+*/
+
+.button, 
+.button:link, 
+.button:visited, 
+button, 
+input[type="submit"], 
+input[type="reset"], 
+input[type="button"] {
+  font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, arial, sans-serif;
+  letter-spacing: 0px;
+}
+
+header .button.small {
+  font-size: 16px;
+}
+
+fieldset {
+  padding: 0px;
+  margin: 0px 0px 5px 0px;
 }
 
 

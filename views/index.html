@@ -3,11 +3,22 @@
 {{#replace "body"}}
 
 <div class="container">
-  <h2>Sign in</h2>
+  <h1 class="page-title">Sign in</h1>
+
   <form action="/sessions" method="post">
-    username: <input type="text" name="username"><br>
-    password: <input type="password" name="password"><br>
-    <input type="submit" value="Sign in">
+    <fieldset>
+      <label for="username">username</label>
+      <input type="text" name="username">
+    </fieldset>
+    
+    <fieldset>
+      <label for="password">password</label>
+      <input type="password" name="password">
+    </fieldset>
+
+    <div class="form-actions">
+      <input type="submit" value="Sign in">
+    </div>
   </form>
 </div>
 

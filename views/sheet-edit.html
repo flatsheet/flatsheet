@@ -4,15 +4,14 @@
 
 <div class="container">
   <div id="sheet-details"></div>
+
+  <button id="add-row" class="editor-button"><i class="fa fa-plus"></i> row</button>
+  <button id="add-column" class="editor-button"><i class="fa fa-plus"></i> column</button>
+  <a class="button editor-button" href="/api/v2/sheets/{{ sheet.id }}" target="_blank"><i class="fa fa-file-code-o"></i> api</a>
+  <button id="show-json" class="editor-button"><i class="fa fa-download"></i> json</button>
+  <button id="show-csv" class="editor-button"><i class="fa fa-download"></i> csv</button>
+  <button id="destroy" class="editor-button"><i class="fa fa-trash-o"></i> destroy</button>
   <div id="user-list"></div>
-
-  <button id="add-row"><i class="fa fa-plus"></i> row</button>
-  <button id="add-column"><i class="fa fa-plus"></i> column</button>
-  <a class="button" href="/api/v2/sheets/{{ sheet.id }}" target="_blank"><i class="fa fa-file-code-o"></i> api</a>
-  <button id="show-json"><i class="fa fa-download"></i> json</button>
-  <button id="show-csv"><i class="fa fa-download"></i> csv</button>
-  <button id="destroy"><i class="fa fa-trash-o"></i> destroy</button>
-
   <div id="main-content" class="table-wrapper"></div>
   <p id="hello-message">Add your first column to get started.</p>
 

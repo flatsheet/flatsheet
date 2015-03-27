@@ -2,12 +2,27 @@
 
 {{#replace "body"}}
 <div class="container">
-  <h1>Sign up</h1>
+  <h1 class="page-title">Sign up</h1>
+  
   <form action="/accounts/accept" method="post">
-    email: <input type="email" name="email" value="{{ email }}"><br>
-    username: <input type="text" name="username"><br>
-    password: <input type="password" name="password"><br>
-    <input type="submit" value="Create your account">
+    <fieldset>
+      <label for="email">email</label>
+      <input type="email" name="email" value="{{ email }}">
+    </fieldset>
+    
+    <fieldset>
+      <label for="username">username</label>
+      <input type="text" name="username">
+    </fieldset>
+    
+    <fieldset>
+      <label for="password">password</label>
+      <input type="password" name="password">
+    </fieldset>
+    
+    <div class="actions">
+      <input type="submit" value="Create your account">
+    </div>
   </form>
 </div>
 {{/replace}}
