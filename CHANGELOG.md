@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.1 - March 3, 2015
+- limit height of table so horizontal scroll is visible
+- reduce whitespace on sheet edit page
+- improve html of forms, start using csskit for base css of forms & buttons
+
 ## v0.7.0 - March 3, 2015
 - revise cli tool: make subcommands plural to they are `accounts` & `sheets`
 
