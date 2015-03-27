@@ -1,0 +1,19 @@
+<div class="long-text-wrapper">
+  <form action="/sheets/update/{{sheet.id}}" method="post">
+    sheetid: {{sheet.id}} <br>
+    name: <input type="name" name="name" placeholder={{ sheet.name }} value={{ sheet.name }}><br>
+    description: <input type="description" name="description" placeholder={{ sheet.description }} value={{ sheet.description }}><br>
+    <span class="active-users" id="user-list">
+    Accessible by:<br>
+    {{#each sheet.accessible_by}}
+    <li style="color:{{ this.color }}">
+    <!--<li style="color:">-->
+      <i class="fa fa-square"></i>
+      {{this.username}}
+    </li><br>
+    {{/each}}
+    </span>
+    Grant access to username: <input type="text" name="new-user-permission" id="autofill-usernames"><br>
+    <input type="submit" value="Update sheet">
+  </form>
+</div>
