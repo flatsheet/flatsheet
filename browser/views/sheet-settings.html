@@ -1,19 +1,34 @@
 <div class="long-text-wrapper">
   <form action="/sheets/update/{{sheet.id}}" method="post">
-    sheetid: {{sheet.id}} <br>
-    name: <input type="name" name="name" placeholder={{ sheet.name }} value={{ sheet.name }}><br>
-    description: <input type="description" name="description" placeholder={{ sheet.description }} value={{ sheet.description }}><br>
+    <fieldset>
+      <label >name:</label>
+      <input type="name" name="name" placeholder={{ sheet.name }} value={{ sheet.name }}><br>
+    </fieldset>
+
+    <fieldset>
+      <label >description:</label>
+      <input type="description" name="description" placeholder={{ sheet.description }} value={{ sheet.description }}><br>
+    </fieldset>
+
+    <fieldset>
     <span class="active-users" id="user-list">
-    Accessible by:<br>
+    <label>Accessible by:</label>
     {{#each sheet.accessible_by}}
     <li style="color:{{ this.color }}">
-    <!--<li style="color:">-->
       <i class="fa fa-square"></i>
       {{this.username}}
     </li><br>
     {{/each}}
     </span>
-    Grant access to username: <input type="text" name="new-user-permission" id="autofill-usernames"><br>
-    <input type="submit" value="Update sheet">
+    </fieldset>
+
+    <fieldset>
+      <label>Grant access to username:</label>
+      <input type="name" name="new-user-permission" id="autofill-usernames"><br><br>
+      <!--<input type="name" name="new-user-permission" ><br>-->
+    </fieldset>
+    <fieldset>
+      <input type="submit" value="Update sheet">
+    </fieldset>
   </form>
 </div>
