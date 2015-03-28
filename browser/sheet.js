@@ -182,25 +182,31 @@ on(document.body, '#settings', 'click', function (e) {
   // Get an array of all accounts in the site
   flatsheet.listAccounts(function (err, accounts) {
 
-    // Create a sheet object with color info for our settings template
-    var usernamesToColors = accounts.reduce(function(newObject, user) {
-      newObject[user.key] = user.value.color;
+    // Create a sheet object with our settings to easily access account data
+    var accountsDict = accounts.reduce(function(newObject, user) {
+      newObject[user.key] = {};
+      newObject[user.key].color = user.value.color;
+      newObject[user.key].admin = user.value.admin;
+      newObject[user.key].username = user.key;
       return newObject;
     }, {});
 
-    // Ensures that all accessible usernames listed are valid accounts, even if the accounts have been deleted.
+    // Ensures that all accessible usernames listed are valid accounts,
+    // removes accounts that have been deleted.
     for (var account in sheet.accessible_by) {
-      if (!(account in usernamesToColors)) {
-        // is this the proper way to alter a ractive object? It seems to work...
+      if (!(account in accountsDict)) {
         delete sheet.accessible_by[account];
       }
     }
-    // TODO: Have the sheet hold the color information
-    function mapUsersToColors(username) {
-      return {username: username, color: usernamesToColors[username]}
+    // TODO: Have the sheet already hold the color information (to show colors on edit)
+    function appendProperties(username) {
+      return {username: username, color: accountsDict[username].color};
     }
-    // create an object with the user's colors alongside each username
-    var accessibleBy= Object.keys(sheet.accessible_by).map(mapUsersToColors);
+    // Filter out admins - this covers the case when admin privileges have changed
+    function filterAdmins(username) {
+      return !accountsDict[username].admin;
+    }
+    var accessibleBy= Object.keys(sheet.accessible_by).filter(filterAdmins).map(appendProperties);
     var sheetInfo = {id: sheet.id, name : sheet.name, description: sheet.description, accessible_by: accessibleBy};
 
     // convert accounts array to an array of account usernames (currently usernames are used as keys)
