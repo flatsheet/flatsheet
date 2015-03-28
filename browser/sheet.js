@@ -181,85 +181,50 @@ on(document.body, '#settings', 'click', function (e) {
   console.log("settings event: sheet details from Ractive:");
   console.log(sheet);
 
-  //  var sheetDetails = new View({
-  //  el: 'sheet-details',
-  //  template: templates.sheetDetails,
-  //  data: { name: '', description: '' }
-  //});
-  //
-  //sheetDetails.on('change', function (change) {
-  //  if (remoteChange) return;
-  //  io.emit('sheet-details', change);
-  //});
-  //
-  //io.on('sheet-details', function (change) {
-  //  remoteChange = true;
-  //  sheetDetails.set(change);
-  //  remoteChange = false;
-  //});
-
-  //var input = document.querySelector('input');
-  //var usernames = accountUsernames.get();
-  //console.log("settings event: account usernames from Ractive:");
-  //console.log(usernames);
   // Get an array of all accounts in the site
   flatsheet.listAccounts(function (err, accounts) {
-    //console.log("getting accounts from the api:");
-    //console.log(accounts);
-    // verify type
-    //console.log("accounts type:");
-    //console.log(typeof(accounts));
 
-    // convert accounts array to an array of account usernames (currently usernames are used as keys)
-
-    //var accountsList = accounts.map(function(account) {return account.key});
-    // excluding admins and accounts that already have access
-    function accountsListFilter (account) {
-      return !(account.key in sheet.accessible_by) && !account.value.admin;
-    }
-    var suggestedAccessibleAccounts = accounts.filter(accountsListFilter).map(function(account) {return account.key});
-
-    //console.log("accountsList, filtered:");
-    //console.log(suggestedAccessibleAccounts);
-
-    // create our colors alongside each username
+    // Create a sheet object with color info for our settings template
     var usernamesToColors = accounts.reduce(function(newObject, user) {
       newObject[user.key] = user.value.color;
       return newObject;
     }, {});
-    // TODO: Hold color information in the sheet
+
+    // Ensures that all accessible usernames listed are valid accounts, even if the accounts are deleted.
+    for (var account in sheet.accessible_by) {
+      console.log("checking account in sheet.accessible_by:");
+      console.log(account);
+      if (!(account in usernamesToColors)) {
+        console.log("account is being removed");
+        // is this the proper way to alter a ractive object? It seems to work...
+        delete sheet.accessible_by[account];
+      }
+    }
+    console.log("sheet.accessible_by:");
+    console.log(sheet.accessible_by);
+
+    // TODO: Have the sheet hold the color information
     function mapUsersToColors(username) {
       return {username: username, color: usernamesToColors[username]}
     }
-    //console.log("sheets.accessibleBy:");
-    //console.log(sheet.accessible_by);
-    //console.log("type of sheets.accessible_by:");
-    //console.log(typeof(sheet.accessible_by));
-    //sheet.accessible_by = sheet.accessible_by.map(mapUsersToColors);
+    // create an object with the user's colors alongside each username
     var accessibleBy= Object.keys(sheet.accessible_by).map(mapUsersToColors);
-    //var accessibleBy = sheet.accessible_by.map(function(username) {return {username:username});
-    //console.log("accessibleBy:");
-    //console.log(accessibleBy);
     var sheetInfo = {id: sheet.id, name : sheet.name, description: sheet.description, accessible_by: accessibleBy};
-    //console.log("sheetInfo:");
-    //console.log(sheetInfo);
+
+    // convert accounts array to an array of account usernames (currently usernames are used as keys)
+    // excluding admins and accounts that already have access
+    var suggestedAccessibleAccounts = accounts.filter(accountsListFilter).map(function(account) {return account.key});
+    function accountsListFilter (account) {
+      return !(account.key in sheet.accessible_by) && !account.value.admin;
+    }
 
     var modal = templates.modal({
-      //content: templates.settings({sheet: sheet, accounts: accounts})
-      //content: templates.settings({sheet: sheet})
       content: templates.settings({sheet: sheetInfo})
     });
-//var modal = templates.modal({
-//  content: templates.editLongText({ text: text, id: id })
-//});
     dom.add(document.body, domify(modal));
 
-    // AUTO-COMPLETE
-    // EXAMPLE:
-    //console.log("Adding auto-complete element:");
+    // AUTO-COMPLETE feature
     var enteredText = document.querySelector('#autofill-usernames');
-    //console.log("input:");
-    //console.log(enteredText);
 
     function toLowerCase (s) { return s.toLowerCase() }
     autoComplete(enteredText, function (completionElement) {
