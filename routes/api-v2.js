@@ -112,4 +112,19 @@ exports.install = function (server, prefix) {
   server.route(prefix + 'sheets/:id/csv', function (req, res, match) {
     //todo
   });
-}
+
+
+  server.route(prefix + 'accounts', function (req, res, match) {
+    /*
+     *  Get list of accounts
+     */
+    if (req.method === 'GET') {
+      res.setHeader('Content-Type', 'application/json');
+
+      server.accounts.list()
+        .pipe(JSONStream.stringify())
+        .pipe(res);
+    }
+    // TODO: Handle POST request to create new account
+  });
+};

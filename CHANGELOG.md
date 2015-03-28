@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.7.1 - March 3, 2015
+- limit height of table so horizontal scroll is visible
+- reduce whitespace on sheet edit page
+- improve html of forms, start using csskit for base css of forms & buttons
+
+## v0.7.0 - March 3, 2015
+- revise cli tool: make subcommands plural to they are `accounts` & `sheets`
+
+## v0.6.3 - March 3, 2015
+- use 'auth.login' in `/accounts/invite` POST
+
+## v0.6.2 - March 3, 2015
+- fix `/accounts/accept` route to be a plural `accounts`
+
+## v0.6.1 - March 3, 2015
+- Fix login error: password check
+- add CONTRIBUTING.md and LICENSE.md
+- small route fixes
+
 ## v0.6.0 - February 26, 2015
 - make accounts, sheets, sessions routes plural
 - update accountdown to ^4.0.0

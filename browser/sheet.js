@@ -14,6 +14,7 @@ var domquery = require('domquery');
 var siblings = require('siblings');
 var io = require('socket.io-client')();
 var View = require('ractive');
+var autoComplete = require('autocomplete-element');
 
 var flatsheet = require('flatsheet-api-client')({ 
   host: 'http://' + window.location.host
@@ -33,6 +34,9 @@ var templates = {
   ),
   editLongText: Handlebars.compile(
     fs.readFileSync(__dirname + '/views/editor-long-text.html', 'utf8')
+  ),
+  settings: Handlebars.compile(
+    fs.readFileSync(__dirname + '/views/sheet-settings.html', 'utf8')
   )
 };
 
@@ -166,7 +170,95 @@ on(document.body, '#destroy', 'click', function (e) {
   if (window.confirm(msg)) {
     editor.clear();
     elClass(hello).remove('hidden');
-  };
+  }
+});
+
+/* listener for settings button */
+on(document.body, '#settings', 'click', function (e) {
+  e.preventDefault();
+
+  var sheet = sheetDetails.get();
+
+  // Get an array of all accounts in the site
+  flatsheet.listAccounts(function (err, accounts) {
+
+    // Create a sheet object with our settings to easily access account data
+    var accountsDict = accounts.reduce(function(newObject, user) {
+      newObject[user.key] = {};
+      newObject[user.key].color = user.value.color;
+      newObject[user.key].admin = user.value.admin;
+      newObject[user.key].username = user.key;
+      return newObject;
+    }, {});
+
+    // Ensures that all accessible usernames listed are valid accounts,
+    // removes accounts that have been deleted.
+    for (var account in sheet.accessible_by) {
+      if (!(account in accountsDict)) {
+        delete sheet.accessible_by[account];
+      }
+    }
+    // TODO: Have the sheet already hold the color information (to show colors on edit)
+    function appendProperties(username) {
+      return {username: username, color: accountsDict[username].color};
+    }
+    // Filter out admins - this covers the case when admin privileges have changed
+    function filterAdmins(username) {
+      return !accountsDict[username].admin;
+    }
+    var accessibleBy= Object.keys(sheet.accessible_by).filter(filterAdmins).map(appendProperties);
+    var sheetInfo = {id: sheet.id, name : sheet.name, description: sheet.description, accessible_by: accessibleBy};
+
+    // convert accounts array to an array of account usernames (currently usernames are used as keys)
+    // excluding admins and accounts that already have access
+    var suggestedAccessibleAccounts = accounts.filter(accountsListFilter).map(function(account) {return account.key});
+    function accountsListFilter (account) {
+      return !(account.key in sheet.accessible_by) && !account.value.admin;
+    }
+
+    var modal = templates.modal({
+      content: templates.settings({sheet: sheetInfo})
+    });
+    dom.add(document.body, domify(modal));
+
+    // AUTO-COMPLETE feature
+    var enteredText = document.querySelector('#autofill-usernames');
+
+    function toLowerCase (s) { return s.toLowerCase() }
+    autoComplete(enteredText, function (completionElement) {
+      if (!enteredText.value.length) return completionElement.suggest([]);
+      var matches = suggestedAccessibleAccounts.filter(function (accountUsername) {
+        // return matches if there is a substring prefix match
+        return toLowerCase(accountUsername.slice(0, enteredText.value.length)) === toLowerCase(enteredText.value);
+      });
+      completionElement.suggest(matches);
+    });
+  });
+});
+
+
+/* listener for revoking access of usernames */
+on(document.body, '.delete-sheet-permission', 'click', function (e) {
+  var btn;
+
+  if (elClass(e.target).has('destroy')) {
+    btn = e.target;
+  } else if (elClass(e.target).has('destroy-icon')) {
+    btn = closest(e.target, '.destroy');
+  } else {
+    console.log("the target element has no destroy icon");
+  }
+
+  var username = btn.id;
+  var msg = 'Sure you want to revoke permissions for the user ' + username + '?';
+
+  if (window.confirm(msg)) {
+    var sheet = sheetDetails.get();
+    delete sheet.accessible_by[username];
+    sheetDetails.set('accessible_by', sheet.accessible_by);
+    var sheetId = sheet.id;
+    window.location = '/sheets/edit/' + sheetId;
+  }
 });
 
 /* listener for the delete column button */
@@ -239,9 +331,12 @@ on(document.body, '#save-long-text-editor', 'click', function (e) {
 
 /* listener for closing a modal */
 on(document.body, '#close-modal', 'click', function (e) {
-  var id = document.querySelector('.expanded-cell-id').value;
+  //var id = document.querySelector('.expanded-cell-id').value;
+  // TODO: LMS: I'm not quite sure about the purpose of this call,
+  // but it prevents our 'settings' modal from closing, so I'm disabling it
+  // Also, shouldn't we emit a 'cell-focus' instead of 'cell-blur' when closing a modal?
+  //io.emit('cell-blur', id);
   dom.remove('#modal');
-  io.emit('cell-blur', id);
 });
 
 function cellFocus (e) {

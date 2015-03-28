@@ -63,6 +63,7 @@ exports.install = function (server, prefix) {
 
       formBody(req, res, function (err, body) {
         var data = body;
+        data['project'] = 'default project'; // TODO: add project field to form
         data['accessible_by'] = {};
         data.accessible_by[user.username] = true;
 
@@ -121,7 +122,52 @@ exports.install = function (server, prefix) {
       });
     });
   });
-  
+
+
+  server.route(prefix + '/update/:id', function (req, res, opts) {
+    server.sheets.fetch(opts.params.id, function (err, sheet) {
+      if (err) {
+        console.error(err);
+        return redirect(res, '/404');
+      }
+
+      //var ctx = { account: res.account, sheet: sheet };
+      //return response().html(server.render('sheet-edit', ctx)).pipe(res);
+
+      formBody(req, res, function (err, body) {
+        console.log("inside sheets/update...");
+        console.log("sheet:");
+        console.log(sheet);
+        console.log("body:");
+        console.log(body);
+        var data = sheet;
+        if (body['new-user-permission'] !== '') {
+          // TODO: Check whether the new name permission is a duplicate or a valid username
+          //data.accessible_by[body['new-access']] = true;
+          console.log("updating new user permission");
+          data.accessible_by[body['new-user-permission']] = true;
+        }
+        if (body['description'] !== sheet.description) {
+          console.log("updating description");
+          //console.log(data.description);
+          data.description = body['description'];
+        }
+        if (body['name'] !== sheet.name) {
+          console.log("updating name");
+          data.name = body['name'];
+        }
+
+        server.sheets.update(opts.params.id, data, function(err) {
+          if (err) console.log(err);
+          console.log(data);
+          res.writeHead(302, { 'Location': '/sheets/edit/' + opts.params.id });
+          return res.end();
+        });
+      });
+
+    });
+  });
+
   server.route('/404', function (req, res, opts) {
     return response().html(server.render('404')).pipe(res);
   });
@@ -134,6 +180,6 @@ exports.install = function (server, prefix) {
     res.writeHead(302, { 'Location': prefix + '/edit/' + opts.params.id });
     return res.end();
   });
-}
+};
 
 

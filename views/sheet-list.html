@@ -3,11 +3,11 @@
 {{#replace "body"}}
 
 <div class="container">
-  <button id="new-blank-sheet"><i class="fa fa-plus"></i> New blank sheet</button>
-  <button id="import-csv"><i class="fa fa-plus"></i> Import CSV file</button>
+  <button id="new-blank-sheet" class="small"><i class="fa fa-plus"></i> New blank sheet</button>
+  <button id="import-csv" class="small"><i class="fa fa-plus"></i> Import CSV file</button>
   <hr>
   <div class="sheet-list">
-    <h1>Your sheets</h1>
+    <h1 class="page-title">Your sheets</h1>
 
     {{#each sheets}}
     <div class="list-item clearfix">
@@ -19,7 +19,7 @@
         
         <div class="list-item-actions">
           <form action="/sheets/destroy/{{ id }}" method="post">
-            <button type="submit" class="destroy-sheet">
+            <button type="submit" class="destroy-sheet small">
               <i class="fa fa-trash-o"></i> destroy
             </button>
           </form>
