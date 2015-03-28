@@ -12,11 +12,12 @@
 
     <fieldset>
     <span class="active-users" id="user-list">
-    <label>Accessible by:</label>
+    <label>Accessible by (admins not shown):</label>
     {{#each sheet.accessible_by}}
     <li style="color:{{ this.color }}">
       <i class="fa fa-square"></i>
-      {{this.username}}
+      {{ this.username }}
+      <button type="button" id="{{ this.username }}" class="destroy settings delete-sheet-permission"><i class="fa fa-times destroy-icon"></i></button>
     </li><br>
     {{/each}}
     </span>
@@ -25,7 +26,6 @@
     <fieldset>
       <label>Grant access to username:</label>
       <input type="name" name="new-user-permission" id="autofill-usernames"><br><br>
-      <!--<input type="name" name="new-user-permission" ><br>-->
     </fieldset>
     <fieldset>
       <input type="submit" value="Update sheet">

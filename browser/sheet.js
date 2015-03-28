@@ -178,8 +178,6 @@ on(document.body, '#settings', 'click', function (e) {
   e.preventDefault();
 
   var sheet = sheetDetails.get();
-  console.log("settings event: sheet details from Ractive:");
-  console.log(sheet);
 
   // Get an array of all accounts in the site
   flatsheet.listAccounts(function (err, accounts) {
@@ -190,19 +188,13 @@ on(document.body, '#settings', 'click', function (e) {
       return newObject;
     }, {});
 
-    // Ensures that all accessible usernames listed are valid accounts, even if the accounts are deleted.
+    // Ensures that all accessible usernames listed are valid accounts, even if the accounts have been deleted.
     for (var account in sheet.accessible_by) {
-      console.log("checking account in sheet.accessible_by:");
-      console.log(account);
       if (!(account in usernamesToColors)) {
-        console.log("account is being removed");
         // is this the proper way to alter a ractive object? It seems to work...
         delete sheet.accessible_by[account];
       }
     }
-    console.log("sheet.accessible_by:");
-    console.log(sheet.accessible_by);
-
     // TODO: Have the sheet hold the color information
     function mapUsersToColors(username) {
       return {username: username, color: usernamesToColors[username]}
@@ -236,6 +228,31 @@ on(document.body, '#settings', 'click', function (e) {
       completionElement.suggest(matches);
     });
   });
+});
+
+
+/* listener for revoking access of usernames */
+on(document.body, '.delete-sheet-permission', 'click', function (e) {
+  var btn;
+
+  if (elClass(e.target).has('destroy')) {
+    btn = e.target;
+  } else if (elClass(e.target).has('destroy-icon')) {
+    btn = closest(e.target, '.destroy');
+  } else {
+    console.log("the target element has no destroy icon");
+  }
+
+  var username = btn.id;
+  var msg = 'Sure you want to revoke permissions for the user ' + username + '?';
+
+  if (window.confirm(msg)) {
+    var sheet = sheetDetails.get();
+    delete sheet.accessible_by[username];
+    sheetDetails.set('accessible_by', sheet.accessible_by);
+    var sheetId = sheet.id;
+    window.location = '/sheets/edit/' + sheetId;
+  }
 });
 
 /* listener for the delete column button */
