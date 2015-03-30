@@ -1,6 +1,12 @@
 # Changelog
 
-## v0.7.1 - March 3, 2015
+## v0.8.0 - March 28, 2015
+- sheets now have access control. admins have access to all sheets, users can invite other users to edit their sheets through the sheet settings modal that is added in this version
+
+## v0.7.2 - March 27, 2015
+- fix issue with db not being accessible when using flatsheet as a module
+
+## v0.7.1 - March 27, 2015
 - limit height of table so horizontal scroll is visible
 - reduce whitespace on sheet edit page
 - improve html of forms, start using csskit for base css of forms & buttons
