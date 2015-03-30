@@ -268,6 +268,51 @@ table button.destroy:hover {
   color: #555;
 }
 
+#table-view {
+  width: 100%;
+}
+
+#table-view .spacer {
+  display: block;
+  width: 100px;
+}
+
+#table-view thead {
+  font-size: 0.9em;
+  background-color: #f6f6f5;
+  border-bottom: 1px solid #e2e2e0;
+}
+
+#table-view thead.stuck {
+  right: 50px;
+}
+
+body.el-stuck #table-view {
+  margin-top: 150px;
+}
+
+#table-view th {
+  text-align: left;
+  width: 103px;
+}
+
+#table-view tbody tr {
+  border-bottom: 1px solid #efefef;
+}
+
+#table-view tbody td {
+  padding: 10px 5px;
+  width: 100px;
+}
+
+#table-view .row {
+  cursor: pointer;
+}
+
+#table-view .row:hover {
+  background-color: #fcfcfa;
+}
+
 #main-content {
   margin-left: -32px;
   height: 500px;
