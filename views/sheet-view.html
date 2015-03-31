@@ -3,15 +3,19 @@
 {{#replace "body"}}
 
 <div class="container">
-  <h1 class="page-title">{{ name }}</h1>
-  <p>{{ description }}</p>
-
-  <table id="table-editor">
+  <h1 class="page-title">{{ sheet.name }}</h1>
+  <p>{{ sheet.description }}</p>
+  
+  <p>
+    <a class="button editor-button small" href="/sheets/edit/{{ sheet.id }}" target="_blank"><i class="fa fa-file-code-o"></i> edit</a>
+    <a class="button editor-button small" href="/api/v2/sheets/{{ sheet.id }}" target="_blank"><i class="fa fa-file-code-o"></i> api</a>
+  </p>
+    
+  <table id="table-view">
     <thead id="table-header">
       <tr>
-        <span class="spacer"></span>
         <th>
-          <span class="column-name"></span>
+          <span class="column-name"><span class="spacer"></span></span>
         </th>
         {{#each headers}}
           <th id={{this}}>
@@ -22,8 +26,10 @@
     </thead>
     <tbody id="table-body">
       {{#each sheet.rows}}
-      <tr class="row">
-        <td class="row-index">{{plus1 @index}}</td>
+      <tr class="row" id="{{plus1 @index}}" name="{{plus1 @index}}">
+        <td class="row-index">
+          {{plus1 @index}}
+        </td>
         {{#each this}}
         <td class="column-{{@key}}">
           {{this}}
@@ -34,6 +40,8 @@
     </tbody>
   </table>
 </div>
+
+<script src="/public/sheet-view.js"></script>
 
 {{/replace}}
 
