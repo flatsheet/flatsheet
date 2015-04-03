@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.9.1 – April 3, 2015
+- fix `flatsheet` command so it works with accounts refactor
+
 ## v0.9.0 – April 3, 2015
 - refactor accounts routes into a handlers file and a routes file
 - allow custom views so that built-in views can be overriden
