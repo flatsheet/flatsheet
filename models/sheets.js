@@ -2,97 +2,82 @@ var level = require('level');
 var uuid = require('uuid').v1;
 var extend = require('extend');
 
-var Sheets = (function() {
+module.exports = Sheets;
 
-  function Sheets (db, opts) {
-    if (!(this instanceof Sheets)) {
-      return new Sheets(db, opts);
-    }
-    this.db = db || level('./data/sheets', {
-      valueEncoding: 'json'
+function Sheets (db, opts) {
+  if (!(this instanceof Sheets)) {
+    return new Sheets(db, opts);
+  }
+  this.db = db || level('./data/sheets', {
+    valueEncoding: 'json'
+  });
+}
+
+Sheets.prototype.create = function (data, cb) {
+  var self = this;
+  var key = uuid();
+  data.id = key;
+
+  this.db.put(key, data, function (err) {
+    self.db.get(key, function (err, sheet) {
+      cb(err, sheet, key);
     });
+  });
+};
+
+Sheets.prototype.put = Sheets.prototype.create;
+
+Sheets.prototype.fetch = function (key, cb) {
+  this.db.get(key, cb);
+};
+
+Sheets.prototype.get = Sheets.prototype.fetch;
+
+Sheets.prototype.list = function (opts, cb) {
+  var defaultOpts = {keys: false, values: true};
+
+  if (typeof opts === 'function') {
+    cb = opts;
+    opts = defaultOpts;
+  } else {
+    opts = extend(defaultOpts, opts);
   }
 
-  Sheets.prototype.create = function (data, cb) {
-    var self = this;
-    var key = uuid();
-    data.id = key;
+  if (!cb) {
+    return this.db.createReadStream(opts);
+  }
 
-    this.db.put(key, data, function (err) {
-      self.db.get(key, function (err, sheet) {
-        cb(err, sheet, key);
-      });
-    });
-  };
-
-  Sheets.prototype.put = Sheets.prototype.create;
-
-  Sheets.prototype.fetch = function (key, cb) {
-    this.db.get(key, cb);
-  };
-
-  Sheets.prototype.get = Sheets.prototype.fetch;
-
-  var list = function (opts, cb) {
-    var defaultOpts = {keys: false, values: true};
-
-    if (typeof opts === 'function') {
-      var cb = opts;
-      var opts = defaultOpts;
-    } else {
-      var opts = extend(defaultOpts, opts);
-    }
-
-    if (!cb) {
-      return this.db.createReadStream(opts);
-    }
-
-    var results = [];
-    console.log("opts:");
-    console.log(opts);
-    console.log("filter:");
-    console.log(opts.filter);
-    this.db.createReadStream(opts)
-      .on('data', function (data) {
-        if (opts.filter) {
-          if (opts.username in data.accessible_by) {
-            console.log("pushing data to results:");
-            console.log(data);
-            results.push(data);
-          }
-        } else {
+  var results = [];
+  this.db.createReadStream(opts)
+    .on('data', function (data) {
+      if (opts.filter) {
+        if (opts.username in data.accessible_by) {
           results.push(data);
         }
-      })
-      .on('error', function (err) {
-        return cb(err);
-      })
-      .on('end', function () {
-        return cb(null, results);
-      });
-  };
-
-  Sheets.prototype.list = function (opts, cb) {
-    return list.apply(this, [opts, cb]);
-  };
-
-  Sheets.prototype.listAccessible = function (username, cb) {
-    return list.apply(this, [{filter: true, username: username}, cb]);
-  };
-
-  Sheets.prototype.update = function (key, data, cb) {
-    var self = this;
-    this.db.put(key, data, function (err) {
-      if (err) return cb(err);
-      self.db.get(key, cb);
+      } else {
+        results.push(data);
+      }
+    })
+    .on('error', function (err) {
+      return cb(err);
+    })
+    .on('end', function () {
+      return cb(null, results);
     });
-  };
+};
 
-  Sheets.prototype.destroy = function (key, cb) {
-    this.db.del(key, cb);
-  };
+Sheets.prototype.listAccessible = function (username, cb) {
+  return this.list({filter: true, username: username}, cb);
+};
 
-  return Sheets;
-})();
+Sheets.prototype.update = function (key, data, cb) {
+  var self = this;
+  this.db.put(key, data, function (err) {
+    if (err) return cb(err);
+    self.db.get(key, cb);
+  });
+};
 
-module.exports = Sheets;
+Sheets.prototype.destroy = function (key, cb) {
+  this.db.del(key, cb);
+};
