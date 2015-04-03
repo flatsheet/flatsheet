@@ -121,7 +121,7 @@ exports.install = function (server, prefix) {
     if (req.method === 'GET') {
       res.setHeader('Content-Type', 'application/json');
 
-      server.accounts.list()
+      server.accountdown.list()
         .pipe(JSONStream.stringify())
         .pipe(res);
     }

@@ -15,7 +15,7 @@ exports.install = function (server, prefix) {
     if (req.method === 'POST') {
       formBody(req, res, function (err, body) {
 
-        server.accounts.verify('basic', body, function (err, ok, id) {
+        server.accountdown.verify('basic', body, function (err, ok, id) {
           if (err) {
             console.error(err);
           } else if (!ok) {
