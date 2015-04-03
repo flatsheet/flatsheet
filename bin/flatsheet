@@ -56,7 +56,7 @@ function accounts () {
         }
       };
 
-      flatsheet.accounts.create(result.username, opts, function (err) {
+      flatsheet.accountdown.create(result.username, opts, function (err) {
         if (err) console.error(err);
         flatsheet.db.close()
       });
@@ -65,16 +65,16 @@ function accounts () {
   }
 
   if (sub === 'list') {
-    var l = flatsheet.accounts.list();
+    var l = flatsheet.accountdown.list();
     l.on('data', console.log);
     l.on('end', function () { flatsheet.db.close(); });
   }
 
   if (sub === 'delete-all') {
-    flatsheet.accounts.list().pipe(through.obj(write, end));
+    flatsheet.accountdown.list().pipe(through.obj(write, end));
 
     function write (account, enc, next) {
-      flatsheet.accounts.remove(account.key, function (err) {
+      flatsheet.accountdown.remove(account.key, function (err) {
         if (err) return console.error('something went wrong');
         console.log(account.key + ' removed');
         next();
