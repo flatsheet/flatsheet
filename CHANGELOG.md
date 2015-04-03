@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.9.0 – April 3, 2015
+- refactor accounts routes into a handlers file and a routes file
+- allow custom views so that built-in views can be overriden
+
 ## v0.8.0 - March 28, 2015
 - sheets now have access control. admins have access to all sheets, users can invite other users to edit their sheets through the sheet settings modal that is added in this version
 
