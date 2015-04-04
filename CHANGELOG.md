@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.9.2 – April 4, 2015
+- fix invites bug
+
 ## v0.9.1 – April 3, 2015
 - fix `flatsheet` command so it works with accounts refactor
 
