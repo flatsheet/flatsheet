@@ -166,7 +166,7 @@ Accounts.prototype.invite = function (req, res) {
         emails.forEach(function (email) {
           var token = uuid();
           var opts = { email: email, accepted: false };
-          this.invites.put(token, opts, function (err) {
+          self.server.invites.put(token, opts, function (err) {
             if (err) console.log(new Error(err));
 
             var data = {
@@ -207,7 +207,7 @@ Accounts.prototype.acceptInvite = function (req, res) {
     var query = url.parse(req.url).query;
     var token = qs.parse(query).token;
 
-    server.invites.get(token, function (err, invite) {
+    this.server.invites.get(token, function (err, invite) {
       if (err || invite.accepted) {
         res.writeHead(302, { 'Location': '/' });
         return res.end();
@@ -241,7 +241,7 @@ Accounts.prototype.acceptInvite = function (req, res) {
         }
       };
 
-      self.createAccount(body.username, opts, function (err) {
+      self.server.accountdown.create(body.username, opts, function (err) {
         //todo: notification of error on page
         if (err) return console.error(err);
 
