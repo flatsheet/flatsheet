@@ -77,7 +77,7 @@
     "st": "^0.5.1",
     "sticky-header": "git://github.com/sethvincent/sticky-header.git",
     "subleveldown": "^2.0.0",
-    "table-editor": "^2.0.3",
+    "table-editor": "^2.1.0",
     "through2": "^0.6.3",
     "uuid": "^1.4.1",
     "xhr": "^1.15.0"

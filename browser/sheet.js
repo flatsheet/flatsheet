@@ -142,8 +142,8 @@ on(document.body, '#add-row', 'click', function (e) {
 /* listener for adding a column */
 on(document.body, '#add-column', 'click', function (e) {
   if (editor.get('columns')) elClass(hello).add('hidden');
-  var name = window.prompt('New column name');
-  if (name) editor.addColumn({ name: name, type: 'string' });
+  var columns = editor.get('columns');
+  editor.addColumn({ name: 'column ' + (columns.length+1), type: 'string' });
 });
 
 /* listener for showing the data as json */

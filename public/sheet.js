@@ -143,8 +143,8 @@ on(document.body, '#add-row', 'click', function (e) {
 /* listener for adding a column */
 on(document.body, '#add-column', 'click', function (e) {
   if (editor.get('columns')) elClass(hello).add('hidden');
-  var name = window.prompt('New column name');
-  if (name) editor.addColumn({ name: name, type: 'string' });
+  var columns = editor.get('columns');
+  editor.addColumn({ name: 'column ' + (columns.length+1), type: 'string' });
 });
 
 /* listener for showing the data as json */
@@ -29103,7 +29103,7 @@ module.exports = Ractive.extend({
       var row = {};
 
       Object.keys(columnIdByName).forEach(function (name) {
-        if (!item[name]) item[name] = ' ';
+        if (!item[name]) item[name] = null;
         row[columnIdByName[name]] = item[name];
       });
 
@@ -29137,7 +29137,7 @@ module.exports = Ractive.extend({
 
     if (rows.length > 0) {
       rows.forEach(function (row, i) {
-        changes['rows[' + i + '].' + id] = '';
+        changes['rows[' + i + '].' + id] = null;
       });
       this.set(changes);
     }
