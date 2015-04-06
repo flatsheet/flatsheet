@@ -183,11 +183,11 @@ on(document.body, '#settings', 'click', function (e) {
   flatsheet.listAccounts(function (err, accounts) {
 
     // Create a sheet object with our settings to easily access account data
-    var accountsDict = accounts.reduce(function(newObject, user) {
-      newObject[user.key] = {};
-      newObject[user.key].color = user.value.color;
-      newObject[user.key].admin = user.value.admin;
-      newObject[user.key].username = user.key;
+    var accountsDict = accounts.reduce(function(newObject, account) {
+      newObject[account.key] = {};
+      newObject[account.key].color = account.value.color;
+      newObject[account.key].admin = account.value.admin;
+      newObject[account.key].username = account.key;
       return newObject;
     }, {});
 
