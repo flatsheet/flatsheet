@@ -63,7 +63,6 @@ exports.install = function (server, prefix) {
 
       formBody(req, res, function (err, body) {
         var data = body;
-        data['project'] = 'default project'; // TODO: add project field to form
         data['accessible_by'] = {};
         data.accessible_by[user.username] = true;
 
