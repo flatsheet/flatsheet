@@ -21,7 +21,7 @@ function Accounts (server) {
  */
 Accounts.prototype.getListOfAccounts = function (req, res) {
   var self = this;
-  this.server.authorizeSession(req, res, function (error, user, session) {
+  this.server.permissions.authorizeSession(req, res, function (error, user, session) {
     if (!user.admin || error) {
       if (error) {
         console.log(error);
@@ -60,7 +60,7 @@ Accounts.prototype.signIntoAccount = function (req, res) {
 
 Accounts.prototype.createAdminAccount = function (req, res) {
   var self = this;
-  this.server.authorizeSession(req, res, function (error, user, session) {
+  this.server.permissions.authorizeSession(req, res, function (error, user, session) {
     if (!user.admin || error) {
       if (error) console.log(error);
       res.writeHead(302, { 'Location': self.prefix });
@@ -100,7 +100,7 @@ Accounts.prototype.createAccount = function (req, res) {
 
 Accounts.prototype.deleteAccount = function (req, res, opts) {
   var self = this;
-  this.server.authorizeSession(req, res, function (error, user, session) {
+  this.server.permissions.authorizeSession(req, res, function (error, user, session) {
     if (user.admin && !error) {
       if (req.method === 'POST') {
         // TODO: Remove account username from all sheet permissions
@@ -120,7 +120,7 @@ Accounts.prototype.deleteAccount = function (req, res, opts) {
 
 Accounts.prototype.updateAccount = function (req, res, opts) {
   var self = this;
-  this.server.authorizeSession(req, res, function (error, user, session) {
+  this.server.permissions.authorizeSession(req, res, function (error, user, session) {
     if (error) redirect(res, '/');
 
     if (user.admin) {

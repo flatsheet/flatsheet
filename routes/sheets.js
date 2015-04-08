@@ -11,7 +11,7 @@ exports.install = function (server, prefix) {
   var prefix = prefix || '/sheets';
 
   server.route(prefix, function (req, res, opts) {
-    server.authorizeSession(req, res, function (err, user, session) {
+    server.permissions.authorizeSession(req, res, function (err, user, session) {
       if (err) redirect(res, '/');
 
       var renderSheets = function (err, list) {
@@ -28,7 +28,7 @@ exports.install = function (server, prefix) {
   });
 
   server.route(prefix + '/edit/:id', function (req, res, opts) {
-    server.authorizeSession(req, res, function (err, user, session) {
+    server.permissions.authorizeSession(req, res, function (err, user, session) {
       if (err) return redirect(res, '/');
 
       server.sheets.fetch(opts.params.id, function (err, sheet) {
@@ -58,7 +58,7 @@ exports.install = function (server, prefix) {
   });
 
   server.route(prefix + '/new', function (req, res, opts) {
-    server.authorizeSession(req, res, function (err, user, session) {
+    server.permissions.authorizeSession(req, res, function (err, user, session) {
       if (err) redirect(res, '/');
 
       formBody(req, res, function (err, body) {
@@ -79,7 +79,7 @@ exports.install = function (server, prefix) {
   });
 
   server.route(prefix + '/new/csv', function (req, res, opts) {
-    server.authorizeSession(req, res, function (err, user, session) {
+    server.permissions.authorizeSession(req, res, function (err, user, session) {
       if (err) redirect(res, '/');
 
       var sheet = { rows: [] };
@@ -112,7 +112,7 @@ exports.install = function (server, prefix) {
   });
 
   server.route(prefix + '/destroy/:id', function (req, res, opts) {
-    server.authorizeSession(req, res, function (err, user, session) {
+    server.permissions.authorizeSession(req, res, function (err, user, session) {
       if (err) redirect(res, '/');
 
       server.sheets.destroy(opts.params.id, function (err) {

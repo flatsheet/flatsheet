@@ -24,7 +24,7 @@ exports.install = function (server, prefix) {
      */
 
     if (req.method === 'POST') {
-      server.authorizeAPI(req, res, function (err) {
+      server.permissions.authorizeAPI(req, res, function (err) {
         if (err) response().json({ error: 'Unauthorized'}).status(401).pipe(res);
 
         jsonBody(req, res, function (err, body) {
@@ -70,7 +70,7 @@ exports.install = function (server, prefix) {
      */
 
     if (req.method === 'PUT') {
-      server.authorizeAPI(req, res, function (err, user) {
+      server.permissions.authorizeAPI(req, res, function (err, user) {
         if (err) response().json({ error: 'Unauthorized'}).status(401).pipe(res);
 
         jsonBody(req, res, function (err, body) {
@@ -93,7 +93,7 @@ exports.install = function (server, prefix) {
      */
 
     if (req.method === 'DELETE') {
-      server.authorizeAPI(req, res, function (err, user) {
+      server.permissions.authorizeAPI(req, res, function (err, user) {
         if (err) response().json({ error: 'Unauthorized'}).status(401).pipe(res);
 
         server.sheets.destroy(opts.params.id, function (err) {

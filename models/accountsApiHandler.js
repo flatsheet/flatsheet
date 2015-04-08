@@ -20,7 +20,7 @@ function AccountsApiHandler (server) {
  */
 AccountsApiHandler.prototype.accounts = function (req, res) {
   var self = this;
-  this.server.authorizeAPI(req, res, function (authError, authAccount, session) {
+  this.server.permissions.authorize(req, res, function (authError, authAccount, session) {
     var notAuthorized = (authError || !authAccount);
     if (req.method === 'GET') {
       // Get all accounts
@@ -66,7 +66,7 @@ AccountsApiHandler.prototype.accounts = function (req, res) {
 AccountsApiHandler.prototype.accountFromUsername = function (req, res, opts) {
   debugger;
   var self = this;
-  this.server.authorizeAPI(req, res, function (authError, authAccount, session) {
+  this.server.permissions.authorize(req, res, function (authError, authAccount, session) {
     var notAuthorized = (authError || !authAccount);
     if (req.method === 'GET') {
       self.server.accountdown.get(opts.params.username, function (err, account) {
