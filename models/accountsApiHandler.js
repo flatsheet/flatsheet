@@ -16,28 +16,22 @@ function AccountsApiHandler (server) {
 
 /*
  * GET: return all accounts
- * POST: create a new account
+ * POST: create a new account (admins only)
  */
 AccountsApiHandler.prototype.accounts = function (req, res) {
   var self = this;
   this.server.permissions.authorize(req, res, function (authError, authAccount, session) {
     var notAuthorized = (authError || !authAccount);
     if (req.method === 'GET') {
-      // Get all accounts
-      if (notAuthorized) {
-        return self.server.accountdown.list({keys: false})
-          .pipe(filterAccountDetails())
-          .pipe(JSONStream.stringify())
-          .pipe(res);
-        }
-      return self.server.accountdown.list()
+      if (notAuthorized) return response().status('401').json({error: 'Not Authorized'}).pipe(res);
+      return self.server.accountdown.list({keys: false})
+        .pipe(filterAccountDetails())
         .pipe(JSONStream.stringify())
         .pipe(res);
     }
     else if (req.method === 'POST') {
       if (notAuthorized) return response().status('401').json({error: 'Not Authorized'}).pipe(res);
       if (!authAccount.admin) return response().status('401').json({error: 'Must be admin to create new accounts'}).pipe(res);
-      // create a new account
       jsonBody(req, res, function (err, body) {
         if (err) return response().status(500).json({ error: err }).pipe(res);
         var opts = {
@@ -61,8 +55,8 @@ AccountsApiHandler.prototype.accounts = function (req, res) {
 
 /*
  * GET: return an account
- * PUT: update an account
- * DELETE: remove an account
+ * PUT: update an account (admins only)
+ * DELETE: remove an account (admins only)
  */
 AccountsApiHandler.prototype.accountFromUsername = function (req, res, opts) {
   debugger;
