@@ -66,6 +66,8 @@ exports.install = function (server, prefix) {
         data['project'] = 'default project'; // TODO: add project field to form
         data['accessible_by'] = {};
         data.accessible_by[user.username] = true;
+        data['owners'] = {};
+        data.owners[user.username] = true;
 
         data.rows =
           server.sheets.create(data, function (err, sheet, token) {
@@ -136,6 +138,10 @@ exports.install = function (server, prefix) {
         if (body['new-user-permission'] !== '') {
           // TODO: Check whether the new name permission is a duplicate or a valid username
           data.accessible_by[body['new-user-permission']] = true;
+        }
+        if (body['new-owner-permission'] !== '') {
+          // TODO: Check whether the new name permission is a duplicate or a valid username
+          data.owners[body['new-owner-permission']] = true;
         }
         if (body['description'] !== sheet.description) {
           data.description = body['description'];

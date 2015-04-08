@@ -182,62 +182,91 @@ on(document.body, '#settings', 'click', function (e) {
   // Get an array of all accounts in the site
   flatsheet.listAccounts(function (err, accounts) {
 
-    // Create a sheet object with our settings to easily access account data
+    // Create an associative array to easily access account data
     var accountsDict = accounts.reduce(function(newObject, account) {
-      newObject[account.key] = {};
-      newObject[account.key].color = account.value.color;
-      newObject[account.key].admin = account.value.admin;
-      newObject[account.key].username = account.key;
+      newObject[account.username] = account;
       return newObject;
     }, {});
 
-    // Ensures that all accessible usernames listed are valid accounts,
+    // check to ensure we have a 'sheet.owners' and 'sheet.accessible_by' object:
+    // TODO: Remove these checks when all sheets have been properly 'migrated'
+    if (!sheet.owners) {
+      sheet.owners = {};
+      sheetDetails.set('owners', sheet.owners);
+    }
+    if (!sheet.accessible_by) {
+      sheet.accessible_by = {};
+      sheetDetails.set('accessible_by', sheet.accessible_by);
+    }
+
+    // Ensures that all sheet users listed are valid accounts,
     // removes accounts that have been deleted.
-    for (var account in sheet.accessible_by) {
+    for (account in sheet.accessible_by) {
       if (!(account in accountsDict)) {
         delete sheet.accessible_by[account];
+      }
+    }
+    // Ensures that all sheet owners listed are valid accounts,
+    // removes accounts that have been deleted.
+    for (account in sheet.owners) {
+      if (!(account in accountsDict)) {
+        delete sheet.owners[account];
       }
     }
     // TODO: Have the sheet already hold the color information (to show colors on edit)
     function appendProperties(username) {
       return {username: username, color: accountsDict[username].color};
     }
-    // Filter out admins - this covers the case when admin privileges have changed
-    function filterAdmins(username) {
-      return !accountsDict[username].admin;
-    }
-    var accessibleBy= Object.keys(sheet.accessible_by).filter(filterAdmins).map(appendProperties);
-    var sheetInfo = {id: sheet.id, name : sheet.name, description: sheet.description, accessible_by: accessibleBy};
+    var accessibleBy = Object.keys(sheet.accessible_by).map(appendProperties);
+    var owners = Object.keys(sheet.owners).map(appendProperties);
+    var sheetInfo = {id: sheet.id, name : sheet.name, description: sheet.description, accessible_by: accessibleBy, owners: owners};
 
-    // convert accounts array to an array of account usernames (currently usernames are used as keys)
-    // excluding admins and accounts that already have access
-    var suggestedAccessibleAccounts = accounts.filter(accountsListFilter).map(function(account) {return account.key});
-    function accountsListFilter (account) {
-      return !(account.key in sheet.accessible_by) && !account.value.admin;
-    }
+    var isOwner = (user.admin || (user.username in sheet.owners));
 
     var modal = templates.modal({
-      content: templates.settings({sheet: sheetInfo})
+      content: templates.settings({sheet: sheetInfo, account: {owner: isOwner}})
     });
     dom.add(document.body, domify(modal));
 
-    // AUTO-COMPLETE feature
-    var enteredText = document.querySelector('#autofill-usernames');
+    // convert accounts array to an array of account usernames (currently usernames are used as keys)
+    var suggestedSheetUsers = accounts.filter(sheetUsersFilter).map(function(account) {return account.username});
+    function sheetUsersFilter (account) {
+      return !(account.username in sheet.accessible_by);
+    }
+    // convert accounts array to an array of account usernames (currently usernames are used as keys)
+    var suggestedSheetOwners = accounts.filter(sheetOwnersFilter).map(function(account) {return account.username});
+    function sheetOwnersFilter (account) {
+      return !(account.username in sheet.owners);
+    }
 
-    function toLowerCase (s) { return s.toLowerCase() }
-    autoComplete(enteredText, function (completionElement) {
-      if (!enteredText.value.length) return completionElement.suggest([]);
-      var matches = suggestedAccessibleAccounts.filter(function (accountUsername) {
-        // return matches if there is a substring prefix match
-        return toLowerCase(accountUsername.slice(0, enteredText.value.length)) === toLowerCase(enteredText.value);
+    // AUTO-COMPLETE feature
+    var enteredSheetUserText = document.querySelector('#autofill-sheet-users');
+    function toLowerCase (s) { console.log("testing with lowercase:"); console.log(s); return s.toLowerCase() }
+
+    autoComplete(enteredSheetUserText, function (completionElement) {
+      if (!enteredSheetUserText.value.length) return completionElement.suggest([]);
+      var matches = suggestedSheetUsers.filter(function (username) {
+        return toLowerCase(username.slice(0, enteredSheetUserText.value.length)) === toLowerCase(enteredSheetUserText.value);
       });
       completionElement.suggest(matches);
     });
+
+    var enteredSheetOwnerText = document.querySelector('#autofill-sheet-owners');
+
+    if (isOwner) {
+      autoComplete(enteredSheetOwnerText, function (completionElement) {
+        if (!enteredSheetOwnerText.value.length) return completionElement.suggest([]);
+        var matches = suggestedSheetOwners.filter(function (username) {
+          return toLowerCase(username.slice(0, enteredSheetOwnerText.value.length)) === toLowerCase(enteredSheetOwnerText.value);
+        });
+        completionElement.suggest(matches);
+      });
+    }
   });
 });
 
 
-/* listener for revoking access of usernames */
+/* listener for revoking access of sheet owners and users*/
 on(document.body, '.delete-sheet-permission', 'click', function (e) {
   var btn;
 
@@ -249,13 +278,22 @@ on(document.body, '.delete-sheet-permission', 'click', function (e) {
     console.log("the target element has no destroy icon");
   }
 
-  var username = btn.id;
+  var array = btn.id.split("-"),// button id's: 'testusername-user` and 'testusername-owner'
+    username = array[0], changeType = array[1];
   var msg = 'Sure you want to revoke permissions for the user ' + username + '?';
 
   if (window.confirm(msg)) {
     var sheet = sheetDetails.get();
-    delete sheet.accessible_by[username];
-    sheetDetails.set('accessible_by', sheet.accessible_by);
+    if (changeType === 'user') {
+      delete sheet.accessible_by[username];
+      sheetDetails.set('accessible_by', sheet.accessible_by);
+    } else if (changeType === 'owner') {
+      delete sheet.owners[username];
+      sheetDetails.set('owners', sheet.owners);
+    } else {
+      console.log("invalid type revoked:");
+      console.log(changeType);
+    }
     var sheetId = sheet.id;
     window.location = '/sheets/edit/' + sheetId;
   }

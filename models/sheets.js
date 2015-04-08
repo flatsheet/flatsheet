@@ -51,7 +51,8 @@ Sheets.prototype.list = function (opts, cb) {
   this.db.createReadStream(opts)
     .on('data', function (data) {
       if (opts.filter) {
-        if (opts.username in data.accessible_by) {
+        // TODO: Remove check that data.owners exists after all sheet data has been "migrated"
+        if (opts.username in data.accessible_by || (data.owners && opts.username in data.owners)) {
           results.push(data);
         }
       } else {

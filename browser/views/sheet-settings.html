@@ -12,21 +12,42 @@
 
     <fieldset>
     <span class="active-users" id="user-list">
-    <label>Accessible by (admins not shown):</label>
+    <label>Accessible by:</label>
     {{#each sheet.accessible_by}}
     <li style="color:{{ this.color }}">
       <i class="fa fa-square"></i>
       {{ this.username }}
-      <button type="button" id="{{ this.username }}" class="destroy settings delete-sheet-permission"><i class="fa fa-times destroy-icon"></i></button>
+      <button type="button" id="{{ this.username }}-user" class="destroy settings delete-sheet-permission"><i class="fa fa-times destroy-icon"></i></button>
     </li><br>
     {{/each}}
     </span>
     </fieldset>
 
     <fieldset>
-      <label>Grant access to username:</label>
-      <input type="name" name="new-user-permission" id="autofill-usernames"><br><br>
+      <label>Add username to sheet users:</label>
+      <input type="name" name="new-user-permission" id="autofill-sheet-users"><br><br>
     </fieldset>
+
+    {{#if account.owner}}
+    <fieldset>
+    <span class="active-users" id="owner-list">
+    <label>Owners:</label>
+    {{#each sheet.owners}}
+    <li style="color:{{ this.color }}">
+      <i class="fa fa-square"></i>
+      {{ this.username }}
+      <button type="button" id="{{ this.username }}-owner" class="destroy settings delete-sheet-permission"><i class="fa fa-times destroy-icon"></i></button>
+    </li><br>
+    {{/each}}
+    </span>
+    </fieldset>
+    <fieldset>
+      <label>Add username to sheet owners:</label>
+      <input type="name" name="new-owner-permission" id="autofill-sheet-owners"><br><br>
+    </fieldset>
+    {{/if}}
+
+
     <fieldset>
       <input type="submit" value="Update sheet">
     </fieldset>
