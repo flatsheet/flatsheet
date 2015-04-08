@@ -36,6 +36,7 @@ AccountsApiHandler.prototype.accounts = function (req, res) {
     }
     else if (req.method === 'POST') {
       if (notAuthorized) return response().status('401').json({error: 'Not Authorized'}).pipe(res);
+      if (!authAccount.admin) return response().status('401').json({error: 'Must be admin to create new accounts'}).pipe(res);
       // create a new account
       jsonBody(req, res, function (err, body) {
         if (err) return response().status(500).json({ error: err }).pipe(res);
@@ -79,6 +80,7 @@ AccountsApiHandler.prototype.accountFromUsername = function (req, res, opts) {
     }
     if (req.method === 'PUT') {
       if (notAuthorized) return response().status('401').json({error: 'Not Authorized'}).pipe(res);
+      if (!authAccount.admin) return response().status('401').json({error: 'Must be admin to update accounts'}).pipe(res);
       jsonBody(req, res, opts, function (err, body) {
         if (err) return response().status(500).json({ error:'Could not parse the request\'s body' }).pipe(res);
         self.server.accountdown.get(opts.params.username, function (err, account){
@@ -93,6 +95,7 @@ AccountsApiHandler.prototype.accountFromUsername = function (req, res, opts) {
     }
     if (req.method === 'DELETE') {
       if (notAuthorized) return response().status('401').json({ error: 'Not Authorized'}).pipe(res);
+      if (!authAccount.admin) return response().status('401').json({error: 'Must be admin to delete accounts'}).pipe(res);
       self.server.accountdown.remove(opts.params.username, function (err, account) {
         if (err) return response().status(500).json({ error:'Username does not exist' }).pipe(res);
         return response().json(account).pipe(res);
