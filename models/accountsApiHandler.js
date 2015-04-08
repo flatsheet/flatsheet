@@ -59,7 +59,6 @@ AccountsApiHandler.prototype.accounts = function (req, res) {
  * DELETE: remove an account (admins only)
  */
 AccountsApiHandler.prototype.accountFromUsername = function (req, res, opts) {
-  debugger;
   var self = this;
   this.server.permissions.authorize(req, res, function (authError, authAccount, session) {
     var notAuthorized = (authError || !authAccount);
