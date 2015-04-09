@@ -14,7 +14,9 @@ exports.install = function (server, prefix) {
   server.route(prefix, function (req, res) {
     if (req.method === 'POST') {
       formBody(req, res, function (err, body) {
-
+        if (body.username) {
+          body.username = body.username.trim();
+        }
         server.accountdown.verify('basic', body, function (err, ok, id) {
           if (err) {
             console.error(err);
