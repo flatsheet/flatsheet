@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.10.0 – April 9, 2015
+- API routes for accounts
+- Sheets now have owners
+- update to latest [table-editor](http://npmjs.org/table-editor) version
+
 ## v0.9.2 – April 4, 2015
 - fix invites bug
 
