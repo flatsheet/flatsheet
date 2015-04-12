@@ -2,16 +2,16 @@ var response = require('response');
 var JSONStream = require('JSONStream');
 var formBody = require('body/form');
 var redirect = require('../lib/redirect');
+var Router = require('match-routes');
 
-exports.install = function (server, prefix) {
+module.exports = function (server, prefix) {
   var prefix = prefix || '/sessions';
-
+  var router = Router();
 
   /*
   * Create a session
   */
-
-  server.route(prefix, function (req, res) {
+  router.on(prefix, function (req, res) {
     if (req.method === 'POST') {
       formBody(req, res, function (err, body) {
         if (body.username) {
@@ -33,15 +33,15 @@ exports.install = function (server, prefix) {
     }
   });
 
-
   /*
   * Destroy a session
   */
-
-  server.route(prefix + '/destroy', function (req, res) {
+  router.on(prefix + '/destroy', function (req, res) {
     server.auth.delete(req, function () {
       server.auth.cookie.destroy(res);
       redirect(res, '/');
     });
   });
+
+  return router;
 }

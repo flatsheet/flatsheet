@@ -12,6 +12,7 @@ function AccountsApiHandler (server) {
     return new AccountsApiHandler(server);
   }
   this.server = server;
+  this.permissions = require('../lib/permissions')(server);
 }
 
 /*
@@ -20,7 +21,7 @@ function AccountsApiHandler (server) {
  */
 AccountsApiHandler.prototype.accounts = function (req, res) {
   var self = this;
-  this.server.permissions.authorize(req, res, function (authError, authAccount, session) {
+  this.permissions.authorize(req, res, function (authError, authAccount, session) {
     var notAuthorized = (authError || !authAccount);
     if (req.method === 'GET') {
       if (notAuthorized) return response().status('401').json({error: 'Not Authorized'}).pipe(res);
@@ -60,7 +61,7 @@ AccountsApiHandler.prototype.accounts = function (req, res) {
  */
 AccountsApiHandler.prototype.accountFromUsername = function (req, res, opts) {
   var self = this;
-  this.server.permissions.authorize(req, res, function (authError, authAccount, session) {
+  this.permissions.authorize(req, res, function (authError, authAccount, session) {
     var notAuthorized = (authError || !authAccount);
     if (req.method === 'GET') {
       self.server.accountdown.get(opts.params.username, function (err, account) {

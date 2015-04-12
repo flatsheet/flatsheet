@@ -54,7 +54,6 @@ This is a good option for when you're using flatsheet in production, because you
 - Create a app.js file with this code:
 
 ```javascript
-var response = require('response');
 var server = require('flatsheet')({
   site: {
     title: 'flatsheet',
@@ -65,23 +64,7 @@ var server = require('flatsheet')({
   db: __dirname + '/data'
 });
 
-server.route('/', function (req, res) {
-  if (!res.account) {
-    return response()
-      .html(server.render('index', {
-        account: { username: 'friend' }
-      }))
-      .pipe(res);
-  }
-  else {
-    res.writeHead(302, { 'Location': '/sheets' });
-    res.end();
-  }
-});
-
-server.listen((process.env.PORT || 3333), function () {
-  console.log('server started at 127.0.0.1:' + (process.env.PORT || 3333));
-});
+server.listen();
 ```
 
 - Create a .env file for secret config like sendgrid username/password:
