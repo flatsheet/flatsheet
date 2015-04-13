@@ -1,11 +1,14 @@
 var response = require('response');
 var JSONStream = require('JSONStream');
 var jsonBody = require('body/json');
+var Router = require('match-routes');
 
-exports.install = function (server, prefix) {
+module.exports = function (server, prefix) {
   var prefix = prefix || '/api/v2/';
-
-  server.route(prefix + 'sheets', function (req, res, match) {
+  var permissions = require('../lib/permissions')(server);
+  var router = Router();
+  
+  router.on(prefix + 'sheets', function (req, res, match) {
 
     /*
      *  Get list of sheets
@@ -24,7 +27,7 @@ exports.install = function (server, prefix) {
      */
 
     if (req.method === 'POST') {
-      server.permissions.authorizeAPI(req, res, function (err) {
+      permissions.authorizeAPI(req, res, function (err) {
         if (err) response().json({ error: 'Unauthorized'}).status(401).pipe(res);
 
         jsonBody(req, res, function (err, body) {
@@ -44,7 +47,7 @@ exports.install = function (server, prefix) {
 
 
 
-  server.route(prefix + 'sheets/:id', function (req, res, opts) {
+  router.on(prefix + 'sheets/:id', function (req, res, opts) {
 
     /*
      *  Get individual sheet
@@ -70,7 +73,7 @@ exports.install = function (server, prefix) {
      */
 
     if (req.method === 'PUT') {
-      server.permissions.authorizeAPI(req, res, function (err, user) {
+      permissions.authorizeAPI(req, res, function (err, user) {
         if (err) response().json({ error: 'Unauthorized'}).status(401).pipe(res);
 
         jsonBody(req, res, function (err, body) {
@@ -93,7 +96,7 @@ exports.install = function (server, prefix) {
      */
 
     if (req.method === 'DELETE') {
-      server.permissions.authorizeAPI(req, res, function (err, user) {
+      permissions.authorizeAPI(req, res, function (err, user) {
         if (err) response().json({ error: 'Unauthorized'}).status(401).pipe(res);
 
         server.sheets.destroy(opts.params.id, function (err) {
@@ -109,11 +112,20 @@ exports.install = function (server, prefix) {
     }
   });
 
-  server.route(prefix + 'sheets/:id/csv', function (req, res, match) {
+  router.on(prefix + 'sheets/:id/csv', function (req, res, match) {
     //todo
   });
 
-  server.route(prefix + 'accounts', server.accountsApiHandler.accounts.bind(server.accountsApiHandler));
-
-  server.route(prefix + 'accounts/:username', server.accountsApiHandler.accountFromUsername.bind(server.accountsApiHandler));
+  return router;
 };
+
+/*
+ * Helper functions
+ */
+
+function filterSheetDetails () {
+  return through.obj(function iterator(chunk, enc, next) {
+    this.push(filter(chunk, ['*', '!accessible_by', '!owners']));
+    next();
+  });
+}

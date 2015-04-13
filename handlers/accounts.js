@@ -14,6 +14,7 @@ function Accounts (server) {
     return new Accounts(server);
   }
   this.server = server;
+  this.permissions = require('../lib/permissions')(server);
 }
 
 /*
@@ -21,14 +22,9 @@ function Accounts (server) {
  */
 Accounts.prototype.getListOfAccounts = function (req, res) {
   var self = this;
-  this.server.permissions.authorizeSession(req, res, function (error, user, session) {
-    if (!user.admin || error) {
-      if (error) {
-        console.log(error);
-      }
-      res.writeHead(302, {'Location': '/'});
-      return res.end();
-    }
+  this.permissions.authorizeSession(req, res, function (error, account, session) {
+    if (!account.admin || error) return redirect(res, '/');
+
     if (req.method === 'GET') {
       var results = [];
       var stream = self.server.accountdown.list();
@@ -41,7 +37,7 @@ Accounts.prototype.getListOfAccounts = function (req, res) {
           return console.log(err);
         })
         .on('end', function () {
-          var ctx = {accounts: results};
+          var ctx = { accounts: results, account: account };
           return response().html(self.server.render('account-list', ctx)).pipe(res);
         });
     }
@@ -50,17 +46,19 @@ Accounts.prototype.getListOfAccounts = function (req, res) {
 
 Accounts.prototype.signIntoAccount = function (req, res) {
   if (req.method === 'GET') {
-    if (res.account) {
-      res.writeHead(302, { 'Location': '/' });
-      return res.end();
-    }
-    else return response().html(this.server.render('signin')).pipe(res);
+    this.server.getAccountBySession(req, function (err, account, session) {
+      if (account) {
+        res.writeHead(302, { 'Location': '/' });
+        return res.end();
+      }
+      else return response().html(this.server.render('signin')).pipe(res);
+    });
   }
 };
 
 Accounts.prototype.createAdminAccount = function (req, res) {
   var self = this;
-  this.server.permissions.authorizeSession(req, res, function (error, user, session) {
+  this.permissions.authorizeSession(req, res, function (error, account, session) {
     if (!user.admin || error) {
       if (error) console.log(error);
       res.writeHead(302, { 'Location': self.prefix });
@@ -82,13 +80,18 @@ Accounts.prototype.createAdminAccount = function (req, res) {
 Accounts.prototype.createAccount = function (req, res) {
   var self = this;
   if (req.method === 'GET') {
-    if (res.account) {
-      this.server.getUserBySession(req, function (err, user, session) {
-        return response().html(self.server.render('account-update')).pipe(res);
-      });
-    }
-    else return response()
-      .html(this.server.render('account-new')).pipe(res);
+    this.server.getAccountBySession(req, function (err, account, session) {
+      if (account) {
+        return response()
+          .html(self.server.render('account-update'))
+          .pipe(res);
+      } else {
+        return response()
+        .html(self.server.render('account-new'))
+        .pipe(res);
+      }
+    });
+    
   }
 
   if (req.method === 'POST') {
@@ -100,7 +103,7 @@ Accounts.prototype.createAccount = function (req, res) {
 
 Accounts.prototype.deleteAccount = function (req, res, opts) {
   var self = this;
-  this.server.permissions.authorizeSession(req, res, function (error, user, session) {
+  this.permissions.authorizeSession(req, res, function (error, user, session) {
     if (user.admin && !error) {
       if (req.method === 'POST') {
         // TODO: Remove account username from all sheet permissions
@@ -120,20 +123,20 @@ Accounts.prototype.deleteAccount = function (req, res, opts) {
 
 Accounts.prototype.updateAccount = function (req, res, opts) {
   var self = this;
-  this.server.permissions.authorizeSession(req, res, function (error, user, session) {
+  this.permissions.authorizeSession(req, res, function (error, account, session) {
     if (error) redirect(res, '/');
 
-    if (user.admin) {
+    if (account.admin) {
       if (req.method === 'POST') {
         self.updateAccountFromForm(req, res, opts.params);
         res.writeHead(302, {'Location': self.prefix });
         return res.end();
       }
       if (req.method === 'GET') {
-        self.renderAccountUpdateForm(res, opts.params.username, user);
+        self.renderAccountUpdateForm(res, opts.params.username, account);
       }
     } else {
-      if (res.account.key !== opts.params.username) {
+      if (account.username !== opts.params.username) {
         return console.log("You must be admin to update an account which is not yours");
       }
       // When we are only changing the current account:
@@ -141,7 +144,7 @@ Accounts.prototype.updateAccount = function (req, res, opts) {
         self.updateAccountFromForm(req, res, opts.params);
       }
       if (req.method === 'GET') {
-        self.renderAccountUpdateForm(res, opts.params.username, user);
+        self.renderAccountUpdateForm(res, opts.params.username, account);
       }
       res.writeHead(302, {'Location': '/'});
       return res.end();
@@ -150,55 +153,58 @@ Accounts.prototype.updateAccount = function (req, res, opts) {
 };
 
 Accounts.prototype.invite = function (req, res) {
-  if (res.account && res.account.admin) {
-    if (req.method === 'GET') {
-      return response().html(this.server.render('invite')).pipe(res);
-    }
+  var self = this;
+  
+  this.server.getAccountBySession(req, function (err, account, session) {
+    if (account && account.admin) {
+      if (req.method === 'GET') {
+        return response().html(self.server.render('invite')).pipe(res);
+      }
 
-    if (req.method === 'POST') {
-      var self = this;
-      formBody(req, res, function (err, body) {
-        //todo: notification of error on page
-        if (err) console.error(err);
+      if (req.method === 'POST') {
+        formBody(req, res, function (err, body) {
+          //todo: notification of error on page
+          if (err) console.error(err);
 
-        var emails = body.emails.split('\r\n');
+          var emails = body.emails.split('\r\n');
 
-        emails.forEach(function (email) {
-          var token = uuid();
-          var opts = { email: email, accepted: false };
-          self.server.invites.put(token, opts, function (err) {
-            if (err) console.log(new Error(err));
+          emails.forEach(function (email) {
+            var token = uuid();
+            var opts = { email: email, accepted: false };
+            self.server.invites.put(token, opts, function (err) {
+              if (err) console.log(new Error(err));
+              
+              var data = {
+                url: self.server.site.url + '/accounts/accept?token=' + token,
+                from: self.server.site.email,
+                fromname: self.server.site.contact
+              };
 
-            var data = {
-              url: self.server.site.url + '/accounts/accept?token=' + token,
-              from: self.server.site.email,
-              fromname: self.server.site.contact
-            };
+              var message = {
+                to: email,
+                from: self.server.site.email,
+                fromname: self.server.site.contact,
+                subject: 'Help me curate data with Flatsheet',
+                text: self.server.render('invite-email', data),
+                html: self.server.render('invite-email', data)
+              };
 
-            var message = {
-              to: email,
-              from: self.server.site.email,
-              fromname: self.server.site.contact,
-              subject: 'Help me curate data with Flatsheet',
-              text: self.server.render('invite-email', data),
-              html: self.server.render('invite-email', data)
-            };
-
-            self.server.email.sendMail(message, function(err, info){
-              if (err) return console.log(err);
-              return response()
-                .html(self.server.render('invite', { emails: emails }))
-                .pipe(res);
+              self.server.email.sendMail(message, function(err, info){
+                if (err) return console.log(err);
+                return response()
+                  .html(self.server.render('invite', { emails: emails }))
+                  .pipe(res);
+              });
             });
           });
         });
-      });
+      }
     }
-  }
-  else {
-    res.writeHead(302, { 'Location': '/' });
-    return res.end();
-  }
+    else {
+      res.writeHead(302, { 'Location': '/' });
+      return res.end();
+    }
+  });
 };
 
 Accounts.prototype.acceptInvite = function (req, res) {
