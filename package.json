@@ -54,7 +54,7 @@
     "element-class": "^0.1.1",
     "extend": "^1.3.0",
     "filter-object": "^1.1.2",
-    "flatsheet-api-client": "^1.2.0",
+    "flatsheet-api-client": "^2.0.0",
     "handlebars": "~2.0",
     "handlebars-layouts": "^0.3.3",
     "jsonpretty": "0.0.1",
