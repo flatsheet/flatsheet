@@ -108,7 +108,7 @@ io.on('sheet-details', function (change) {
 var hello = document.getElementById('hello-message');
 
 /* request the sheet from the api */
-flatsheet.sheet(id, function (err, sheet) {
+flatsheet.sheets.get(id, function (err, sheet) {
   elClass(hello).add('hidden');
   editor.import(sheet.rows);
   sheetDetails.set(sheet);
