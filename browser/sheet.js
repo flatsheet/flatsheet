@@ -180,7 +180,7 @@ on(document.body, '#settings', 'click', function (e) {
   var sheet = sheetDetails.get();
 
   // Get an array of all accounts in the site
-  flatsheet.listAccounts(function (err, accounts) {
+  flatsheet.accounts.list(function (err, accounts) {
 
     // Create an associative array to easily access account data
     var accountsDict = accounts.reduce(function(newObject, account) {
