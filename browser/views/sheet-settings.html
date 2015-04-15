@@ -1,31 +1,25 @@
 <div class="long-text-wrapper">
-  <form action="/sheets/update/{{sheet.id}}" method="post">
+  <form action="/sheets/update/{{sheet.key}}" method="post">
     <fieldset>
-      <label >name:</label>
+      <label>name:</label>
       <input type="name" name="name" placeholder={{ sheet.name }} value={{ sheet.name }}><br>
     </fieldset>
 
     <fieldset>
-      <label >description:</label>
+      <label>description:</label>
       <input type="description" name="description" placeholder={{ sheet.description }} value={{ sheet.description }}><br>
     </fieldset>
-
+    
     <fieldset>
-    <span class="active-users" id="user-list">
-    <label>Accessible by:</label>
-    {{#each sheet.accessible_by}}
-    <li style="color:{{ this.color }}">
-      <i class="fa fa-square"></i>
-      {{ this.username }}
-      <button type="button" id="{{ this.username }}-user" class="destroy settings delete-sheet-permission"><i class="fa fa-times destroy-icon"></i></button>
-    </li><br>
-    {{/each}}
-    </span>
+      <label>websites:</label>
+      <textarea type="websites" name="websites" placeholder="websites that use this data, one on each line">{{ sheet.websites }}</textarea><br>
     </fieldset>
-
+    
     <fieldset>
-      <label>Add username to sheet users:</label>
-      <input type="name" name="new-user-permission" id="autofill-sheet-users"><br><br>
+      <label for="private">
+        <input type="checkbox" name="private" {{checked sheet.private}}>
+        Private
+      </label>
     </fieldset>
 
     {{#if account.owner}}
@@ -47,6 +41,23 @@
     </fieldset>
     {{/if}}
 
+    <fieldset>
+    <span class="active-users" id="user-list">
+    <label>Editors:</label>
+    {{#each sheet.editors}}
+    <li style="color:{{ this.color }}">
+      <i class="fa fa-square"></i>
+      {{ this.username }}
+      <button type="button" id="{{ this.username }}-user" class="destroy settings delete-sheet-permission"><i class="fa fa-times destroy-icon"></i></button>
+    </li><br>
+    {{/each}}
+    </span>
+    </fieldset>
+
+    <fieldset>
+      <label>Add username to sheet editors:</label>
+      <input type="name" name="new-user-permission" id="autofill-sheet-users"><br><br>
+    </fieldset>
 
     <fieldset>
       <input type="submit" value="Update sheet">

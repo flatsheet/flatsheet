@@ -7,6 +7,7 @@ var on = require('component-delegate').bind;
 var closest = require('component-closest');
 var CSV = require('comma-separated-values');
 var Handlebars = require('handlebars');
+require('../lib/handlebars-helpers')(Handlebars);
 var request = require('xhr');
 var domify = require('domify');
 var dom = require('dom-tree');
@@ -20,7 +21,7 @@ var flatsheet = require('flatsheet-api-client')({
   host: 'http://' + window.location.host
 });
 
-var id = window.location.pathname.split('/')[3];
+var key = window.location.pathname.split('/')[3];
 var usersEl = document.getElementById('user-list');
 
 var templates = {
@@ -41,7 +42,7 @@ var templates = {
 };
 
 io.on('connect', function () {  
-  io.emit('room', id);
+  io.emit('room', key);
   io.emit('user', user);
   var users = {};
 
@@ -108,7 +109,7 @@ io.on('sheet-details', function (change) {
 var hello = document.getElementById('hello-message');
 
 /* request the sheet from the api */
-flatsheet.sheets.get(id, function (err, sheet) {
+flatsheet.sheets.get(key, function (err, sheet) {
   elClass(hello).add('hidden');
   editor.import(sheet.rows);
   sheetDetails.set(sheet);
@@ -181,29 +182,28 @@ on(document.body, '#settings', 'click', function (e) {
 
   // Get an array of all accounts in the site
   flatsheet.accounts.list(function (err, accounts) {
-
     // Create an associative array to easily access account data
     var accountsDict = accounts.reduce(function(newObject, account) {
       newObject[account.username] = account;
       return newObject;
     }, {});
 
-    // check to ensure we have a 'sheet.owners' and 'sheet.accessible_by' object:
+    // check to ensure we have a 'sheet.owners' and 'sheet.editors' object:
     // TODO: Remove these checks when all sheets have been properly 'migrated'
     if (!sheet.owners) {
       sheet.owners = {};
       sheetDetails.set('owners', sheet.owners);
     }
-    if (!sheet.accessible_by) {
-      sheet.accessible_by = {};
-      sheetDetails.set('accessible_by', sheet.accessible_by);
+    if (!sheet.editors) {
+      sheet.editors = {};
+      sheetDetails.set('editors', sheet.editors);
     }
 
     // Ensures that all sheet users listed are valid accounts,
     // removes accounts that have been deleted.
-    for (account in sheet.accessible_by) {
+    for (account in sheet.editors) {
       if (!(account in accountsDict)) {
-        delete sheet.accessible_by[account];
+        delete sheet.editors[account];
       }
     }
     // Ensures that all sheet owners listed are valid accounts,
@@ -217,22 +217,35 @@ on(document.body, '#settings', 'click', function (e) {
     function appendProperties(username) {
       return {username: username, color: accountsDict[username].color};
     }
-    var accessibleBy = Object.keys(sheet.accessible_by).map(appendProperties);
+
     var owners = Object.keys(sheet.owners).map(appendProperties);
-    var sheetInfo = {id: sheet.id, name : sheet.name, description: sheet.description, accessible_by: accessibleBy, owners: owners};
+    var editors = Object.keys(sheet.editors).map(appendProperties);
+    var sheetInfo = { 
+      key: sheet.key, 
+      name: sheet.name, 
+      description: 
+      sheet.description, 
+      editors: editors, 
+      owners: owners,
+      private: sheet.private,
+      websites: sheet.websites.join('\n')
+    };
 
     var isOwner = (user.admin || (user.username in sheet.owners));
 
     var modal = templates.modal({
       content: templates.settings({sheet: sheetInfo, account: {owner: isOwner}})
     });
+
     dom.add(document.body, domify(modal));
 
     // convert accounts array to an array of account usernames (currently usernames are used as keys)
     var suggestedSheetUsers = accounts.filter(sheetUsersFilter).map(function(account) {return account.username});
+    
     function sheetUsersFilter (account) {
-      return !(account.username in sheet.accessible_by);
+      return !(account.username in sheet.editors);
     }
+    
     // convert accounts array to an array of account usernames (currently usernames are used as keys)
     var suggestedSheetOwners = accounts.filter(sheetOwnersFilter).map(function(account) {return account.username});
     function sheetOwnersFilter (account) {
@@ -285,8 +298,8 @@ on(document.body, '.delete-sheet-permission', 'click', function (e) {
   if (window.confirm(msg)) {
     var sheet = sheetDetails.get();
     if (changeType === 'user') {
-      delete sheet.accessible_by[username];
-      sheetDetails.set('accessible_by', sheet.accessible_by);
+      delete sheet.editors[username];
+      sheetDetails.set('editors', sheet.editors);
     } else if (changeType === 'owner') {
       delete sheet.owners[username];
       sheetDetails.set('owners', sheet.owners);
@@ -294,8 +307,8 @@ on(document.body, '.delete-sheet-permission', 'click', function (e) {
       console.log("invalid type revoked:");
       console.log(changeType);
     }
-    var sheetId = sheet.id;
-    window.location = '/sheets/edit/' + sheetId;
+
+    window.location = '/sheets/edit/' + sheet.key;
   }
 });
 

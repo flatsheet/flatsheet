@@ -59,14 +59,15 @@ Accounts.prototype.signIntoAccount = function (req, res) {
 Accounts.prototype.createAdminAccount = function (req, res) {
   var self = this;
   this.permissions.authorizeSession(req, res, function (error, account, session) {
-    if (!user.admin || error) {
+    if (!account.admin || error) {
       if (error) console.log(error);
       res.writeHead(302, { 'Location': self.prefix });
       return res.end();
     }
     if (req.method === 'GET') {
       return response()
-        .html(self.server.render('account-new')).pipe(res);
+        .html(self.server.render('account-new', { account: account }))
+        .pipe(res);
     }
     if (req.method === 'POST') {
       self.createAccountFromForm(req, res);
@@ -83,7 +84,7 @@ Accounts.prototype.createAccount = function (req, res) {
     this.server.getAccountBySession(req, function (err, account, session) {
       if (account) {
         return response()
-          .html(self.server.render('account-update'))
+          .html(self.server.render('account-update', { account: account }))
           .pipe(res);
       } else {
         return response()
@@ -158,7 +159,9 @@ Accounts.prototype.invite = function (req, res) {
   this.server.getAccountBySession(req, function (err, account, session) {
     if (account && account.admin) {
       if (req.method === 'GET') {
-        return response().html(self.server.render('invite')).pipe(res);
+        return response()
+          .html(self.server.render('invite', { account: account }))
+          .pipe(res);
       }
 
       if (req.method === 'POST') {
@@ -326,13 +329,13 @@ Accounts.prototype.modifyAccountFromForm = function (err, body, username, accoun
   accountOperation(opts);
 };
 
-Accounts.prototype.renderAccountUpdateForm = function (res, username, user) {
+Accounts.prototype.renderAccountUpdateForm = function (res, username, account) {
   var self = this;
   this.server.accountdown.get(username, function (err, value) {
     if (err) {
       return console.log(err);
     }
-    var ctx = { editingAccount: value, account: user };
+    var ctx = { editingAccount: value, account: account };
     response()
       .html(self.server.render('account-update', ctx)).pipe(res);
   });
