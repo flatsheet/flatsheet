@@ -207,8 +207,8 @@ function createSheet (opts) {
   return {
     key: opts.key,
     name: opts.name,
-    description: opts.description,
-    project: opts.project,
+    description: opts.description || null,
+    project: opts.project || null,
     categories: opts.categories || [],
     websites: opts.websites || [],
     editors: opts.editors || {},
@@ -216,7 +216,7 @@ function createSheet (opts) {
     private: opts.private || false,
     created: opts.created || timestamp(),
     updated: opts.updated || null,
-    rows: opts.rows
+    rows: opts.rows || []
   }
 }
 
