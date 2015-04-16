@@ -9,6 +9,9 @@ var each = require('each-async');
 var isArray = require('isarray');
 var merge = require('merge2');
 var clone = require('clone');
+var dat = require('dat-core');
+var cuid = require('cuid');
+var format = require('json-format-stream')
 
 module.exports = Sheets;
 
@@ -16,6 +19,7 @@ function Sheets (db, opts) {
   if (!(this instanceof Sheets)) return new Sheets(db, opts);
   
   var self = this
+  this._db = db;
   this.db = sublevel(db, 'sheets', { valueEncoding: 'json' });
   this.indexDB = sublevel(db, 'sheet-indexes');
 
@@ -39,35 +43,24 @@ function Sheets (db, opts) {
 }
 
 Sheets.prototype.create = function (data, cb) {
-  var self = this;
-  var key = uuid();
-  data.key = key;
+  var self = this
+  data.key = uuid();
 
-  var sheet = createSheet(data);
-  if (sheet instanceof Error) return cb(sheet)
-
-  this.put(sheet, function (err, newsheet) {
+  this.db.put(data.key, data, function (err) {
     if (err) return cb(err);
-    self.addIndexes(newsheet, function () {
-      cb(null, newsheet)
+    self.addIndexes(data, function () {
+      var sheet = Sheet(self, data)
+      cb(null, sheet)
     })
   });
 };
 
-Sheets.prototype.put = function (data, cb) {
-  var self = this;
-
-  this.db.put(data.key, data, function (err) {
-    if (err) return cb(err)
-    self.db.get(data.key, function (err, sheet) {
-      if (err) return cb(err)
-      cb(null, sheet);
-    });
-  });
-};
-
 Sheets.prototype.get = function (key, cb) {
-  this.db.get(key, cb);
+  var self = this
+  this.db.get(key, function (err, data) {
+    if (err) return cb(err);
+    return cb(err, Sheet(self, data));
+  })
 };
 
 Sheets.prototype.list = function (opts, cb) {
@@ -192,19 +185,26 @@ Sheets.prototype.modifyIndexes = function (type, sheet, cb) {
     
     else next()
   }
-  
-  
-  
+
   function end () {
     if (cb) cb()
   }
 }
 
-function createSheet (opts) {
-  if (!opts.key) return new Error('key required')
-  if (!opts.name) return new Error('name required')
+function timestamp (minimum) {
+  var now = moment()
+  return { human: now.format('h:mm a, MMM DD, YYYY'), unix: now.unix() }
+}
 
-  return {
+function Sheet (sheets, opts) {
+  if (!(this instanceof Sheet)) return new Sheet(sheets, opts);
+  var self = this
+
+  this.key = opts.key
+  this.sheets = sheets
+  this.db = sublevel(sheets._db, 'sheet-' + opts.key)
+  this.dat = dat(this.db, { valueEncoding: 'json' })
+  this.metadata = {
     key: opts.key,
     name: opts.name,
     description: opts.description || null,
@@ -215,12 +215,11 @@ function createSheet (opts) {
     owners: opts.owners || {},
     private: opts.private || false,
     created: opts.created || timestamp(),
-    updated: opts.updated || null,
-    rows: opts.rows || []
+    updated: opts.updated || null
   }
 }
 
-function timestamp (minimum) {
-  var now = moment()
-  return { human: now.format('h:mm a, MMM DD, YYYY'), unix: now.unix() }
+Sheet.prototype.createReadStream = function (opts) {
+  var stream = format(this.metadata, { outputKey: 'rows' })
+  return this.dat.createReadStream(opts).pipe(stream)
 }
