@@ -188,17 +188,6 @@ on(document.body, '#settings', 'click', function (e) {
       return newObject;
     }, {});
 
-    // check to ensure we have a 'sheet.owners' and 'sheet.editors' object:
-    // TODO: Remove these checks when all sheets have been properly 'migrated'
-    if (!sheet.owners) {
-      sheet.owners = {};
-      sheetDetails.set('owners', sheet.owners);
-    }
-    if (!sheet.editors) {
-      sheet.editors = {};
-      sheetDetails.set('editors', sheet.editors);
-    }
-
     // Ensures that all sheet users listed are valid accounts,
     // removes accounts that have been deleted.
     for (account in sheet.editors) {

@@ -31,7 +31,6 @@ function Sheets (db, opts) {
 
   this.indexes = {
     categories: indexer(this.indexDB, ['categories'], indexOpts),
-    project: indexer(this.indexDB, ['project'], indexOpts),
     private: indexer(this.indexDB, ['private'], indexOpts),
     editors: indexer(this.indexDB, ['editors'], indexOpts),
     owners: indexer(this.indexDB, ['owners'], indexOpts)
@@ -208,7 +207,6 @@ function createSheet (opts) {
     key: opts.key,
     name: opts.name,
     description: opts.description || null,
-    project: opts.project || null,
     categories: opts.categories || [],
     websites: opts.websites || [],
     editors: opts.editors || {},

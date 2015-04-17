@@ -21,6 +21,15 @@ sheets.list(function (err, list) {
       sheet.editors = sheet.accessible_by
       delete sheet.accessible_by
     }
+    if (!sheet.websites) {
+      sheet.websites = []
+    }
+    if (!sheet.editors) {
+      sheet.editors = {};
+    }
+    if (sheet.project) {
+      delete sheet.project;
+    }
 
     sheets.put(sheet, function (err, updated) {
       console.log(err, updated)
