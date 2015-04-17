@@ -18,11 +18,11 @@
       {{#if account.admin}}
       <li><a href="/accounts">manage accounts</a></li>
       {{/if}}
-      {{#if account.active}}
+      {{#if account}}
       <li><a href="/accounts/invite">invite users</a></li>
       {{/if}}
       <!--<li><a href="http://flatsheet.io/docs">documentation</a></li>-->
-      {{#if account.active}}
+      {{#if account}}
       <li>
         <form action="/sessions/destroy" method="post" class="sign-out">
           <input type="submit" value="Sign out">

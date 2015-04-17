@@ -107,7 +107,7 @@ function sheets () {
   if (sub === 'fix-ids') {
     flatsheet.sheets.list({ keys:true, values:true }, function (err, results) {
       results.forEach(function (sheet) {
-        sheet.value.id = sheet.key;
+        sheet.value.key = sheet.key;
         flatsheet.sheets.update(sheet.key, sheet.value, function (err) {
           if (err) throw err;
         });
