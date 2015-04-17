@@ -63,6 +63,7 @@
     "isarray": "0.0.1",
     "jsonpretty": "0.0.1",
     "level": "^0.18.0",
+    "level-indexer": "^2.0.0",
     "level-party": "^1.0.1",
     "match-routes": "^1.1.1",
     "merge2": "^0.3.4",
