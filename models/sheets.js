@@ -169,7 +169,7 @@ Sheets.prototype.modifyIndexes = function (type, sheet, cb) {
       })
     }
 
-    else if (typeof sheet[key] === 'object') {
+    else if (sheet[key] && typeof(sheet[key]) === 'object') {
       var properties = Object.keys(sheet[key])
       if (!properties.length) return next()
 
