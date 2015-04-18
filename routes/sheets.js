@@ -77,10 +77,8 @@ module.exports = function (server, prefix) {
 
       formBody(req, res, function (err, body) {
         var data = body;
-        data['editors'] = {};
         data['owners'] = {};
         data.owners[account.username] = true;
-        data.rows = []
 
         server.sheets.create(data, function (err, sheet) {
           if (err) console.error(err);
