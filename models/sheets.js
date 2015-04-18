@@ -31,6 +31,7 @@ function Sheets (db, opts) {
 
   this.indexes = {
     categories: indexer(this.indexDB, ['categories'], indexOpts),
+    project: indexer(this.indexDB, ['project'], indexOpts),
     private: indexer(this.indexDB, ['private'], indexOpts),
     editors: indexer(this.indexDB, ['editors'], indexOpts),
     owners: indexer(this.indexDB, ['owners'], indexOpts)
@@ -175,7 +176,7 @@ Sheets.prototype.modifyIndexes = function (type, sheet, cb) {
       })
     }
 
-    else if (typeof sheet[key] === 'object') {
+    else if (sheet[key] && typeof(sheet[key]) === 'object') {
       var properties = Object.keys(sheet[key])
       if (!properties.length) return next()
 
@@ -207,6 +208,7 @@ function createSheet (opts) {
     key: opts.key,
     name: opts.name,
     description: opts.description || null,
+    project: opts.project || null,
     categories: opts.categories || [],
     websites: opts.websites || [],
     editors: opts.editors || {},

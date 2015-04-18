@@ -27,8 +27,8 @@ sheets.list(function (err, list) {
     if (!sheet.editors) {
       sheet.editors = {};
     }
-    if (sheet.project) {
-      delete sheet.project;
+    if (!sheet.project) {
+      sheet.project = null;
     }
 
     sheets.put(sheet, function (err, updated) {
