@@ -24,6 +24,9 @@ sheets.list(function (err, list) {
     if (!sheet.websites) {
       sheet.websites = []
     }
+    if (!sheet.owners) {
+      sheet.owners = {};
+    }
     if (!sheet.editors) {
       sheet.editors = {};
     }
