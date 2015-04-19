@@ -70,9 +70,10 @@ module.exports = function (server, prefix) {
      */
 
     if (req.method === 'GET') {
-      permissions.authorize(req, res, function (err, account) {
-        server.sheets.get(opts.params.key, function (err, sheet) {          
+      server.sheets.get(opts.params.key, function (err, sheet) {
+        if (sheet && !sheet.private) return response.json(sheet).pipe(res);
 
+        permissions.authorize(req, res, function (err, account) {
           if (permissions.sheetAccessible(sheet, account)) {
             return response.json(sheet).pipe(res);
           }
