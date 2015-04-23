@@ -103,15 +103,76 @@ test('sheet.dat can store data', function (t) {
 test('sheet.createReadStream', function (t) {
   sheets.list(function (err, list) {
     sheets.get(list[0].key, function (err, sheet) {
-      sheet.createReadStream({ keys: false, values: true }).pipe(JSONStream.parse())
+      sheet.createReadStream().pipe(JSONStream.parse())
         .on('data', function (data) {
-          console.log(data)
+          t.ok(data)
         })
         .on('end', function () {
           t.end()
         })
     })
   })
+})
+
+test('sheet.rows', function (t) {
+  sheets.list(function (err, list) {
+    sheets.get(list[0].key, function (err, sheet) {
+      sheet.rows(function (err, rows) {
+        t.notOk(err)
+        t.ok(rows)
+        t.end()
+      })
+    })
+  })
+})
+
+test('sheet.addRows', function (t) {
+  sheets.list(function (err, list) {
+    sheets.get(list[0].key, function (err, sheet) {
+      var rows = [
+        {key: 'a', value: 'a'},
+        {key: 'b', value: 'b'},
+        {key: 'c', value: 'c'}
+      ];
+    
+      sheet.addRows(rows, function () {
+        sheet.rows(function (err, allRows) {
+          t.ok(allRows)
+          t.end()
+        })
+      })
+    })
+  })
+})
+
+test('create a sheet', function (t) {
+  var data = {
+    name: 'example',
+    description: 'a really great sheet',
+    project: 'health',
+    categories: ['healthy', 'food'],
+    websites: ['http://example.com'],
+    owners: { nutrionist: true },
+    editors: { eater: true },
+    private: false,
+    rows: [
+      { example: 'weeeee', wat: 'wooooo' },
+      { example: 'weeeee', wat: 'wooooo' },
+      { example: 'weeeee', wat: 'wooooo' }
+    ]
+  };
+  
+  sheets.create(data, function (err, sheet) {
+    t.notOk(err)
+    t.ok(sheet)
+    sheet.rows(function (err, rows) {
+      t.notOk(err);
+      t.ok(rows);
+      t.equal(rows.length, 3)
+      t.end()
+    })
+  })
+
 })
 
 test('teardown', function (t) {

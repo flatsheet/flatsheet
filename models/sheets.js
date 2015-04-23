@@ -4,14 +4,13 @@ var extend = require('extend');
 var indexer = require('level-indexer');
 var sublevel = require('subleveldown');
 var collect = require('stream-collector');
-var moment = require('moment');
 var each = require('each-async');
 var isArray = require('isarray');
 var merge = require('merge2');
 var clone = require('clone');
-var dat = require('dat-core');
-var cuid = require('cuid');
-var format = require('json-format-stream')
+
+var timestamp = require('../lib/timestamp');
+var Sheet = require('./sheet');
 
 module.exports = Sheets;
 
@@ -45,13 +44,17 @@ function Sheets (db, opts) {
 Sheets.prototype.create = function (data, cb) {
   var self = this
   data.key = uuid();
-
+  var rows = data.rows;
+  delete data.rows;
+  
   this.db.put(data.key, data, function (err) {
     if (err) return cb(err);
     self.addIndexes(data, function () {
       var sheet = Sheet(self, data)
-      cb(null, sheet)
-    })
+      sheet.addRows(rows, function () {
+        cb(null, sheet)
+      });
+    });
   });
 };
 
@@ -64,7 +67,7 @@ Sheets.prototype.get = function (key, cb) {
 };
 
 Sheets.prototype.list = function (opts, cb) {
-  var defaultOpts = {keys: false, values: true};
+  var defaultOpts = { keys: false, values: true };
 
   if (typeof opts === 'function') {
     cb = opts;
@@ -113,19 +116,26 @@ Sheets.prototype.update = function (key, data, cb) {
 
   data.updated = timestamp();
   this.get(key, function (err, sheet) {
-    var sheet = extend(sheet, data)
+    sheet.metadata = extend(sheet.metadata, data);
+    
     self.updateIndexes(sheet, function () {
-      self.put(sheet, cb);
-    })
-  })
+      self.db.put(sheet.key, sheet, function () {
+        sheet.addRows(data.rows, function () {
+          self.get(key, cb);
+        });
+      });
+    });
+  });
 };
 
 Sheets.prototype.destroy = function (key, cb) {
   var self = this
   this.get(key, function (err, sheet) {
     if (err) return cb(err)
-    self.removeIndexes(sheet, function () {
-      self.db.del(key, cb);
+    self.removeIndexes(sheet.metadata, function () {
+      self.db.del(key, function () {
+        sheet.destroy(cb)
+      });
     })
   })
 };
@@ -189,37 +199,4 @@ Sheets.prototype.modifyIndexes = function (type, sheet, cb) {
   function end () {
     if (cb) cb()
   }
-}
-
-function timestamp (minimum) {
-  var now = moment()
-  return { human: now.format('h:mm a, MMM DD, YYYY'), unix: now.unix() }
-}
-
-function Sheet (sheets, opts) {
-  if (!(this instanceof Sheet)) return new Sheet(sheets, opts);
-  var self = this
-
-  this.key = opts.key
-  this.sheets = sheets
-  this.db = sublevel(sheets._db, 'sheet-' + opts.key)
-  this.dat = dat(this.db, { valueEncoding: 'json' })
-  this.metadata = {
-    key: opts.key,
-    name: opts.name,
-    description: opts.description || null,
-    project: opts.project || null,
-    categories: opts.categories || [],
-    websites: opts.websites || [],
-    editors: opts.editors || {},
-    owners: opts.owners || {},
-    private: opts.private || false,
-    created: opts.created || timestamp(),
-    updated: opts.updated || null
-  }
-}
-
-Sheet.prototype.createReadStream = function (opts) {
-  var stream = format(this.metadata, { outputKey: 'rows' })
-  return this.dat.createReadStream(opts).pipe(stream)
 }

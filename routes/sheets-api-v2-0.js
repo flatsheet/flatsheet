@@ -9,7 +9,7 @@ module.exports = function (server, prefix) {
   var prefix = prefix || '/api/v2/';
   var permissions = require('../lib/permissions')(server);
   var router = Router();
-  
+
   router.on(prefix + 'sheets', function (req, res, opts) {
 
     /*
@@ -71,13 +71,18 @@ module.exports = function (server, prefix) {
 
     if (req.method === 'GET') {
       server.sheets.get(opts.params.key, function (err, sheet) {
-        if (sheet && !sheet.private) return response.json(sheet).pipe(res);
+        console.log(err, sheet)
+
+        if (sheet && !sheet.isPrivate()) {
+          return sheet.createReadStream()
+            .pipe(res);
+        }
 
         permissions.authorize(req, res, function (err, account) {
           if (permissions.sheetAccessible(sheet, account)) {
             return response.json(sheet).pipe(res);
           }
-
+          
           return response.json({ message: 'Not found', statusCode: 404 }).status(404).pipe(res);
         });
       });
