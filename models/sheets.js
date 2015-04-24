@@ -111,23 +111,29 @@ Sheets.prototype.createFindStream = function (index, opts) {
 
 Sheets.prototype.update = function (key, data, cb) {
   var self = this;
-  
+
   if (typeof key === 'object') {
     cb = data
     data = key
     key = data.key
   }
-  
+  console.log('sheets.update data object initial', data)
+  if (data.rows) {
+    var rows = data.rows;
+    delete data.rows;
+  }
+
   data.updated = timestamp();
   this.get(key, function (err, sheet) {
-    sheet.metadata = extend(sheet.metadata, data);
     
+    sheet.metadata = extend(sheet.metadata, data);
+
     self.updateIndexes(sheet, function () {
       self.db.put(sheet.key, sheet.metadata, function () {
         console.log('sheets.update data', data)
-        if (!data.rows || !data.rows.length) return self.get(key, cb);
+        if (!rows) return self.get(key, cb);
         
-        sheet.addRows(data.rows, function () {
+        sheet.addRows(rows, function () {
           self.get(key, cb);
         });
       });
