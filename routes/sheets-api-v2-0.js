@@ -71,11 +71,8 @@ module.exports = function (server, prefix) {
 
     if (req.method === 'GET') {
       server.sheets.get(opts.params.key, function (err, sheet) {
-        console.log(err, sheet)
-
         if (sheet && !sheet.isPrivate()) {
-          return sheet.createReadStream()
-            .pipe(res);
+          return sheet.createReadStream().pipe(res);
         }
 
         permissions.authorize(req, res, function (err, account) {

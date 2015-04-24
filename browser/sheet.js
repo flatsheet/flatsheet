@@ -110,7 +110,9 @@ var hello = document.getElementById('hello-message');
 
 /* request the sheet from the api */
 flatsheet.sheets.get(key, function (err, sheet) {
-  console.log(err, sheet)
+  console.log(err, sheet, typeof sheet)
+  if (typeof sheet === 'string') sheet = JSON.parse(sheet)
+  console.log(typeof sheet)
   elClass(hello).add('hidden');
   editor.import(sheet.rows);
   sheetDetails.set(sheet);

@@ -44,13 +44,17 @@ function Sheets (db, opts) {
 Sheets.prototype.create = function (data, cb) {
   var self = this
   data.key = uuid();
-  var rows = data.rows;
-  delete data.rows;
+  
+  if (data.rows) {
+    var rows = data.rows;
+    delete data.rows;
+  }
   
   this.db.put(data.key, data, function (err) {
     if (err) return cb(err);
     self.addIndexes(data, function () {
       var sheet = Sheet(self, data)
+      if (!rows) return cb(null, sheet)
       sheet.addRows(rows, function () {
         cb(null, sheet)
       });
@@ -113,13 +117,16 @@ Sheets.prototype.update = function (key, data, cb) {
     data = key
     key = data.key
   }
-
+  
   data.updated = timestamp();
   this.get(key, function (err, sheet) {
     sheet.metadata = extend(sheet.metadata, data);
     
     self.updateIndexes(sheet, function () {
-      self.db.put(sheet.key, sheet, function () {
+      self.db.put(sheet.key, sheet.metadata, function () {
+        console.log('sheets.update data', data)
+        if (!data.rows || !data.rows.length) return self.get(key, cb);
+        
         sheet.addRows(data.rows, function () {
           self.get(key, cb);
         });

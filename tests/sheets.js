@@ -161,7 +161,7 @@ test('create a sheet', function (t) {
       { example: 'weeeee', wat: 'wooooo' }
     ]
   };
-  
+
   sheets.create(data, function (err, sheet) {
     t.notOk(err)
     t.ok(sheet)
@@ -170,6 +170,45 @@ test('create a sheet', function (t) {
       t.ok(rows);
       t.equal(rows.length, 3)
       t.end()
+    })
+  })
+
+})
+
+test('update a sheet', function (t) {
+  var data = {
+    name: 'example',
+    description: 'a really great sheet',
+    project: 'health',
+    categories: ['healthy', 'food'],
+    websites: ['http://example.com'],
+    owners: { nutrionist: true },
+    editors: { eater: true },
+    private: false,
+    rows: [
+      { example: 'weeeee', wat: 'wooooo' },
+      { example: 'weeeee', wat: 'wooooo' },
+      { example: 'weeeee', wat: 'wooooo' }
+    ]
+  };
+
+  sheets.create(data, function (err, sheet) {
+    t.notOk(err)
+    t.ok(sheet)
+    var newData = [
+      { ok: 'weeeee', cool: 'wooooo' },
+      { ok: 'weeeee', cool: 'wooooo' },
+      { ok: 'weeeee', cool: 'wooooo' }
+    ];
+
+    sheet.addRows(newData, function () {
+      sheet.rows(function (err, rows) {
+        t.notOk(err);
+        t.ok(rows);
+        console.log(rows)
+        t.equal(rows.length, 6)
+        t.end()
+      })
     })
   })
 
