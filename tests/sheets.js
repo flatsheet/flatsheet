@@ -175,7 +175,7 @@ test('create a sheet', function (t) {
 
 })
 
-test('update a sheet', function (t) {
+test('update a sheet – sheet.addRows', function (t) {
   var data = {
     name: 'example',
     description: 'a really great sheet',
@@ -205,13 +205,48 @@ test('update a sheet', function (t) {
       sheet.rows(function (err, rows) {
         t.notOk(err);
         t.ok(rows);
-        console.log(rows)
         t.equal(rows.length, 6)
         t.end()
       })
     })
   })
+})
 
+test('update a sheet – sheet.update', function (t) {
+  var data = {
+    name: 'example',
+    description: 'a really great sheet',
+    project: 'health',
+    categories: ['healthy', 'food'],
+    websites: ['http://example.com'],
+    owners: { nutrionist: true },
+    editors: { eater: true },
+    private: false,
+    rows: [
+      { example: 'weeeee', wat: 'wooooo' },
+      { example: 'weeeee', wat: 'wooooo' },
+      { example: 'weeeee', wat: 'wooooo' }
+    ]
+  };
+
+  sheets.create(data, function (err, sheet) {
+    t.notOk(err)
+    t.ok(sheet)
+    var newData = [
+      { ok: 'weeeee', cool: 'wooooo' },
+      { ok: 'weeeee', cool: 'wooooo' },
+      { ok: 'weeeee', cool: 'wooooo' }
+    ];
+
+    sheet.update({ rows: newData }, function () {
+      sheet.rows(function (err, rows) {
+        t.notOk(err);
+        t.ok(rows);
+        t.equal(rows.length, 6)
+        t.end()
+      })
+    })
+  })
 })
 
 test('teardown', function (t) {
@@ -219,10 +254,12 @@ test('teardown', function (t) {
     t.notOk(err)
     t.ok(list)
 
-    function iterator (sheet, i, next) {
-      sheets.destroy(sheet.key, function (err) {
-        t.notOk(err)
-        next()
+    function iterator (item, i, next) {
+      sheets.get(item.key, function (err, sheet) {
+        sheet.destroy(function (err) {
+          t.notOk(err)
+          next()
+        })
       })
     }
 

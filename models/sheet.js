@@ -36,7 +36,7 @@ function Sheet (sheets, opts) {
 }
 
 Sheet.prototype.createReadStream = function (opts) {
-  var defaultOpts = { keys: false, values: true };
+  var defaultOpts = { keys: true, values: true };
 
   if (typeof opts === 'function') {
     cb = opts;
@@ -50,7 +50,7 @@ Sheet.prototype.createReadStream = function (opts) {
 }
 
 Sheet.prototype.rows = function (opts, cb) {
-  var defaultOpts = { keys: false, values: true };
+  var defaultOpts = { keys: true, values: true };
 
   if (typeof opts === 'function') {
     cb = opts;
@@ -66,18 +66,50 @@ Sheet.prototype.isPrivate = function () {
   return !!this.metadata.private;
 }
 
+Sheet.prototype.update = function (data, cb) {
+  var self = this;
+
+  if (data.rows) {
+    var rows = data.rows;
+    delete data.rows;
+  }
+  
+  data.updated = timestamp();
+  this.metadata = extend(this.metadata, data);
+
+  this.sheets.updateIndexes(this.metadata, function () {
+    self.sheets.db.put(self.key, self.metadata, function () {
+      if (!rows) return self.sheets.get(self.key, cb);
+      self.addRows(rows, function () {
+        return cb(null, self)
+      });
+    });
+  });
+}
+
 Sheet.prototype.destroy = function (cb) {
   var self = this;
-  this.dat.createKeyStream()
-    .on('data', function (data) {
-      self.deleteRow(data, function () {})
-    })
-    .on('end', cb)
+  this.sheets.removeIndexes(this.metadata, function () {
+    self.sheets.db.del(self.key, function () {
+      self.dat.createKeyStream()
+        .on('data', function (data) {
+          self.deleteRow(data, function () {})
+        })
+        .on('end', cb)
+    });
+  });
 }
 
 Sheet.prototype.addRow = function (row, cb) {
+  var self = this
   var key = row.key || cuid();
-  this.dat.put(key, row, cb);
+
+  this.dat.put(key, row, function (err) {
+    if (err) return cb(err)
+    self.dat.get(key, function (err, val) {
+      cb(null, val)
+    })
+  });
 }
 
 Sheet.prototype.addRows = function (rows, cb) {

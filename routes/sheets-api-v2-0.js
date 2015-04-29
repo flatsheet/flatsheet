@@ -19,7 +19,7 @@ module.exports = function (server, prefix) {
     if (req.method === 'GET') {
       var query = qs.parse(opts.parsedUrl.query)
       res.setHeader('Content-Type', 'application/json');
-      permissions.authorize(req, function (err, account) {
+      permissions.authorize(req, res, function (err, account) {
         if (err || !account) {
           return server.sheets.list({ filter: { private: false }})
             .pipe(JSONStream.stringify())
@@ -44,7 +44,7 @@ module.exports = function (server, prefix) {
 
     if (req.method === 'POST') {
       permissions.authorize(req, res, function (err, account) {
-        if (err) response().json({ error: 'Unauthorized'}).status(401).pipe(res);
+        if (err) return response().json({ error: 'Unauthorized'}).status(401).pipe(res);
 
         jsonBody(req, res, function (err, body) {
           server.sheets.create(body, function (err, sheet) {
@@ -53,7 +53,7 @@ module.exports = function (server, prefix) {
               return response.json(data).status(404).pipe(res);
             }
 
-            else return response.json(sheet).pipe(res);
+            return sheet.createReadStream().pipe(res);
           });
         });
       });
@@ -77,7 +77,7 @@ module.exports = function (server, prefix) {
 
         permissions.authorize(req, res, function (err, account) {
           if (permissions.sheetAccessible(sheet, account)) {
-            return response.json(sheet).pipe(res);
+            return sheet.createReadStream().pipe(res);
           }
           
           return response.json({ message: 'Not found', statusCode: 404 }).status(404).pipe(res);
@@ -92,16 +92,19 @@ module.exports = function (server, prefix) {
 
     if (req.method === 'PUT') {
       permissions.authorize(req, res, function (err, account) {
-        if (err) response().json({ error: 'Unauthorized'}).status(401).pipe(res);
+        if (err) return response().json({ error: 'Unauthorized'}).status(401).pipe(res);
 
         jsonBody(req, res, function (err, body) {
-          server.sheets.update(opts.params.key, body, function (err, sheet) {
-            if (err || !sheet) {
-              var data = { message: 'Not found', statusCode: 404 };
-              return response.json(data).status(404).pipe(res);
-            }
+          server.sheets.get(body.key, function (err, sheet) {
+            console.log('waaaaaaaaaaaaaaaaaaa', body)
+            sheet.update(body, function (err) {
+              if (err || !sheet) {
+                var data = { message: 'Not found', statusCode: 404 };
+                return response.json(data).status(404).pipe(res);
+              }
 
-            else return response.json(sheet).pipe(res);
+              return sheet.createReadStream().pipe(res);
+            });
           });
         });
       });
@@ -115,16 +118,18 @@ module.exports = function (server, prefix) {
 
     if (req.method === 'DELETE') {
       permissions.authorize(req, res, function (err, account) {
-        if (err) response().json({ error: 'Unauthorized'}).status(401).pipe(res);
+        if (err) return response().json({ error: 'Unauthorized'}).status(401).pipe(res);
 
-        server.sheets.destroy(opts.params.key, function (err) {
-          if (err) {
-            var data = { message: 'Server error', statusCode: 500 };
-            return response.json(data).status(500).pipe(res);
-          }
+        server.sheets.get(opts.params.key, function (err, sheet) {
+          sheet.destroy(function (err) {
+            if (err) {
+              var data = { message: 'Server error', statusCode: 500 };
+              return response.json(data).status(500).pipe(res);
+            }
 
-          res.writeHead(204);
-          return res.end();
+            res.writeHead(204);
+            return res.end();
+          });
         });
       });
     }

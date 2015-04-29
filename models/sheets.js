@@ -109,50 +109,6 @@ Sheets.prototype.createFindStream = function (index, opts) {
   return this.indexes[index].find(opts)
 }
 
-Sheets.prototype.update = function (key, data, cb) {
-  var self = this;
-
-  if (typeof key === 'object') {
-    cb = data
-    data = key
-    key = data.key
-  }
-  console.log('sheets.update data object initial', data)
-  if (data.rows) {
-    var rows = data.rows;
-    delete data.rows;
-  }
-
-  data.updated = timestamp();
-  this.get(key, function (err, sheet) {
-    
-    sheet.metadata = extend(sheet.metadata, data);
-
-    self.updateIndexes(sheet, function () {
-      self.db.put(sheet.key, sheet.metadata, function () {
-        console.log('sheets.update data', data)
-        if (!rows) return self.get(key, cb);
-        
-        sheet.addRows(rows, function () {
-          self.get(key, cb);
-        });
-      });
-    });
-  });
-};
-
-Sheets.prototype.destroy = function (key, cb) {
-  var self = this
-  this.get(key, function (err, sheet) {
-    if (err) return cb(err)
-    self.removeIndexes(sheet.metadata, function () {
-      self.db.del(key, function () {
-        sheet.destroy(cb)
-      });
-    })
-  })
-};
-
 Sheets.prototype.addIndexes = function (sheet, cb) {
   this.modifyIndexes('add', sheet, cb)
 }
