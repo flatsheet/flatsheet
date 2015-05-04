@@ -47,6 +47,7 @@ Accounts.prototype.getListOfAccounts = function (req, res) {
 Accounts.prototype.signIntoAccount = function (req, res) {
   if (req.method === 'GET') {
     this.server.getAccountBySession(req, function (err, account, session) {
+      if (err || !account) return console.log("signing in: retrieving account from session failed:", err);
       if (account) {
         res.writeHead(302, { 'Location': '/' });
         return res.end();
@@ -56,7 +57,7 @@ Accounts.prototype.signIntoAccount = function (req, res) {
   }
 };
 
-Accounts.prototype.createAdminAccount = function (req, res) {
+Accounts.prototype.createAccountAsAdmin = function (req, res) {
   var self = this;
   this.permissions.authorizeSession(req, res, function (error, account, session) {
     if (!account.admin || error) {
@@ -82,15 +83,10 @@ Accounts.prototype.createAccount = function (req, res) {
   var self = this;
   if (req.method === 'GET') {
     this.server.getAccountBySession(req, function (err, account, session) {
-      if (account) {
-        return response()
-          .html(self.server.render('account-update', { account: account }))
-          .pipe(res);
-      } else {
-        return response()
+      if (error) return console.log(error);
+      return response()
         .html(self.server.render('account-new'))
         .pipe(res);
-      }
     });
     
   }
@@ -126,7 +122,6 @@ Accounts.prototype.updateAccount = function (req, res, opts) {
   var self = this;
   this.permissions.authorizeSession(req, res, function (error, account, session) {
     if (error) redirect(res, '/');
-
     if (req.method === 'POST') {
       // check if we are updating the current account as a non-admin:
       if (account.uuid !== opts.params.uuid && !account.admin) {
@@ -225,6 +220,7 @@ Accounts.prototype.invite = function (req, res) {
       }
 
       if (req.method === 'POST') {
+        // Shouldn't we authorize the account session token here???
         formBody(req, res, function (err, body) {
           //todo: notification of error on page
           if (err) console.error(err);
@@ -243,7 +239,7 @@ Accounts.prototype.invite = function (req, res) {
                 fromname: self.server.site.contact
               };
 
-              var message = {
+              var message = { // Should these be from the current account, or Flatsheet server?
                 to: email,
                 from: self.server.site.email,
                 fromname: self.server.site.contact,
@@ -293,6 +289,10 @@ Accounts.prototype.acceptInvite = function (req, res) {
   }
 
   if (req.method === 'POST') {
+    // LMS: No authentication here???
+    // Can't someone just create a post here with the 'body' data to create an account?
+    // Perhaps a session can be created under the 'acceptInvite' GET request, then we can
+    // authorize it here?
     formBody(req, res, function (err, body) {
 
       var opts = {
@@ -329,8 +329,6 @@ Accounts.prototype.acceptInvite = function (req, res) {
 /*
  * Helper functions
  */
-// NOTE: To make these methods private, we can wrap the module in a function expression
-// (ie `Accounts = (function() {...})(); module.exports = Accounts;)
 
 function logIfError(err) {
   // TODO: implement a notification of error on page
