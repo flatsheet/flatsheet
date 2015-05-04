@@ -1,5 +1,4 @@
-var response = require('response');
-var JSONStream = require('JSONStream');
+var uuid = require('uuid').v1;
 var formBody = require('body/form');
 var redirect = require('../lib/redirect');
 var Router = require('match-routes');
@@ -9,8 +8,8 @@ module.exports = function (server, prefix) {
   var router = Router();
 
   /*
-  * Create a session
-  */
+   * Create a session
+   */
   router.on(prefix, function (req, res) {
     if (req.method === 'POST') {
       formBody(req, res, function (err, body) {
@@ -23,7 +22,7 @@ module.exports = function (server, prefix) {
           } else if (!ok) {
             // TODO: notify user about incorrect password, and offer reset password option (issue #47)
           } else {
-            server.auth.login(res, { username: id }, function (loginerr, data) {
+            server.auth.login(res, {uuid: id}, function (loginerr, data) {
               if (loginerr) console.error(loginerr);
             });
           }
@@ -34,8 +33,8 @@ module.exports = function (server, prefix) {
   });
 
   /*
-  * Destroy a session
-  */
+   * Destroy a session
+   */
   router.on(prefix + '/destroy', function (req, res) {
     server.auth.delete(req, function () {
       server.auth.cookie.destroy(res);
@@ -45,3 +44,4 @@ module.exports = function (server, prefix) {
 
   return router;
 }
+

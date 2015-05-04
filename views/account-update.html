@@ -4,19 +4,20 @@
 <div class="container">
   <h1 class="page-title">Update account for username: {{ editingAccount.username }}</h1>
 
-  <form action="/accounts/update/{{ editingAccount.username }}" method="post">
-    
+  <form action="/accounts/update/{{ editingAccount.uuid }}" method="post">
+
+    <!--TODO: Add button that gives menu to change account username and/or password needed-->
+
     <fieldset>
       <label for="email">email</label>
-      <input type="email" name="email" placeholder={{ editingAccount.email }} value={{ editingAccount.email }}>
+      <input type="text" name="email" placeholder={{ editingAccount.email }} value={{ editingAccount.email }}>
     </fieldset>
-    
+
     {{#if account.admin}}
     <fieldset>
-      <label for="admin">
-        <input type="checkbox" name="admin" {{checked editingAccount.admin}}>
-        admin 
-      </label>
+      <label for="admin">admin</label>
+      <input type="hidden" name="admin" value="unchecked">
+      <input type="checkbox" name="admin" value="checked" {{checked editingAccount.admin}}>
     </fieldset>
     {{/if}}
     
