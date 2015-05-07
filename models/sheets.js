@@ -66,7 +66,7 @@ Sheets.prototype.get = function (key, cb) {
   var self = this
   this.db.get(key, function (err, data) {
     if (err) return cb(err);
-    return cb(err, Sheet(self, data));
+    return cb(null, Sheet(self, data));
   })
 };
 

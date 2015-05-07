@@ -129,17 +129,21 @@ test('sheet.rows', function (t) {
 test('sheet.addRows', function (t) {
   sheets.list(function (err, list) {
     sheets.get(list[0].key, function (err, sheet) {
+            
       var rows = [
-        {key: 'a', value: 'a'},
-        {key: 'b', value: 'b'},
-        {key: 'c', value: 'c'}
+        {weee: 'a', ok: 'a'},
+        {weee: 'b', ok: 'b'},
+        {weee: 'c', ok: 'c'}
       ];
-    
+      sheet.rows(function (err, allRows) {
+        console.log(allRows)
       sheet.addRows(rows, function () {
         sheet.rows(function (err, allRows) {
+          console.log(allRows)
           t.ok(allRows)
           t.end()
         })
+      })
       })
     })
   })

@@ -1,0 +1,15 @@
+{
+  "title": "Sheet",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string",
+      "description": "Unique identifier for the Sheet"
+    },
+    "title": {
+      "type": "string",
+      "description": "Human identifier for a Sheet"
+    }
+  },
+  "required": ["key", "sheet"]
+}
