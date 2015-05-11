@@ -148,11 +148,13 @@ Sheet.prototype.deleteRow = function (key, cb) {
 }
 
 Sheet.prototype.addColumn = function (property, cb) {
-  
+  // it would add the property to every row as null or with a default value
+  // and add the property to the schema
 }
 
 Sheet.prototype.removeColumn = function (property, cb) {
-  
+  // it would remove the property from every row
+  // and remove the property from the schema
 }
 
 Sheet.prototype.addProperty = function (property, cb) {

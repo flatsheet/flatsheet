@@ -253,6 +253,40 @@ test('update a sheet – sheet.update', function (t) {
   })
 })
 
+test('get a row – sheet.getRow', function (t) {
+  var data = {
+    name: 'example',
+    description: 'a really great sheet',
+    project: 'health',
+    categories: ['healthy', 'food'],
+    websites: ['http://example.com'],
+    owners: { nutrionist: true },
+    editors: { eater: true },
+    private: false,
+    rows: [
+      { example: 'weeeee', wat: 'wooooo' },
+      { example: 'weeeee', wat: 'wooooo' },
+      { example: 'weeeee', wat: 'wooooo' }
+    ]
+  };
+
+  sheets.create(data, function (err, sheet) {
+    t.notOk(err)
+    t.ok(sheet)
+    sheet.rows(function (err, rows) {
+      t.notOk(err);
+      t.ok(rows);
+      
+      sheet.getRow(rows[0].key, function (err, row) {
+        t.notOk(err)
+        t.ok(row)
+        t.ok(row.properties)
+        t.end()
+      })
+    })
+  })
+})
+
 test('teardown', function (t) {
   sheets.list(function (err, list) {
     t.notOk(err)
