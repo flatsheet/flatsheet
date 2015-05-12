@@ -4,7 +4,6 @@ var response = require('response');
 var formBody = require('body/form');
 var qs = require('querystring');
 var url = require('url');
-var randomColor = require('random-color');
 var redirect = require('../lib/redirect');
 
 module.exports = Accounts;
@@ -15,6 +14,9 @@ function Accounts (server) {
   }
   this.server = server;
   this.permissions = require('../lib/permissions')(server);
+  this.forms2accounts =
+    require('../lib/forms2accounts')(server.accountdown);
+  this.accountsIndexes = server.accountsIndexes;
 }
 
 /*
@@ -45,6 +47,7 @@ Accounts.prototype.getListOfAccounts = function (req, res) {
 };
 
 Accounts.prototype.signIntoAccount = function (req, res) {
+  var self = this;
   if (req.method === 'GET') {
     this.server.getAccountBySession(req, function (err, account, session) {
       if (err || !account) return console.log("signing in: retrieving account from session failed:", err);
@@ -52,7 +55,7 @@ Accounts.prototype.signIntoAccount = function (req, res) {
         res.writeHead(302, { 'Location': '/' });
         return res.end();
       }
-      else return response().html(this.server.render('signin')).pipe(res);
+      else return response().html(self.server.render('signin')).pipe(res);
     });
   }
 };
@@ -71,10 +74,14 @@ Accounts.prototype.createAccountAsAdmin = function (req, res) {
         .pipe(res);
     }
     if (req.method === 'POST') {
-      self.createAccountFromForm(req, res);
+      self.forms2accounts.create(req, res, function(err, account) {
+        if (err) return console.log("createAccountAsAdmin: error creating account", err);
+        self.accountsIndexes.addIndexes(account, function () {
+          res.writeHead(302, {'Location' : self.prefix});
+          return res.end();
 
-      res.writeHead(302, {'Location' : self.prefix});
-      return res.end();
+        });
+      });
     }
   });
 };
@@ -84,34 +91,44 @@ Accounts.prototype.createAccount = function (req, res) {
   if (req.method === 'GET') {
     this.server.getAccountBySession(req, function (err, account, session) {
       if (error) return console.log(error);
-      return response()
-        .html(self.server.render('account-new'))
-        .pipe(res);
+        return response()
+          .html(self.server.render('account-new'))
+          .pipe(res);
     });
     
   }
 
   if (req.method === 'POST') {
-    this.createAccountFromForm(req, res);
-    res.writeHead(302, { 'Location': '/' });
-    return res.end();
+    this.forms2accounts.create(req, res, function (err, account) {
+      if (err) return console.log(err);
+      self.accountsIndexes.addIndexes(account, function () {
+        res.writeHead(302, {'Location': '/'});
+        return res.end();
+      });
+    });
   }
 };
 
 Accounts.prototype.deleteAccount = function (req, res, opts) {
   var self = this;
   this.permissions.authorizeSession(req, res, function (error, user, session) {
-    if (user.admin && !error) {
+    if (error) return console.log(error);
+    if (user.admin) {
       if (req.method === 'POST') {
         // TODO: Remove account username from all sheet permissions
-        self.server.accountdown.remove(opts.params.uuid, logIfError);
-        res.writeHead(302, { 'Location': self.prefix });
-        return res.end();
+        self.server.accountdown.remove(opts.params.key, function (err) {
+          if (err) return console.log("Error removing account");
+          // We are passing in literal account fields that are indexed
+          // Alternatively, we can pass in the entire account
+          var accountIndexes = { key: opts.params.key,
+            email: opts.params.email, username: opts.params.username };
+          self.accountsIndexes.removeIndexes(accountIndexes, function () {
+            res.writeHead(302, {'Location': self.prefix});
+            return res.end();
+          });
+        });
       }
     } else {
-      if (error) {
-        console.log(error);
-      }
       res.writeHead(302, { 'Location': '/' });
       return res.end();
     }
@@ -124,19 +141,22 @@ Accounts.prototype.updateAccount = function (req, res, opts) {
     if (error) redirect(res, '/');
     if (req.method === 'POST') {
       // check if we are updating the current account as a non-admin:
-      if (account.uuid !== opts.params.uuid && !account.admin) {
+      if (account.key !== opts.params.key && !account.admin) {
         // TODO: Flash notification (?)
         console.log("WARNING: You must be admin to update an account which is not yours");
         res.writeHead(302, {'Location': self.prefix });
         return res.end();
       }
-      self.updateAccountFromForm(req, res, opts.params.uuid, function () {
-        res.writeHead(302, {'Location': self.prefix });
-        return res.end();
+      self.forms2accounts.update(req, res, opts.params.key, function (err, account) {
+        if (err) return console.log("Error updating account from form: ", err);
+        self.accountsIndexes.updateIndexes(account, function () {
+          res.writeHead(302, {'Location': self.prefix });
+          return res.end();
+        })
       });
     }
     if (req.method === 'GET') {
-      self.renderAccountUpdateForm(res, opts.params.uuid, account);
+      self.renderAccountUpdateForm(res, opts.params.key, account);
     }
   });
 };
@@ -156,15 +176,15 @@ Accounts.prototype.passwordReset = function (req, res, opts) {
     this.permissions.authorizeSession(req, res, function (error, account, session) {
       if (error) return console.error("error authorizing session:", error);
       if (account) {
-        self.updateAccountFromForm(req, res, opts.params.uuid, function (err) {
+        self.forms2accounts.update(req, res, opts.params.key, function (err, account) {
           if (err) return console.log(err);
 
-          if (!account) return console.log("No account returned after updating");
+          self.accountsIndexes.updateIndexes(account);
           // delete then recreate the session token since the login account has been recreated
-          // when the password was updated
+          // when the password was updated (not sure if this is necessary...)
           self.server.auth.delete(req, function () {
             self.server.auth.cookie.destroy(res);
-            self.server.auth.login(res, {uuid: account.uuid }, function (loginerr, data) {
+            self.server.auth.login(res, {key: account.key}, function (loginerr, data) {
               if (loginerr) return console.log(loginerr);
               res.writeHead(302, {'Location': '/'});
               return res.end();
@@ -179,29 +199,27 @@ Accounts.prototype.passwordReset = function (req, res, opts) {
   }
 }
 
-Accounts.prototype.passwordResetAccept = function (req, res, opts) {
+Accounts.prototype.passwordAcceptReset = function (req, res) {
   var self = this;
   if (req.method === 'GET') {
-
     var query = url.parse(req.url).query;
     var token = qs.parse(query).token;
-    var uuid = qs.parse(query).uuid;
-    var username = qs.parse(query).username;
+    var key = qs.parse(query).key;
     this.server.resets.get(token, function (err, resetReq) {
       if (err || resetReq.accepted) {
         res.writeHead(302, { 'Location': '/' });
         return res.end();
-      }
-      else {
-        self.server.auth.login(res, { uuid: uuid }, function (loginerr, data) {
-
-          if (loginerr) return console.error("login error:", loginerr);
-          resetReq.accepted = true;
-          self.server.resets.put(token, resetReq);
-          var account = {email: resetReq.email, uuid: uuid, username: username};
-          return response()
-            .html(self.server.render('password-reset', {account: account}))
-            .pipe(res);
+      } else {
+        self.server.auth.login(res, { key: key }, function (loginerr, data) {
+            if (loginerr) return console.error("login error:", loginerr);
+          self.server.accountdown.get(key, function (err, account) {
+            if (err) return console.err("error retrieving password reset account:", err);
+            resetReq.accepted = true;
+            self.server.resets.put(token, resetReq);
+            return response()
+              .html(self.server.render('password-reset', {account: account}))
+              .pipe(res);
+          })
         });
       }
     });
@@ -266,7 +284,7 @@ Accounts.prototype.invite = function (req, res) {
   });
 };
 
-Accounts.prototype.acceptInvite = function (req, res) {
+Accounts.prototype.acceptInvite = function (req, res, opts) {
   var self = this;
   if (req.method === 'GET') {
     var query = url.parse(req.url).query;
@@ -293,34 +311,18 @@ Accounts.prototype.acceptInvite = function (req, res) {
     // Can't someone just create a post here with the 'body' data to create an account?
     // Perhaps a session can be created under the 'acceptInvite' GET request, then we can
     // authorize it here?
-    formBody(req, res, function (err, body) {
+    self.forms2accounts.create(req, res, function (err, account) {
+      //todo: notification of error on page
+      if (err) return console.error(err);
 
-      var opts = {
-        login: {
-          basic: {
-            username: body.username,
-            password: body.password
-          }
-        },
-        value: {
-          admin: true,
-          email: body.email,
-          username: body.username,
-          color: randomColor(),
-          uuid: uuid()
-        }
-      };
+      console.log("Account.acceptInvite: account created:", account);
+      self.accountsIndexes.addIndexes(account);
 
-      self.server.accountdown.create(opts.value.uuid, opts, function (err) {
-        //todo: notification of error on page
-        if (err) return console.error(err);
+      self.server.auth.login(res, {key: account.key}, function (loginerr, data) {
+        if (loginerr) console.error(loginerr);
 
-        self.server.auth.login(res, { uuid: opts.value.uuid }, function (loginerr, data) {
-          if (loginerr) console.error(loginerr);
-
-          res.writeHead(302, { 'Location': '/' });
-          return res.end();
-        });
+        res.writeHead(302, {'Location': '/'});
+        return res.end();
       });
     });
   }
@@ -330,92 +332,17 @@ Accounts.prototype.acceptInvite = function (req, res) {
  * Helper functions
  */
 
-function logIfError(err) {
-  // TODO: implement a notification of error on page
-  if (err) console.error(err);
-
-}
-
-// TODO: Move these methods into an npm module?
-Accounts.prototype.createAccountFromForm = function (req, res, cb) {
-  var self = this;
-  formBody(req, res, function(err, body) {
-    if (err) return console.log(err);
-    self.modifyAccountFromForm({}, body, uuid(), self.createAccountFromOpts.bind(self), cb);
-  });
-};
-
-Accounts.prototype.createAccountFromOpts = function (account, cb) {
-  this.server.accountdown.create(account.value.uuid, account, function (err) {
-    if (cb) return cb(err);
-    else logIfError(err);
-  });
-};
-
-Accounts.prototype.updateAccountFromForm = function (req, res, uuid, cb) {
-  var self = this;
-  self.server.accountdown.get(uuid, function (err, existingAccount) {
-    if (err) return console.log(err);
-    formBody(req, res, function (err, body) {
-      if (err) return console.log(err);
-      if (body.username || body.password) {
-        // If username or password has been modified, we call this to alter the account-basic store
-        self.modifyAccountFromForm(existingAccount, body, uuid, self.recreateAccountFromOpts.bind(self), cb);
-      } else {
-        self.modifyAccountFromForm(existingAccount, body, uuid, self.updateAccountFromOpts.bind(self), cb);
-      }
-    });
-  });
-};
-
-// When the username and/or password has been updated
-Accounts.prototype.recreateAccountFromOpts = function (account, cb) {
-  var self = this;
-  this.server.accountdown.remove(account.value.uuid, function (err) {
-    if (err) return console.log("err while deleting old account:", err);
-    self.server.accountdown.create(account.value.uuid, account, function (err) {
-      if (cb) return cb(err);
-      else logIfError(err);
-    });
-  });
-}
-
-Accounts.prototype.updateAccountFromOpts = function (account, cb) {
-  var self = this;
-  self.server.accountdown.put(account.value.uuid, account.value, function (err) {
-    if (cb) return cb(err);
-    else logIfError(err);
-  });
-};
-
-Accounts.prototype.modifyAccountFromForm = function (existingAccount, body, accountUuid, accountOperation, cb) {
-  var account = {
-    login: {
-      basic: {
-        username: (existingAccount.username || body.username),
-        password: body.password
-      }
-    },
-    value: {
-      admin: body.hasOwnProperty('admin') ? body.admin !== 'unchecked' : existingAccount.admin,
-      color: (existingAccount.color || randomColor()),
-      email: (body.email || existingAccount.email),
-      username: (body.username || existingAccount.username),
-      uuid: accountUuid
-    }
-  };
-  accountOperation(account, cb);
-};
-
 Accounts.prototype.renderAccountUpdateForm = function (res, accountUuid, account) {
   var self = this;
   this.server.accountdown.get(accountUuid, function (err, value) {
     if (err) {
       return console.log(err);
     }
-    value['uuid'] = accountUuid;
+    value['key'] = accountUuid;
     var ctx = { editingAccount: value, account: account };
     response()
       .html(self.server.render('account-update', ctx)).pipe(res);
   });
-};
+
+
+}

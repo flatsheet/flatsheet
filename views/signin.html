@@ -1,13 +1,14 @@
 {{#extend "layout"}}
 
 {{#replace "body"}}
+
 <div class="container">
   <h1 class="page-title">Sign in</h1>
 
   <form action="/sessions" method="post">
     <fieldset>
-      <label for="username">username</label>
-      <input type="text" name="username">
+      <label for="usernameOrEmail">username or email</label>
+      <input type="text" name="usernameOrEmail">
     </fieldset>
 
     <fieldset>
@@ -20,6 +21,7 @@
     </div>
   </form>
 </div>
+
 {{/replace}}
 
 {{/extend}}

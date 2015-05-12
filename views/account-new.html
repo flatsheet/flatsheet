@@ -24,7 +24,11 @@
       <label for="password">password</label>
       <input type="password" name="password">
     </fieldset>
-    
+
+
+    <input type="hidden" name="key" value="{{ getUUID }}">
+    <input type="hidden" name="color" value="{{ getRandomColor }}">
+
     {{#if account.admin}}
     <fieldset>
       <label for="admin">
