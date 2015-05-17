@@ -110,6 +110,7 @@ SENDGRID_PASS=yourpassword
 ### Start the server
 - Now run `npm start` to start the server.
 - In development you can watch the css & js using `npm run watch`.
+- In development you can debug runnig `npm run-script debug`. You add breakpoints in the code with `debugger`
 - Go to `http://127.0.0.1:3333` and log in with the admin account credentials.
 
 ### Create a sheet
