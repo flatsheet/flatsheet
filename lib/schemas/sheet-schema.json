@@ -9,6 +9,20 @@
     "title": {
       "type": "string",
       "description": "Human identifier for a Sheet"
+    },
+    "description": {
+      "type": "string",
+      "description": ""
+    },
+    "rows": {
+      "type": "array",
+      "description": "The data in the sheet",
+      "items": {
+        "type": "object",
+        "properties": {
+          
+        }
+      }
     }
   },
   "required": ["key", "sheet"]

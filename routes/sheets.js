@@ -22,7 +22,7 @@ module.exports = function (server, prefix) {
         var ctx = { account: account, sheets: list };
         return response().html(server.render('sheet-list', ctx)).pipe(res);
       };
-      
+
       if (account.admin) {
         server.sheets.list(renderSheets);
       } else {
@@ -129,7 +129,7 @@ module.exports = function (server, prefix) {
       server.sheets.get(opts.params.key, function (err, sheet) {
         if (err) console.error(err)
         if (permissions.sheetDestroyable(sheet, account)) {
-          server.sheets.destroy(opts.params.key, function (err) {
+          sheet.destroy(opts.params.key, function (err) {
             if (err) console.error(err);
             return redirect(res, '/')
           });

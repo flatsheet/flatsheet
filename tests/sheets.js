@@ -4,7 +4,7 @@ var each = require('each-async')
 var JSONStream = require('JSONStream')
 
 var db = level(__dirname + '/../tmp/sheets', { valueEncoding: 'json' })
-var sheets = require('../models/sheets')(db)
+var sheets = require('../lib/sheets')(db)
 
 test('create sheets', function (t) {
   var data = require('./data/sample.js')
@@ -282,6 +282,77 @@ test('get a row – sheet.getRow', function (t) {
         t.ok(row)
         t.ok(row.properties)
         t.end()
+      })
+    })
+  })
+})
+
+test('update a row', function (t) {
+  var data = {
+    name: 'update this',
+    description: 'a really great sheet',
+    project: 'health',
+    categories: ['healthy', 'food'],
+    websites: ['http://example.com'],
+    owners: { nutrionist: true },
+    editors: { eater: true },
+    private: false,
+    rows: [
+      { example: 'weeeee', wat: 'wooooo' },
+      { example: 'weeeee', wat: 'wooooo' },
+      { example: 'weeeee', wat: 'wooooo' }
+    ]
+  };
+
+  sheets.create(data, function (err, sheet) {
+    t.notOk(err)
+    t.ok(sheet)
+    sheet.rows(function (err, rows) {
+      t.notOk(err);
+      t.ok(rows);
+      sheet.getRow(rows[0].key, function (err, row) {
+        row.value.ok = 'cool'
+        sheet.updateRow(row.key, row, function (err, updated) {
+          t.notOk(err)
+          t.ok(updated)
+          t.equals(updated.value.ok, 'cool')
+          t.end()
+        })
+      })
+    })
+  })
+})
+
+test('delete a row', function (t) {
+  var data = {
+    name: 'delete this',
+    description: 'a really great sheet',
+    project: 'health',
+    categories: ['healthy', 'food'],
+    websites: ['http://example.com'],
+    owners: { nutrionist: true },
+    editors: { eater: true },
+    private: false,
+    rows: [
+      { example: 'weeeee', wat: 'wooooo' },
+      { example: 'weeeee', wat: 'wooooo' },
+      { example: 'weeeee', wat: 'wooooo' }
+    ]
+  };
+
+  sheets.create(data, function (err, sheet) {
+    t.notOk(err)
+    t.ok(sheet)
+    sheet.rows(function (err, rows) {
+      t.notOk(err);
+      t.ok(rows);
+      sheet.deleteRow(rows[0].key, function (err) {
+        t.notOk(err)
+        sheet.getRow(rows[0].key, function (err, row) {
+          t.ok(err)
+          t.notOk(row)
+          t.end()
+        })
       })
     })
   })

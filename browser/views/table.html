@@ -15,16 +15,16 @@
   </thead>
   <tbody id="table-body">
     {{# rows:i }}
-    <tr id="{{ i }}" decorator="sortable">
+    <tr id="{{ i }}">
       <button class="delete-row destroy"><i class="fa fa-trash-o destroy-icon"></i></button>
       <td class='row-label'>{{i+1}}</td>
-      {{# this:value }}
-      <td id="row-{{ i }}-column-{{ value }}">
-        <textarea value="{{ this }}" class="cell"></textarea>
+      {{# .value:key }}
+      <td data-keypath="{{ @keypath }}" id="row-{{ i }}-column-{{ key }}">
+        <textarea class="cell" value="{{ value[key] }}"></textarea>
         <a href="#" class="expand-editor"><i class="fa fa-edit"></i></a>
       </td>
-      {{/ . }}
+      {{/}}
     </tr>
-    {{/ rows }}
+    {{/}}
   </tbody>
 </table>

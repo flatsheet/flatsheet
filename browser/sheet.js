@@ -16,6 +16,8 @@ var siblings = require('siblings');
 var io = require('socket.io-client')();
 var View = require('ractive');
 var autoComplete = require('autocomplete-element');
+var flat = require('flat');
+var debounce = require('lodash.debounce')
 
 var flatsheet = require('flatsheet-api-client')({ 
   host: 'http://' + window.location.host
@@ -55,8 +57,17 @@ var remoteChange;
 
 io.on('change', function (change, rows, sort) {
   remoteChange = true;
+  console.log('remote change', change)
   if (sort) editor.forceUpdate(rows);
-  else editor.set(change);
+  else {
+    change.forEach(function (row) {
+      for (var key in row.value) {
+        var id = editor.getColumnID(key)
+        console.log(key, row.value[key])
+        editor.setCell(row.key, id, row.value[key]);
+      }
+    })
+  }
   remoteChange = false;
 });
 
@@ -110,9 +121,7 @@ var hello = document.getElementById('hello-message');
 
 /* request the sheet from the api */
 flatsheet.sheets.get(key, function (err, sheet) {
-  console.log(err, sheet, typeof sheet)
   if (typeof sheet === 'string') sheet = JSON.parse(sheet)
-  console.log(typeof sheet)
   elClass(hello).add('hidden');
   editor.import(sheet.rows);
   sheetDetails.set(sheet);
@@ -121,8 +130,36 @@ flatsheet.sheets.get(key, function (err, sheet) {
 /* listen for changes to the data and save the object to the db */
 editor.on('change', function (change) {
   if (remoteChange) return;
-  if (editor.data.rows) var rows = editor.getRows();
-  if (!sorting) io.emit('change', change, rows);
+
+  var obj = flat.unflatten(change)
+
+  if (obj.rows) {
+    var keys = Object.keys(obj.rows)
+    var columns = editor.get('columns')
+
+    var out = keys.map(function (key) {
+      if (obj.rows[key].value) {
+        var value = {}
+
+        for (var v in obj.rows[key].value) {
+          var header = editor.get('columns.' + v.substring(1))
+          value[header.name] = obj.rows[key].value[v]
+        }
+        console.log('key', key)
+        return { key: key, value: value }
+      }
+    })
+  }
+
+  if (obj.columns) {
+    console.log(obj.columns)
+    var out = editor.getRows();
+  }
+
+  if (out) {
+    if (editor.data.rows) var rows = editor.getRows();
+    if (!sorting) io.emit('change', out, rows);
+  }
 });
 
 var sorting;
@@ -134,7 +171,7 @@ editor.on('dragstart', function () {
 
 editor.on('drop', function () {
   var rows = editor.getRows();
-  io.emit('change', {}, rows, sorting);
+  io.emit('change', {}, sorting);
   sorting = false;
 });
 

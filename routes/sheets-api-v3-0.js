@@ -6,7 +6,7 @@ var Router = require('match-routes');
 var CSV = require('comma-separated-values');
 
 module.exports = function (server, prefix) {
-  var prefix = prefix || '/api/v2/';
+  var prefix = prefix || '/api/v3/';
   var permissions = require('../lib/permissions')(server);
   var router = Router();
 
@@ -134,19 +134,90 @@ module.exports = function (server, prefix) {
     }
   });
 
-  router.on(prefix + 'sheets/:key/csv', function (req, res, opts) {
-    permissions.authorize(req, res, function (err, account) {
+
+  router.on(prefix + 'sheets/:key/rows', function (req, res, opts) {
+    if (req.method === 'GET') {
       server.sheets.get(opts.params.key, function (err, sheet) {
-        
-        if (permissions.sheetAccessible(sheet, account)) {
-          var csv = new CSV(sheet.rows, {header:true}).encode()
-          return response().txt(csv).pipe(res)
+        if (sheet && !sheet.isPrivate()) {
+          return sheet.dat.createReadStream()
+            .pipe(JSONStream.stringify())
+            .pipe(res);
         }
 
-        return response.json({ message: 'Not found', statusCode: 404 }).status(404).pipe(res);
+        permissions.authorize(req, res, function (err, account) {
+          if (permissions.sheetAccessible(sheet, account)) {
+            return sheet.dat.createReadStream()
+              .pipe(JSONStream.stringify())
+              .pipe(res);
+          }
+          
+          return response.json({ message: 'Not found', statusCode: 404 }).status(404).pipe(res);
+        });
+      })
+    }
+
+    if (req.method === 'POST') {
+      
+    }
+  })
+
+  router.on(prefix + 'sheets/:key/rows/:rowkey', function (req, res, opts) {
+    if (req.method === 'GET') {
+      server.sheets.get(opts.params.key, function (err, sheet) {
+        if (err || !sheet) {
+          return response.json({ message: 'Sheet not found', statusCode: 404 }).status(404).pipe(res);
+        }
+
+        permissions.authorize(req, res, function (err, account) {
+          if (permissions.sheetAccessible(sheet, account)) {
+            sheet.getRow(opts.params.rowkey, function (err, row) {
+              if (err || !row) {
+                return response.json({ message: 'Row not found', statusCode: 404 }).status(404).pipe(res);
+              }
+              return response.json(row).pipe(res)
+            })
+          }
+        });
+      })
+    }
+
+    if (req.method === 'PUT') {
+      permissions.authorize(req, res, function (err, account) {
+        if (err) return response().json({ error: 'Unauthorized'}).status(401).pipe(res);
+
+        jsonBody(req, res, function (err, body) {
+          server.sheets.get(opts.params.key, function (err, sheet) {
+            sheet.updateRow(opts.params.rowkey, body, function (err, row) {
+              if (err || !sheet) {
+                var data = { message: 'Not found', statusCode: 404 };
+                return response.json(data).status(404).pipe(res);
+              }
+
+              return response.json(row).pipe(res)
+            });
+          });
+        });
       });
-    });
-  });
+    }
+
+    if (req.method === 'DELETE') {
+      permissions.authorize(req, res, function (err, account) {
+        if (err) return response().json({ error: 'Unauthorized'}).status(401).pipe(res);
+
+        server.sheets.get(opts.params.key, function (err, sheet) {
+          sheet.deleteRow(opts.params.rowkey, function (err) {
+            if (err) {
+              var data = { message: 'Server error', statusCode: 500 };
+              return response.json(data).status(500).pipe(res);
+            }
+
+            res.writeHead(204);
+            return res.end();
+          });
+        });
+      });
+    }
+  })
 
   return router;
 };
