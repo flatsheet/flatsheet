@@ -1,9 +1,0 @@
-{
-  "title": "Row",
-  "type": "object",
-  "properties": {},
-  "required": ["key"],
-  "definitions": {
-    "geometry": {}
-  }
-}

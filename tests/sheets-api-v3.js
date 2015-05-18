@@ -69,6 +69,21 @@ test('get rows of a sheet', function (t) {
   })
 })
 
+test('add a row to a sheet', function (t) {
+  flatsheet.sheets.list(function (err, list) {
+    flatsheet.sheets.rows(list[0].key, function (err, rows) {
+      var data = { ok: 'cool' }
+      flatsheet.sheets.addRow(list[0].key, data, function (err, row) {
+        console.log(err, row)
+        t.notOk(err)
+        t.ok(row)
+        console.log(row)
+        t.end()
+      })
+    })
+  })
+})
+
 test('get specific row of a sheet', function (t) {
   flatsheet.sheets.list(function (err, list) {
     flatsheet.sheets.rows(list[0].key, function (err, rows) {

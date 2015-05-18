@@ -19,7 +19,7 @@
       <button class="delete-row destroy"><i class="fa fa-trash-o destroy-icon"></i></button>
       <td class='row-label'>{{i+1}}</td>
       {{# .value:key }}
-      <td data-keypath="{{ @keypath }}" id="row-{{ i }}-column-{{ key }}">
+      <td id="row-{{ i }}-column-{{ key }}">
         <textarea class="cell" value="{{ value[key] }}"></textarea>
         <a href="#" class="expand-editor"><i class="fa fa-edit"></i></a>
       </td>

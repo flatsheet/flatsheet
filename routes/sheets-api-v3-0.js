@@ -157,7 +157,20 @@ module.exports = function (server, prefix) {
     }
 
     if (req.method === 'POST') {
-      
+      permissions.authorize(req, res, function (err, account) {
+        if (!account) return response().json({ error: 'Unauthorized'}).status(401).pipe(res);
+
+        jsonBody(req, res, function (err, body) {
+          server.sheets.get(opts.params.key, function (err, sheet) {
+            if (permissions.sheetAccessible(sheet, account)) {
+              sheet.addRow(body, function (err, row) {
+                if (err) return response().json({ error: 'Error'}).status(500).pipe(res);
+                return response().json(row).pipe(res)
+              })
+            }
+          });
+        });
+      });
     }
   })
 

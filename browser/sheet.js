@@ -57,13 +57,11 @@ var remoteChange;
 
 io.on('change', function (change, rows, sort) {
   remoteChange = true;
-  console.log('remote change', change)
   if (sort) editor.forceUpdate(rows);
   else {
     change.forEach(function (row) {
       for (var key in row.value) {
         var id = editor.getColumnID(key)
-        console.log(key, row.value[key])
         editor.setCell(row.key, id, row.value[key]);
       }
     })
@@ -145,14 +143,12 @@ editor.on('change', function (change) {
           var header = editor.get('columns.' + v.substring(1))
           value[header.name] = obj.rows[key].value[v]
         }
-        console.log('key', key)
         return { key: key, value: value }
       }
     })
   }
 
   if (obj.columns) {
-    console.log(obj.columns)
     var out = editor.getRows();
   }
 
