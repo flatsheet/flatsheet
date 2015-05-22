@@ -14,8 +14,80 @@ function Accounts (server) {
   }
   this.server = server;
   this.permissions = require('../lib/permissions')(server);
+  var validator = require('is-my-json-valid');
+  var validate = validator({
+    required: true,
+    type: 'object',
+    properties: {
+      login: {
+        required: false,
+        type: 'object',
+        properties: {
+          basic: {
+            required: true,
+            type: 'object',
+            properties: {
+              username: {
+                required: true,
+                type: 'string'
+              },
+              password: {
+                required: true,
+                type: 'string'
+              }
+            }
+          }
+
+        },
+      value: {
+        required: true,
+        type: 'object',
+        properties: {
+          key: {
+            required: true,
+            type: 'string'
+          },
+          admin: {
+            required: false,
+            type: 'boolean'
+          },
+          color: {
+            required: false,
+            type: 'string'
+          },
+          username: {
+            required: false,
+            type: 'string'
+          },
+          email: {
+            required: false,
+            type: 'string'
+          }
+        }
+      }
+
+      }
+    }
+  }, {
+    verbose: true
+  });
+  opts = {
+    validate: validate,
+    format: function (body) {
+      body.value.admin = !!(body.value.admin);
+      if (body.value.username && body.login) {
+        body.login.basic.username = body.value.username;
+      }
+      return body;
+    },
+    updateLoginCreds: function (account) {
+      return account.hasOwnProperty('login');
+      //return account.hasOwnProperty('login');
+      //return account.login.hasOwnProperty('basic');
+    }
+  };
   this.forms2accounts =
-    require('../lib/forms2accounts')(server.accountdown);
+    require('../lib/forms2accounts')(server.accountdown, opts);
   this.accountsIndexes = server.accountsIndexes;
 }
 
