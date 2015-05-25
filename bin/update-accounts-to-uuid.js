@@ -47,7 +47,7 @@ var migrateAccount = function (oldAccount, sendPasswordResetEmail) {
       var updatedAccount = {
         login: {
           basic: {
-            username: accountValue.username,
+            uuid: accountValue.key,
             password: self.secrets.PASSWORD
           }
         },
@@ -56,8 +56,8 @@ var migrateAccount = function (oldAccount, sendPasswordResetEmail) {
 
       flatsheet.accountdown.remove(oldAccount.key, function (err) {
         if (err) return console.log("err while deleting old account:", err);
+        console.log("updates:migrateAccount: account removed:", oldAccount.key);
         flatsheet.accountdown.create(newAccountKey, updatedAccount, function (err) {
-
           if (err) return console.log("err while putting in new account:", err);
           flatsheet.accountsIndexes.addIndexes(accountValue);
           sendPasswordResetEmail(updatedAccount);

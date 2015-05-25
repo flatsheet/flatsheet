@@ -27,7 +27,7 @@ function Accounts (server) {
             required: true,
             type: 'object',
             properties: {
-              username: {
+              uuid: {
                 required: true,
                 type: 'string'
               },
@@ -75,15 +75,13 @@ function Accounts (server) {
     validate: validate,
     format: function (body) {
       body.value.admin = !!(body.value.admin);
-      if (body.value.username && body.login) {
-        body.login.basic.username = body.value.username;
+      if (body.value.key && body.login) {
+        body.login.basic.uuid = body.value.key;
       }
       return body;
     },
     updateLoginCreds: function (account) {
       return account.hasOwnProperty('login');
-      //return account.hasOwnProperty('login');
-      //return account.login.hasOwnProperty('basic');
     }
   };
   this.forms2accounts =
@@ -172,7 +170,7 @@ Accounts.prototype.createAccount = function (req, res) {
 
   if (req.method === 'POST') {
     this.forms2accounts.create(req, res, function (err, account) {
-      if (err) return console.log(err);
+      if (err) return console.log("Accounts.createAccount: error creating account:", err);
       self.accountsIndexes.addIndexes(account, function () {
         res.writeHead(302, {'Location': '/'});
         return res.end();
@@ -386,10 +384,7 @@ Accounts.prototype.acceptInvite = function (req, res, opts) {
     self.forms2accounts.create(req, res, function (err, account) {
       //todo: notification of error on page
       if (err) return console.error(err);
-
-      console.log("Account.acceptInvite: account created:", account);
       self.accountsIndexes.addIndexes(account);
-
       self.server.auth.login(res, {key: account.key}, function (loginerr, data) {
         if (loginerr) console.error(loginerr);
 

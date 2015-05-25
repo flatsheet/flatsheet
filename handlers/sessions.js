@@ -19,15 +19,21 @@ Sessions.prototype.createSession = function (req, res) {
       body.usernameOrEmail = body.usernameOrEmail.trim();
       // Check whether the provided credential is username or email,
       // then verify it by logging in
-      var creds = {username: undefined, password: body.password};
-      if (body.usernameOrEmail.indexOf('@') < 0) {
-        creds.username = body.usernameOrEmail;
-        return self.verifyCredentials(res, creds);
+      var creds = {uuid: undefined, password: body.password};
+      if (body.usernameOrEmail.indexOf('@') < 0) { // username was entered
+        // Get uuid from username
+        self.accountsIndexes.getKeyFromUsername(body.usernameOrEmail, function (err, account) {
+          if (err || !account) return console.log("Sessions.createSession: error retrieving " +
+            "account from username, err:", err);
+          creds.uuid = account.key;
+          return self.verifyCredentials(res, creds);
+        });
       } else { // email was entered
+        // Get uuid from email
         self.accountsIndexes.getKeyFromEmail(body.usernameOrEmail, function (err, account) {
           if (err || !account) return console.log("Sessions.createSession: error retrieving " +
-          "account from key, err:", key);
-          creds.username = account.username;
+          "account from email, err:", err);
+          creds.uuid = account.key;
           return self.verifyCredentials(res, creds);
         });
       }
@@ -45,7 +51,6 @@ Sessions.prototype.destroySession = function (req, res) {
     redirect(res, '/');
   });
 }
-
 
 Sessions.prototype.verifyCredentials = function (res, creds) {
   var self = this;
