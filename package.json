@@ -35,7 +35,7 @@
   "dependencies": {
     "JSONStream": "^0.9.0",
     "accountdown": "^4.0.0",
-    "accountdown-basic": "^1.0.0",
+    "accountdown-basic": "https://github.com/LukeSwart/accountdown-basic/tarball/3fb2fa6995d071c712e30ea71926f1d2b0b7a3a5",
     "autocomplete-element": "^1.0.7",
     "body": "^4.5.0",
     "busboy": "^0.2.9",
