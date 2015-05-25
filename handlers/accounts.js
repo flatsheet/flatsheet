@@ -85,7 +85,7 @@ function Accounts (server) {
     }
   };
   this.forms2accounts =
-    require('../lib/forms2accounts')(server.accountdown, opts);
+    require('accountdown-parser')(server.accountdown, opts);
   this.accountsIndexes = server.accountsIndexes;
 }
 
