@@ -62,7 +62,11 @@ function accounts () {
 
       flatsheet.accountdown.create(opts.value.key, opts, function (err) {
         if (err) console.error(err);
-        flatsheet.db.close()
+        flatsheet.accountdown.get(opts.value.key, function (err, res) {
+          flatsheet.accountsIndexes.addIndexes(res, function () {
+            flatsheet.db.close();
+          });
+        });
       });
     });
 
