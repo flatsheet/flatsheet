@@ -180,13 +180,16 @@ on(document.body, '#settings', 'click', function (e) {
 
   var sheet = sheetDetails.get();
 
-  // Get an array of all accounts in the site
+  // Get an array of all (filtered) accounts objects in the site
   flatsheet.accounts.list(function (err, accounts) {
+    if (err) return console.log("sheet.settings: err:", err);
     // Create an associative array to easily access account data
-    var accountsDict = accounts.reduce(function(newObject, account) {
-      newObject[account.username] = account;
-      return newObject;
-    }, {});
+    var len = accounts.length;
+    var accountsDict = {};
+    for (var i = 0; i < len; i++) {
+      var account = accounts[i];
+      accountsDict[account.key] = account;
+    }
 
     // Ensures that all sheet users listed are valid accounts,
     // removes accounts that have been deleted.
@@ -202,14 +205,14 @@ on(document.body, '#settings', 'click', function (e) {
         delete sheet.owners[account];
       }
     }
-    // TODO: Have the sheet already hold the color information (to show colors on edit)
-    function appendProperties(username) {
-      return {username: username, color: accountsDict[username].color};
+
+    function appendProperties(key) {
+      return {key: key, username: accountsDict[key].username, color: accountsDict[key].color};
     }
 
     var owners = Object.keys(sheet.owners).map(appendProperties);
     var editors = Object.keys(sheet.editors).map(appendProperties);
-    var sheetInfo = { 
+    var sheetInfo = {
       key: sheet.key, 
       name: sheet.name, 
       description: 
@@ -220,7 +223,7 @@ on(document.body, '#settings', 'click', function (e) {
       websites: sheet.websites.join('\n')
     };
 
-    var isOwner = (user.admin || (user.username in sheet.owners));
+    var isOwner = (user.admin || (user.key in sheet.owners));
 
     var modal = templates.modal({
       content: templates.settings({sheet: sheetInfo, account: {owner: isOwner}})
@@ -229,25 +232,24 @@ on(document.body, '#settings', 'click', function (e) {
     dom.add(document.body, domify(modal));
 
     // convert accounts array to an array of account usernames (currently usernames are used as keys)
-    var suggestedSheetUsers = accounts.filter(sheetUsersFilter).map(function(account) {return account.username});
-    
-    function sheetUsersFilter (account) {
-      return !(account.username in sheet.editors);
+    var suggestedEditors = accounts.filter(editorsFilter).map(function(account) {return account.username});
+    function editorsFilter (account) {
+      return !(account.key in sheet.editors);
     }
-    
+
     // convert accounts array to an array of account usernames (currently usernames are used as keys)
-    var suggestedSheetOwners = accounts.filter(sheetOwnersFilter).map(function(account) {return account.username});
+    var suggestedOwners = accounts.filter(sheetOwnersFilter).map(function(account) {return account.username});
     function sheetOwnersFilter (account) {
-      return !(account.username in sheet.owners);
+      return !(account.key in sheet.owners);
     }
 
     // AUTO-COMPLETE feature
     var enteredSheetUserText = document.querySelector('#autofill-sheet-users');
-    function toLowerCase (s) { console.log("testing with lowercase:"); console.log(s); return s.toLowerCase() }
+    function toLowerCase (s) { return s.toLowerCase() }
 
     autoComplete(enteredSheetUserText, function (completionElement) {
       if (!enteredSheetUserText.value.length) return completionElement.suggest([]);
-      var matches = suggestedSheetUsers.filter(function (username) {
+      var matches = suggestedEditors.filter(function (username) {
         return toLowerCase(username.slice(0, enteredSheetUserText.value.length)) === toLowerCase(enteredSheetUserText.value);
       });
       completionElement.suggest(matches);
@@ -258,7 +260,7 @@ on(document.body, '#settings', 'click', function (e) {
     if (isOwner) {
       autoComplete(enteredSheetOwnerText, function (completionElement) {
         if (!enteredSheetOwnerText.value.length) return completionElement.suggest([]);
-        var matches = suggestedSheetOwners.filter(function (username) {
+        var matches = suggestedOwners.filter(function (username) {
           return toLowerCase(username.slice(0, enteredSheetOwnerText.value.length)) === toLowerCase(enteredSheetOwnerText.value);
         });
         completionElement.suggest(matches);
@@ -280,17 +282,17 @@ on(document.body, '.delete-sheet-permission', 'click', function (e) {
     console.log("the target element has no destroy icon");
   }
 
-  var array = btn.id.split("-"),// button id's: 'testusername-user` and 'testusername-owner'
-    username = array[0], changeType = array[1];
+  var array = btn.id.split("_"),// button id's: 'testusername-key-user` and 'testusername-key-owner'
+    username = array[0], key = array[1], changeType = array[2];
   var msg = 'Sure you want to revoke permissions for the user ' + username + '?';
 
   if (window.confirm(msg)) {
     var sheet = sheetDetails.get();
     if (changeType === 'user') {
-      delete sheet.editors[username];
+      delete sheet.editors[key];
       sheetDetails.set('editors', sheet.editors);
     } else if (changeType === 'owner') {
-      delete sheet.owners[username];
+      delete sheet.owners[key];
       sheetDetails.set('owners', sheet.owners);
     } else {
       console.log("invalid type revoked:");

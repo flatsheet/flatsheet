@@ -22,7 +22,7 @@ module.exports = function (server, prefix) {
   /*
   *  Create an admin account (admin only)
   */
-  router.on(prefix + '/create-admin', handler.createAdminAccount.bind(handler));
+  router.on(prefix + '/create-admin', handler.createAccountAsAdmin.bind(handler));
 
   /*
   *  Create an account
@@ -32,12 +32,22 @@ module.exports = function (server, prefix) {
   /*
   * Delete an account (admin only)
   */
-  router.on(prefix + '/delete/:username', handler.deleteAccount.bind(handler));
+  router.on(prefix + '/delete/:key', handler.deleteAccount.bind(handler));
 
   /*
   * Update an account
   */
-  router.on(prefix + '/update/:username', handler.updateAccount.bind(handler));
+  router.on(prefix + '/update/:key', handler.updateAccount.bind(handler));
+
+  /*
+   * Reset password
+   */
+  router.on(prefix + '/reset/:key', handler.passwordReset.bind(handler));
+
+  /*
+   * Accept reset password email
+   */
+  router.on(prefix + '/acceptReset', handler.passwordAcceptReset.bind(handler));
 
   /*
   * Invite users to create accounts

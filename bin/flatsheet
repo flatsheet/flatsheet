@@ -11,6 +11,7 @@ var accountdown = require('accountdown');
 var randomColor = require('random-color');
 var through = require('through2');
 var prompt = require('prompt');
+var uuid = require('uuid').v1;
 prompt.message = 'account';
 
 var argv = minimist(process.argv.slice(2));
@@ -39,16 +40,19 @@ function accounts () {
     ];
 
     prompt.start();
+    var key = uuid();
     prompt.get(properties, function (err, result) {
+
 
       var opts = {
         login: {
           basic: {
-            username: result.username,
+            uuid: key,
             password: result.password
           }
         },
         value: {
+          key: key,
           admin: true,
           email: result.email,
           username: result.username,
@@ -56,9 +60,13 @@ function accounts () {
         }
       };
 
-      flatsheet.accountdown.create(result.username, opts, function (err) {
+      flatsheet.accountdown.create(opts.value.key, opts, function (err) {
         if (err) console.error(err);
-        flatsheet.db.close()
+        flatsheet.accountdown.get(opts.value.key, function (err, res) {
+          flatsheet.accountsIndexes.addIndexes(res, function () {
+            flatsheet.db.close();
+          });
+        });
       });
     });
 
@@ -76,7 +84,7 @@ function accounts () {
     function write (account, enc, next) {
       flatsheet.accountdown.remove(account.key, function (err) {
         if (err) return console.error('something went wrong');
-        console.log(account.key + ' removed');
+        console.log(account.key, ' removed');
         next();
       });
     }

@@ -8,7 +8,7 @@ module.exports = function (server, prefix) {
   router.on('/', function (req, res, options) {
     server.getAccountBySession(req, function (err, account, session) {
       if (account) return redirect(res, '/sheets');
-      var html = server.render('index', { account: account });
+      var html = server.render('signin', { account: account });
       response().html(html).pipe(res);
     });
   })

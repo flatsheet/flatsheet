@@ -19,7 +19,11 @@
       <label for="password">password</label>
       <input type="password" name="password">
     </fieldset>
-    
+
+    <input type="hidden" name="key" value="{{ getUUID }}">
+    <input type="hidden" name="color" value="{{ getRandomColor }}">
+    <!-- Admin input field NOT included because invited users are NOT admins by default-->
+
     <div class="actions">
       <input type="submit" value="Create your account">
     </div>

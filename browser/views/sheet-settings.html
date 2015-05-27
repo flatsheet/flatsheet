@@ -30,7 +30,7 @@
     <li style="color:{{ this.color }}">
       <i class="fa fa-square"></i>
       {{ this.username }}
-      <button type="button" id="{{ this.username }}-owner" class="destroy settings delete-sheet-permission"><i class="fa fa-times destroy-icon"></i></button>
+      <button type="button" id="{{ this.username }}_{{ this.key }}_owner" class="destroy settings delete-sheet-permission"><i class="fa fa-times destroy-icon"></i></button>
     </li><br>
     {{/each}}
     </span>
@@ -48,7 +48,7 @@
     <li style="color:{{ this.color }}">
       <i class="fa fa-square"></i>
       {{ this.username }}
-      <button type="button" id="{{ this.username }}-user" class="destroy settings delete-sheet-permission"><i class="fa fa-times destroy-icon"></i></button>
+      <button type="button" id="{{ this.username }}_{{ this.key }}_user" class="destroy settings delete-sheet-permission"><i class="fa fa-times destroy-icon"></i></button>
     </li><br>
     {{/each}}
     </span>
@@ -56,7 +56,7 @@
 
     <fieldset>
       <label>Add username to sheet editors:</label>
-      <input type="name" name="new-user-permission" id="autofill-sheet-users"><br><br>
+      <input type="name" name="new-editor-permission" id="autofill-sheet-users"><br><br>
     </fieldset>
 
     <fieldset>
