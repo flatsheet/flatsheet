@@ -18,9 +18,7 @@ var argv = minimist(process.argv.slice(2));
 var cmd = argv._[0];
 var sub = argv._[1];
 
-var flatsheet = require('../lib/index')({
-  db: process.cwd() + '/data'
-}, ready);
+var flatsheet = require('../lib/index')({}, ready);
 
 function ready () {
   if (cmd === 'accounts') return accounts();

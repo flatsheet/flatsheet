@@ -12,9 +12,9 @@ var UUID_REGEX = /^([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-
  * Be sure to have the variable PASSWORD set in your .env file
  * (probably shouldn't check in the literal 'unguessable" password into version control)
  */
-var flatsheet = require('../lib/index')({
-  db: process.cwd() + '/data'
-}, ready);
+var config = JSON.parse(fs.readFileSync('config.js', 'utf8'));
+
+var flatsheet = require('../lib/index.js')(config, ready);
 
 function ready () {
 
