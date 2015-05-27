@@ -5,6 +5,7 @@ var formBody = require('body/form');
 var Busboy = require('busboy');
 var csv = require('csv-parser');
 var Router = require('match-routes');
+var each = require('each-async')
 
 var redirect = require('../lib/redirect');
 
@@ -138,6 +139,64 @@ module.exports = function (server, prefix) {
     });
   });
 
+  /*
+   * Sheet update helper functions
+   */
+  // helper functions to determine whether the sheet's attribute needs to be updated
+  var isEmpty = function (attribute, body, sheet) {
+    return body[attribute] !== '';
+  }
+  var isChanged = function (attribute, body, sheet) {
+    return body[attribute] !== sheet[attribute];
+  }
+  var isBooleanChanged = function (attribute, body, sheet) {
+    return !!body[attribute] !== sheet[attribute];
+  }
+  // helper functions to perform the sheet attribute update
+  var setPermissionsAttribute = function (attribute, body, data, done, opts) {
+    var username = body[attribute];
+    server.accountsIndexes.getKeyFromUsername(username, function (err, account) {
+      // TODO: return flash message if username is invalid or already has permission
+      if (err) return console.log("sheets.update: Invalid username:", err);
+      data[opts.permission][account.key] = true;
+      done();
+    })
+  }
+  var setEditor = function (attribute, body, data, done) {
+    setPermissionsAttribute(attribute, body, data, done, { permission: 'editors' });
+  }
+  var setOwner = function (attribute, body, data, done) {
+    setPermissionsAttribute(attribute, body, data, done, { permission: 'owners' });
+  }
+  var setAttribute = function (attribute, body, data, done) {
+    data[attribute] = body[attribute];
+    done();
+  }
+  var setBooleanAttribute = function (attribute, body, data, done) {
+    data[attribute] = !!body[attribute];
+    done();
+  }
+
+  // Returns an object with two functions: bodyNeedsUpdating and updateBody
+  // Allows control over asynchronous processing
+  var sheetAttributesSettings = {
+    'new-editor-permission': {
+      bodyNeedsUpdating: isEmpty,
+      updateBody: setEditor
+    }, 'new-owner-permission': {
+      bodyNeedsUpdating: isEmpty,
+      updateBody: setOwner
+    }, description: {
+      bodyNeedsUpdating: isChanged,
+      updateBody: setAttribute
+    }, name: {
+      bodyNeedsUpdating: isChanged,
+      updateBody: setAttribute
+    }, 'private': {
+      bodyNeedsUpdating: isBooleanChanged,
+      updateBody: setBooleanAttribute
+    }
+  }
 
   router.on(prefix + '/update/:key', function (req, res, opts) {
     permissions.authorize(req, res, function (err, account, session) {
@@ -149,36 +208,29 @@ module.exports = function (server, prefix) {
 
         if (permissions.sheetEditable(sheet, account)) {
           formBody(req, res, function (err, body) {
+            if (err) return console.log("Sheet.update: err on formbody parse:", err);
             var data = sheet;
-            if (body['new-user-permission'] !== '') {
-              // TODO: Check whether the new name permission is a duplicate or a valid username
-              data.editors[body['new-user-permission']] = true;
-            }
-            if (body['new-owner-permission'] !== '') {
-              // TODO: Check whether the new name permission is a duplicate or a valid username
-              data.owners[body['new-owner-permission']] = true;
-            }
-            if (body['description'] !== sheet.description) {
-              data.description = body['description'];
-            }
-            if (body['name'] !== sheet.name) {
-              data.name = body['name'];
-            }
-            if (!!body['private'] !== sheet.private) {
-              data.private = !!body['private'];
-            }
-
-            data.websites = body.websites.split(/\n\s*/g).map(function (url) {
-              if(!/^((http|https):\/\/)/.test(url)) {
-                  url = "http://" + url;
+            each(Object.keys(sheetAttributesSettings), function(attribute, _, done) {
+              if (sheetAttributesSettings[attribute]['bodyNeedsUpdating'](attribute, body, sheet)) {
+                sheetAttributesSettings[attribute]['updateBody'](attribute, body, data, done);
+              } else {
+                done();
               }
-              return url.replace(/\r/g, '');
-            })
+            }, function(err) {
+              if (err) console.log("sheets.update: Error while setting attributes:", err);
 
-            server.sheets.update(opts.params.key, data, function(err) {
-              if (err) console.log(err);
-              return redirect(res, '/sheets/edit/' + opts.params.key)
-            });
+              data.websites = body.websites.split(/\n\s*/g).map(function (url) {
+                if(!/^((http|https):\/\/)/.test(url)) {
+                  url = "http://" + url;
+                }
+                return url.replace(/\r/g, '');
+              })
+
+              server.sheets.update(opts.params.key, data, function(err) {
+                if (err) console.log(err);
+                return redirect(res, '/sheets/edit/' + opts.params.key)
+              });
+            })
           });
         }
       });
@@ -186,7 +238,7 @@ module.exports = function (server, prefix) {
   });
 
   /*
-  * backwards campatibility for old sheet route
+  * backwards compatibility for old sheet route
   */
   router.on(prefix + '/:key', function (req, res, opts) {
     return redirect(res, prefix + '/edit/' + opts.params.key)

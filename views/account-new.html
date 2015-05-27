@@ -12,23 +12,26 @@
   
     <fieldset>
       <label for="email">email</label>
-      <input type="email" name="email">
+      <input type="email" name="value[email]">
     </fieldset>
     
     <fieldset>
       <label for="username">username</label>
-      <input type="text" name="username">
+      <input type="text" name="value[username]">
     </fieldset>
     
     <fieldset>
       <label for="password">password</label>
-      <input type="password" name="password">
+      <input type="password" name="login[basic][password]">
     </fieldset>
-    
+
+    <input type="hidden" name="value[key]" value="{{ getUUID }}">
+    <input type="hidden" name="value[color]" value="{{ getRandomColor }}">
+
     {{#if account.admin}}
     <fieldset>
       <label for="admin">
-        <input type="checkbox" name="admin" value=true>
+        <input type="checkbox" name="value[admin]" value=checked>
         admin
       </label>
     </fieldset>
