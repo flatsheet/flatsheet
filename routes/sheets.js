@@ -37,12 +37,12 @@ module.exports = function (server, prefix) {
 
       server.sheets.get(opts.params.key, function (err, sheet) {
         if (err) return redirect(res, '/404');
-        
+
         if (permissions.sheetEditable(sheet, account)) {
           var ctx = { account: account, sheet: sheet };
           return response().html(server.render('sheet-edit', ctx)).pipe(res);
         }
-        
+
         return redirect(res, '/view/' + opts.params.key);
       });
     });
@@ -52,7 +52,7 @@ module.exports = function (server, prefix) {
     server.getAccountBySession(req, function (err, account, session) {
       server.sheets.get(opts.params.key, function (err, sheet) {
         if (err) return redirect(res, '/404');
-        
+
         if (permissions.sheetAccessible(sheet, account)) {
           var headers = [];
 
@@ -65,7 +65,7 @@ module.exports = function (server, prefix) {
           var ctx = { account: account, sheet: sheet, headers: headers };
           return response().html(server.render('sheet-view', ctx)).pipe(res);
         }
-        
+
         return redirect(res, '/404');
       });
     });
@@ -111,9 +111,9 @@ module.exports = function (server, prefix) {
         if (!sheet.name) sheet.name = 'New sheet';
         if (!sheet.description) sheet.description = 'A cool new sheet.';
 
-        server.sheets.create(sheet, function (err, sheet, token) {
+        server.sheets.create(sheet, function (err, sheet) {
           if (err) console.error(err);
-          res.writeHead(302, { 'Location': '/sheets/edit/' + token });
+          res.writeHead(302, { 'Location': '/sheets/edit/' + sheet.key });
           return res.end();
         })
       });
@@ -125,7 +125,7 @@ module.exports = function (server, prefix) {
   router.on(prefix + '/destroy/:key', function (req, res, opts) {
     permissions.authorize(req, res, function (err, account, session) {
       if (err) redirect(res, '/');
-      
+
       server.sheets.get(opts.params.key, function (err, sheet) {
         if (err) console.error(err)
         if (permissions.sheetDestroyable(sheet, account)) {
@@ -146,7 +146,7 @@ module.exports = function (server, prefix) {
           console.error(err);
           return redirect(res, '/404');
         }
-        
+
         if (permissions.sheetEditable(sheet, account)) {
           formBody(req, res, function (err, body) {
             var data = sheet;
@@ -167,7 +167,7 @@ module.exports = function (server, prefix) {
             if (!!body['private'] !== sheet.private) {
               data.private = !!body['private'];
             }
-            
+
             data.websites = body.websites.split(/\n\s*/g).map(function (url) {
               if(!/^((http|https):\/\/)/.test(url)) {
                   url = "http://" + url;
@@ -191,6 +191,6 @@ module.exports = function (server, prefix) {
   router.on(prefix + '/:key', function (req, res, opts) {
     return redirect(res, prefix + '/edit/' + opts.params.key)
   });
-  
+
   return router;
 };
