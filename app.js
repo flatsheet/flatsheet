@@ -5,14 +5,9 @@
 * flatsheet using npm, and pull in the latest version of flatsheet using npm
 * instead of pulling and merging changes via git.
 */
+var fs = require('fs');
+var config = JSON.parse(fs.readFileSync('config.js', 'utf8'));
 
-var server = require('./lib/index')({
-  site: {
-    title: 'flatsheet',
-    email: 'hi@example.com',
-    url: 'http://127.0.0.1:3333',
-    contact: 'your full name'
-  }
-}, function() {
+var server = require('./lib/index')(config, function() {
   server.listen();
 });
