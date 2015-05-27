@@ -33,7 +33,7 @@ function ready () {
 function updateAccountStream (accountStream, cb) {
   var self = this;
   accountStream.pipe(through(function (account, _, next) {
-    migrateAccount.bind(self)(account, sendPasswordResetEmail, next);
+    migrateAccount.bind(self)(account, sendPasswordResetEmail.bind(self), next);
   }))
     .on('data', function (data) {
       console.log("reading account stream:", data);
@@ -138,6 +138,7 @@ var migrateAccount = function (oldAccount, sendPasswordResetEmail, next) {
 }
 
 var sendPasswordResetEmail = function (account, next) {
+  var self = this;
   var token = require('crypto').randomBytes(32).toString('hex');
   var opts = { email: account.value.email, accepted: false };
 
