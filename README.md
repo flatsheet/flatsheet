@@ -47,7 +47,6 @@ This is a good option for when you're using flatsheet in production, because you
 - Change directory `cd flatsheet`
 - Create a package.json file with `npm init`
 - Install flatsheet with npm: `npm install flatsheet --save`
-- Install the response module: `npm install response --save`
 
 ### File/folder setup
 - Create a folder named `data`: `mkdir data`
