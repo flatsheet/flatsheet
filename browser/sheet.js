@@ -2,14 +2,16 @@ var fs = require('fs')
 var url = require('url')
 var through = require('through2')
 var debounce = require('lodash.debounce')
+var extend = require('extend')
 var on = require('dom-event')
+var dataSchema = require('data-schema')
 
 var grid = require('data-grid')({
   appendTo: document.getElementById('main-content'),
   height: window.innerHeight - 100
 })
 
-var flatsheet = require('flatsheet-api-client')({ 
+window.flatsheet = require('flatsheet-api-client')({ 
   host: window.location.origin
 })
 
@@ -29,6 +31,7 @@ var render = debounce(grid.render.bind(grid), 100)
 flatsheet.sheets.get(key, getSheet)
 
 function getSheet (err, sheet) {
+  var schema = dataSchema(sheet.schema)
   var rows = sheet.rows
   var length = rows.length
   var i = 0
@@ -37,7 +40,7 @@ function getSheet (err, sheet) {
     model.write(rows[i])
   }
 
-  createEventListeners(sheet.schema.properties.rows.items.properties)
+  createEventListeners(sheet, schema)
 }
 
 grid.on('input', function (e, property, row) {
@@ -46,19 +49,45 @@ grid.on('input', function (e, property, row) {
   })
 })
 
-
-function createEventListeners (properties) {
+function createEventListeners (sheet, schema) {
   on(document.getElementById('add-row'), 'click', function (e) {
-    var row = {}
-    
-    for (var prop in properties) {
-      row[prop] = properties[prop]
-    }
-    console.log(row, properties)
+    addRow(sheet, schema)
+  })
 
-    flatsheet.sheets.addRow(row, function (err, res) {
-      console.log(err, res)
-      model.write(res)
+  on(document.getElementById('add-column'), 'click', function (e) {
+    var property = schema.create({
+      name: 'weee a column'
     })
+    var name = prompt('new column name')
+    addColumn(property, sheet, schema)
+  })
+}
+
+
+function addRow (sheet, schema) {
+  var row = schema.row()
+
+  flatsheet.sheets.addRow(sheet.key, row, function (err, res) {
+    model.write(res)
+  })
+}
+
+function addColumn (property, sheet, schema) {
+  var length = all.length
+  var i = 0
+
+  if (length > 0) {
+    for (i; i<=length; i++) {
+      all[i].value = extend(all[i].value, schema.row())
+    }
+  }
+
+  else {
+    addRow(sheet, schema)
+  }
+
+  sheet.schema = schema.schema
+  flatsheet.sheets.update(sheet, function (err, res) {
+    console.log(err, res)
   })
 }

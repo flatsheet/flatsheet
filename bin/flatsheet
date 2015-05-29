@@ -3,7 +3,7 @@
 var Sheets = require('../lib/sheets');
 
 var fs = require('fs');
-var level = require('level-party');
+var level = require('level');
 var sublevel = require('subleveldown');
 var minimist = require('minimist');
 var JSONStream = require('JSONStream');
@@ -122,7 +122,7 @@ function sheets () {
       });
     });
   }
-  
+
   if (sub === 'delete-all') {
     flatsheet.sheets.list({ keys:true, values:true }, function (err, results) {
       results.forEach(function (sheet) {

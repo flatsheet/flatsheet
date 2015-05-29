@@ -64,7 +64,7 @@ module.exports = function (server, prefix) {
 
 
   router.on(prefix + 'sheets/:key', function (req, res, opts) {
-
+    console.log('happening', req.method, req.url)
     /*
      *  Get individual sheet
      */
@@ -136,6 +136,7 @@ module.exports = function (server, prefix) {
 
 
   router.on(prefix + 'sheets/:key/rows', function (req, res, opts) {
+    console.log('happening', req.method, req.url)
     if (req.method === 'GET') {
       server.sheets.get(opts.params.key, function (err, sheet) {
         if (sheet && !sheet.isPrivate()) {
@@ -168,9 +169,9 @@ module.exports = function (server, prefix) {
                 return response().json(row).pipe(res)
               })
             }
-          });
-        });
-      });
+          })
+        })
+      })
     }
   })
 
