@@ -2,6 +2,8 @@
   "name": "flatsheet",
   "description": "a multi-user, realtime editor for tabular data",
   "version": "0.10.0",
+  "license": "MIT",
+  "homepage": "http://flatsheet.io/",
   "repository": {
     "url": "git://github.com/flatsheet/flatsheet.git"
   },
