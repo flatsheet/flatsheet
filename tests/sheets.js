@@ -7,7 +7,7 @@ var db = level(__dirname + '/../tmp/sheets', { valueEncoding: 'json' })
 var sheets = require('../models/sheets')(db)
 
 test('create sheets', function (t) {
-  var data = require('./data/sample.js')
+  var data = require('./data/sheets.js')
   each(data, iterator, end)
 
   function iterator (sheet, i, done) {
