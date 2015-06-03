@@ -2,7 +2,7 @@ var level = require('level')
 var each = require('each-async')
 
 var db = level(__dirname + '/../data/db', { valueEncoding: 'json' })
-var sheets = require('../lib/sheets')(db)
+var sheets = require('../models/sheets')(db)
 
 /*
 * updates sheets to match expected data changes:

@@ -4,7 +4,7 @@ var each = require('each-async')
 var JSONStream = require('JSONStream')
 
 var db = level(__dirname + '/../tmp/sheets', { valueEncoding: 'json' })
-var sheets = require('../lib/sheets')(db)
+var sheets = require('../models/sheets')(db)
 
 test('create sheets', function (t) {
   var data = require('./data/sample.js')
@@ -129,21 +129,18 @@ test('sheet.rows', function (t) {
 test('sheet.addRows', function (t) {
   sheets.list(function (err, list) {
     sheets.get(list[0].key, function (err, sheet) {
-            
       var rows = [
         {weee: 'a', ok: 'a'},
         {weee: 'b', ok: 'b'},
         {weee: 'c', ok: 'c'}
-      ];
+      ]
+
       sheet.rows(function (err, allRows) {
-        console.log(allRows)
-      sheet.addRows(rows, function () {
-        sheet.rows(function (err, allRows) {
-          console.log(allRows)
-          t.ok(allRows)
-          t.end()
+        sheet.addRows(rows, function () {
+          sheet.rows(function (err, allRows) {
+            t.end()
+          })
         })
-      })
       })
     })
   })
