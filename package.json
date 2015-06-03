@@ -69,6 +69,7 @@
     "handlebars": "~2.0",
     "handlebars-layouts": "^0.3.3",
     "inherits": "^2.0.1",
+    "is-email": "^0.1.1",
     "is-my-json-valid": "^2.12.0",
     "isarray": "0.0.1",
     "json-format-stream": "^1.1.0",
