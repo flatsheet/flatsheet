@@ -11,7 +11,8 @@
   "main": "lib/index.js",
   "scripts": {
     "flatsheet": "./bin/flatsheet",
-    "test": "tape test.js",
+    "pretest": "node pretest",
+    "test": "tape 'tests/**/*.js'",
     "bundle-css": "rework-npm browser/style.css | myth | cleancss -o public/style.css",
     "watch-css": "gazer -p 'browser/style.css' 'rework-npm browser/style.css | myth > public/style.css'",
     "watch-sheet-edit": "watchify -d browser/sheet.js -o public/sheet.js -g brfs",
