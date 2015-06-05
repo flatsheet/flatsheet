@@ -4,10 +4,7 @@ var each = require('each-async')
 var accountdown = require('accountdown')
 var sublevel = require('subleveldown')
 
-var db = level('test', { 
-  db: require('memdown'),
-  valueEncoding: 'json'
-})
+var db = level('test', { db: require('memdown') })
 
 function accountdownBasic (db, prefix) {
   return require('accountdown-basic')(db, prefix, { key: 'key' })
@@ -37,7 +34,7 @@ test('create accounts', function (t) {
 })
 
 test('find account by username', function (t) {
-  accounts.find('pizza', function (err, account) {
+  accounts.findOne('pizza', function (err, account) {
     t.ok(account)
     t.equals(account.username, 'pizza')
     t.end()
@@ -45,7 +42,7 @@ test('find account by username', function (t) {
 })
 
 test('find account by email', function (t) {
-  accounts.find('poop@example.com', function (err, account) {
+  accounts.findOne('poop@example.com', function (err, account) {
     t.ok(account)
     t.equals(account.email, 'poop@example.com')
     t.end()

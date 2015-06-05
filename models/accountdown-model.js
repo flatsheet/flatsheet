@@ -230,7 +230,7 @@ AccountdownModel.prototype.createReadStream = function (options) {
   return this.accountdown.list(options)
 }
 
-AccountdownModel.prototype.find =function (identifier, callback) {
+AccountdownModel.prototype.findOne =function (identifier, callback) {
   if (isEmail(identifier)) return this.getKeyFromEmail(identifier, callback)
   return this.getKeyFromUsername(identifier, callback)
 }
