@@ -74,18 +74,13 @@ function AccountdownModel (accountdown, options) {
         properties: {
           basic: {
             type: 'object',
-            properties: {
-              key: { type: 'string' },
-              password: { type: 'string' }
-            }
+            properties: { key: { type: 'string' }, password: { type: 'string' } }
           }
         }
       },
       value: { type: 'object' }
     }
   })
-
-  this.indexes = {}
 
   function map (key, callback) {
     self.get(key, function (err, val) {
@@ -99,9 +94,10 @@ function AccountdownModel (accountdown, options) {
     values: true,
     map: map
   })
-
+  
   this.indexDB = sublevel(options.db, this.modelName + '-index')
   this.indexer = indexer(this.indexDB, indexOptions)
+  console.log(this.indexer)
 }
 
 AccountdownModel.prototype.verify = function (type, creds, callback) {
@@ -215,7 +211,7 @@ AccountdownModel.prototype.remove = function (key, callback) {
   })
 }
 
-AccountdownModel.prototype.resetPassword = function (key, password, callback) {
+AccountdownModel.prototype.resetPassword = function (key, data, callback) {
   this.get(key, function (err, account) {
     if (err) return callback(err)
     
@@ -225,7 +221,7 @@ AccountdownModel.prototype.resetPassword = function (key, password, callback) {
   })
 }
 
-AccountdownModel.prototype.changeUsername = function (key, value, callback) {
+AccountdownModel.prototype.changeUsername = function (key, username, callback) {
   // TODO
 }
 
@@ -234,17 +230,17 @@ AccountdownModel.prototype.createReadStream = function (options) {
   return this.accountdown.list(options)
 }
 
-AccountdownModel.prototype.getKey =function (identifier, callback) {
+AccountdownModel.prototype.find =function (identifier, callback) {
   if (isEmail(identifier)) return this.getKeyFromEmail(identifier, callback)
   return this.getKeyFromUsername(identifier, callback)
 }
 
 AccountdownModel.prototype.getKeyFromEmail =function (email, callback) {
-  var options = [email];
-  this.indexes.email.findOne(options, callback);
+  var options = [email]
+  this.indexer.indexes.email.findOne(email, callback)
 }
 
 AccountdownModel.prototype.getKeyFromUsername =function (username, callback) {
-  var options = [username];
-  this.indexes.username.findOne(options, callback);
+  var options = [username]
+  this.indexer.indexes.username.findOne(username, callback)
 }

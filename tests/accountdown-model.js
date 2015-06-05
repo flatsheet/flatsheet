@@ -41,3 +41,19 @@ test('create accounts', function (t) {
     t.end()
   }
 })
+
+test('find account by username', function (t) {
+  accounts.find('pizza', function (err, account) {
+    t.ok(account)
+    t.equals(account.username, 'pizza')
+    t.end()
+  })
+})
+
+test('find account by email', function (t) {
+  accounts.find('poop@example.com', function (err, account) {
+    t.ok(account)
+    t.equals(account.email, 'poop@example.com')
+    t.end()
+  })
+})
