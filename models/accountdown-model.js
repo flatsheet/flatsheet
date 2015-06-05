@@ -2,6 +2,7 @@ var Emitter = require('events').EventEmitter
 var inherits = require('util').inherits
 var validator = require('is-my-json-valid')
 var indexer = require('level-simple-indexes')
+var filterObject = require('filter-object')
 var sublevel = require('subleveldown')
 var isEmail = require('is-email')
 var extend = require('extend')
@@ -30,27 +31,60 @@ inherits(AccountdownModel, Emitter)
 */
 
 function AccountdownModel (accountdown, options) {
-  if (!(this instanceof AccountdownModel)) return new AccountdownModel(db, options)
+  if (!(this instanceof AccountdownModel)) return new AccountdownModel(accountdown, options)
   Emitter.call(this)
   options = options || {}
   var self = this
 
   this.db = options.db
   this.accountdown = accountdown
-  var schema = options.schema || filterObject(options, ['*', '!modelName', '!timestamp', '!indexKeys', '!validateOptions'])
+
+  var schema = options.schema || filterObject(options, [
+    '*', '!modelName', '!timestamp', '!indexKeys', '!validateOptions', '!db'
+  ])
+
   this.modelName = options.modelName || 'accounts'
   this.timestamps = options.timestamps || true
   this.timestamp = options.timestamp || function () { return new Date(Date.now()).toISOString() }
+  this.indexKeys = options.indexKeys || []
+  this.indexKeys = this.indexKeys.concat(['username', 'email'])
+
+  schema.properties = extend({
+    key: { type: 'string' },
+    username: { type: 'string' },
+    email: { type: 'string' }
+  }, schema.properties)
 
   options.schema = extend({
     title: self.modelName,
     type: 'object'
   }, schema)
 
-  options.schema.required = options.schema.required.concat('key')
+  options.schema.required = options.schema.required || []
+  options.schema.required = options.schema.required.concat(['key', 'username', 'email'])
+
   this.validateOptions = options.validateOptions
   this.schema = options.schema
-  this.validate = validator(options.schema, options.validateOptions)
+  this.validateValue = validator(options.schema, options.validateOptions)
+
+  this.validateLogin = validator({
+    properties: {
+      login: { 
+        type: 'object',
+        properties: {
+          basic: {
+            type: 'object',
+            properties: {
+              key: { type: 'string' },
+              password: { type: 'string' }
+            }
+          }
+        }
+      },
+      value: { type: 'object' }
+    }
+  })
+
   this.indexes = {}
 
   function map (key, callback) {
@@ -59,7 +93,7 @@ function AccountdownModel (accountdown, options) {
     })
   }
 
-  var indexoptions = extend(options.indexoptions, {
+  var indexOptions = extend(options.indexOptions, {
     properties: this.indexKeys,
     keys: true,
     values: true,
@@ -67,7 +101,7 @@ function AccountdownModel (accountdown, options) {
   })
 
   this.indexDB = sublevel(options.db, this.modelName + '-index')
-  this.indexer = indexer(this.indexDB, indexoptions)
+  this.indexer = indexer(this.indexDB, indexOptions)
 }
 
 AccountdownModel.prototype.verify = function (type, creds, callback) {
@@ -102,12 +136,26 @@ AccountdownModel.prototype.save = function (key, options, callback) {
   return this.update(key, data, callback)
 }
 
-AccountdownModel.prototype.create = function (key, options, callback) {
+AccountdownModel.prototype.create = function (key, data, callback) {
   var self = this
-  if (!data.value.key) var key = data.value.key = cuid()
-  var validated = this.validate(data)
 
-  if (!validated) {
+  if (typeof key === 'object') {
+    callback = data
+    data = key
+    key = data.value.key = data.login.basic.key
+  }
+
+  if (!key) var key = data.value.key = data.login.basic.key = cuid()
+  var validatedLogin = this.validateLogin(data)
+
+  if (!validatedLogin) {
+    // TODO: more useful error message
+    return callback(new Error(this.modelName + ' login object requires key and accountdown-basic'))
+  }
+
+  var validatedValue = this.validateValue(data.value)
+
+  if (!validatedValue) {
     // TODO: more useful error message
     return callback(new Error(this.modelName + ' object does not match schema'))
   }
@@ -119,6 +167,7 @@ AccountdownModel.prototype.create = function (key, options, callback) {
 
   this.accountdown.create(key, data, function (err) {
     if (err) return callback(err)
+    delete data.login.basic.password
 
     self.indexer.addIndexes(data.value, function () {
       self.emit('create', data)
@@ -169,7 +218,6 @@ AccountdownModel.prototype.remove = function (key, callback) {
 AccountdownModel.prototype.resetPassword = function (key, password, callback) {
   this.get(key, function (err, account) {
     if (err) return callback(err)
-    console.log(account)
     callback(account)
   })
 }
