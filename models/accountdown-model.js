@@ -218,6 +218,9 @@ AccountdownModel.prototype.remove = function (key, callback) {
 AccountdownModel.prototype.resetPassword = function (key, password, callback) {
   this.get(key, function (err, account) {
     if (err) return callback(err)
+    
+    // TODO
+    
     callback(account)
   })
 }
