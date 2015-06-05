@@ -97,7 +97,6 @@ function AccountdownModel (accountdown, options) {
   
   this.indexDB = sublevel(options.db, this.modelName + '-index')
   this.indexer = indexer(this.indexDB, indexOptions)
-  console.log(this.indexer)
 }
 
 AccountdownModel.prototype.verify = function (type, creds, callback) {
