@@ -39,6 +39,9 @@ function AccountdownModel (accountdown, options) {
   this.db = options.db
   this.accountdown = accountdown
 
+  // require the accountdown-basic plugin
+  if (!(this.isRegistered('basic'))) throw new Error('Must use the accountdown-basic plugin')
+
   var schema = options.schema || filterObject(options, [
     '*', '!modelName', '!timestamp', '!indexKeys', '!validateOptions', '!db'
   ])
@@ -120,14 +123,14 @@ AccountdownModel.prototype.removeLogin = function (key, type, callback) {
 }
 
 AccountdownModel.prototype.put =
-AccountdownModel.prototype.save = function (key, options, callback) {
+AccountdownModel.prototype.save = function (key, data, callback) {
   if (typeof key === 'object') {
     callback = data
     data = key
     key = data.key
   }
 
-  if (!options.value.key) return this.create(data, callback)
+  if (!data.key) return this.create(data, callback)
   return this.update(key, data, callback)
 }
 
@@ -162,11 +165,10 @@ AccountdownModel.prototype.create = function (key, data, callback) {
 
   this.accountdown.create(key, data, function (err) {
     if (err) return callback(err)
-    delete data.login.basic.password
 
     self.indexer.addIndexes(data.value, function () {
-      self.emit('create', data)
-      callback(null, data)
+      self.emit('create', data.value)
+      callback(null, data.value)
     })
   })
 }
@@ -210,18 +212,35 @@ AccountdownModel.prototype.remove = function (key, callback) {
   })
 }
 
-AccountdownModel.prototype.resetPassword = function (key, data, callback) {
+AccountdownModel.prototype.changePassword = function (key, password, callback) {
+  var self = this
   this.get(key, function (err, account) {
     if (err) return callback(err)
-    
-    // TODO
-    
-    callback(account)
+    self.remove(key, function (err) {
+      var data = {
+        login: { basic: { key: key, password: password } },
+        value: account
+      }
+
+      if (self.timestamps) data.updated = self.timestamp()
+      self.create(data, function (err) {
+        if (err) return callback(err)
+        callback(null, data.value)
+      })
+    })
   })
 }
 
 AccountdownModel.prototype.changeUsername = function (key, username, callback) {
-  // TODO
+  var self = this
+  this.get(key, function (err, account) {
+    if (err) return callback(err)
+    account.username = username
+    self.put(key, account, function (err) {
+      if (err) return callback(err)
+      callback(null, account)
+    })
+  })
 }
 
 AccountdownModel.prototype.list =
@@ -230,16 +249,15 @@ AccountdownModel.prototype.createReadStream = function (options) {
 }
 
 AccountdownModel.prototype.findOne =function (identifier, callback) {
-  if (isEmail(identifier)) return this.getKeyFromEmail(identifier, callback)
-  return this.getKeyFromUsername(identifier, callback)
+  if (isEmail(identifier)) return this.findOneBy('email', identifier, callback)
+  return this.findOneBy('username', identifier, callback)
 }
 
-AccountdownModel.prototype.getKeyFromEmail =function (email, callback) {
-  var options = [email]
-  this.indexer.indexes.email.findOne(email, callback)
+AccountdownModel.prototype.findOneBy = function (index, options, callback) {
+  if (!this.indexer.indexes[index]) return callback(new Error(index + ' property not indexed'))
+  this.indexer.indexes[index].findOne(options, callback)
 }
 
-AccountdownModel.prototype.getKeyFromUsername =function (username, callback) {
-  var options = [username]
-  this.indexer.indexes.username.findOne(username, callback)
+AccountdownModel.prototype.isRegistered = function (type) {
+  return !!this.accountdown._logins[type]
 }

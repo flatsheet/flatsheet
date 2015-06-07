@@ -48,3 +48,33 @@ test('find account by email', function (t) {
     t.end()
   })
 })
+
+test('change password', function (t) {
+  accounts.findOne('pizza', function (err, account) {
+    accounts.changePassword(account.key, 'butts', function (err) {
+      t.notOk(err)
+      accounts.verify('basic', { key: account.key, password: 'butts'}, function (err, ok, key) {
+        t.notOk(err)
+        t.ok(ok)
+        t.equals(key, account.key)
+        t.end()
+      })
+    })
+  })
+})
+
+test('change username', function (t) {
+  accounts.findOne('poop', function (err, account) {
+    accounts.changeUsername(account.key, 'pee', function (err, updated) {
+      t.notOk(err)
+      t.ok(updated)
+      t.equals(updated.username, 'pee')
+      accounts.findOne('pee', function (err, found) {
+        t.notOk(err)
+        t.ok(found)
+        t.equals(found.key, account.key)
+        t.end()
+      })
+    })
+  })
+})
