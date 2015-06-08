@@ -41,6 +41,8 @@ function AccountdownModel (accountdown, options) {
 
   // require the accountdown-basic plugin
   if (!(this.isRegistered('basic'))) throw new Error('Must use the accountdown-basic plugin')
+  this._key = this.accountdown._logins['basic']._key
+  if (this._key !== 'key') throw new Error('Must use `key` as accountdown-basic property key instead of username')
 
   var schema = options.schema || filterObject(options, [
     '*', '!modelName', '!timestamp', '!indexKeys', '!validateOptions', '!db'
@@ -52,11 +54,8 @@ function AccountdownModel (accountdown, options) {
   this.indexKeys = options.indexKeys || []
   this.indexKeys = this.indexKeys.concat(['username', 'email'])
 
-  schema.properties = extend({
-    key: { type: 'string' },
-    username: { type: 'string' },
-    email: { type: 'string' }
-  }, schema.properties)
+  schema.properties = extend({}, schema.properties)
+  schema.properties[this._key] = { type: 'string' }
 
   options.schema = extend({
     title: self.modelName,
@@ -64,7 +63,7 @@ function AccountdownModel (accountdown, options) {
   }, schema)
 
   options.schema.required = options.schema.required || []
-  options.schema.required = options.schema.required.concat(['key', 'username', 'email'])
+  options.schema.required.concat(this._key)
 
   this.validateOptions = options.validateOptions
   this.schema = options.schema
@@ -74,12 +73,7 @@ function AccountdownModel (accountdown, options) {
     properties: {
       login: { 
         type: 'object',
-        properties: {
-          basic: {
-            type: 'object',
-            properties: { key: { type: 'string' }, password: { type: 'string' } }
-          }
-        }
+        properties: { basic: { type: 'object' } }
       },
       value: { type: 'object' }
     }
@@ -127,10 +121,10 @@ AccountdownModel.prototype.save = function (key, data, callback) {
   if (typeof key === 'object') {
     callback = data
     data = key
-    key = data.key
+    key = data[this._key]
   }
 
-  if (!data.key) return this.create(data, callback)
+  if (!data[this._key]) return this.create(data, callback)
   return this.update(key, data, callback)
 }
 
@@ -140,10 +134,10 @@ AccountdownModel.prototype.create = function (key, data, callback) {
   if (typeof key === 'object') {
     callback = data
     data = key
-    key = data.value.key = data.login.basic.key
+    key = data.value[this._key] = data.login.basic[this._key]
   }
 
-  if (!key) var key = data.value.key = data.login.basic.key = cuid()
+  if (!key) var key = data.value[this._key] = data.login.basic[this._key] = cuid()
   var validatedLogin = this.validateLogin(data)
 
   if (!validatedLogin) {
@@ -165,7 +159,6 @@ AccountdownModel.prototype.create = function (key, data, callback) {
 
   this.accountdown.create(key, data, function (err) {
     if (err) return callback(err)
-
     self.indexer.addIndexes(data.value, function () {
       self.emit('create', data.value)
       callback(null, data.value)
@@ -183,11 +176,11 @@ AccountdownModel.prototype.update = function (key, data, callback) {
  if (typeof key === 'object') {
    callback = data
    data = key
-   key = data.value.key
+   key = data.value[this._key]
  }
 
  this.get(key, function (err, model) {
-   if (err || !model) return callback(new Error(self.modelName + ' not found with key ' + key))
+   if (err || !model) return callback(new Error(self.modelName + ' not found with ' + this._key + ' ' + key))
    model = extend(model, data)
    if (self.timestamps) model.updated = self.timestamp()
    self.indexer.updateIndexes(model, function () {
@@ -218,9 +211,11 @@ AccountdownModel.prototype.changePassword = function (key, password, callback) {
     if (err) return callback(err)
     self.remove(key, function (err) {
       var data = {
-        login: { basic: { key: key, password: password } },
+        login: { basic: { password: password } },
         value: account
       }
+      
+      data.login.basic[self._key] = key
 
       if (self.timestamps) data.updated = self.timestamp()
       self.create(data, function (err) {

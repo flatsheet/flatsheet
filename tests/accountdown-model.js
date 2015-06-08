@@ -14,7 +14,14 @@ var accountdown = accountdown(sublevel(db, 'accounts'), {
   login: { basic: accountdownBasic }
 })
 
-var accounts = require('../models/accountdown-model')(accountdown, { db: db })
+var accounts = require('../models/accountdown-model')(accountdown, { 
+  db: db,
+  properties: {
+    username: { type: 'string' },
+    email: { type: 'string' }
+  },
+  required: ['username', 'email']
+})
 
 test('create accounts', function (t) {
   var data = require('./data/accounts.js')

@@ -14,7 +14,7 @@ module.exports = [
     value: { username: 'pizza', email: 'pizza@example.com' }
   },
   {
-    login: { basic: { password: 'poop' } },
+    login: { basic: { key: cuid(), password: 'poop' } },
     value: { username: 'poop', email: 'poop@example.com' }
   }
 ]
