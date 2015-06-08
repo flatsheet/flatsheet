@@ -36,6 +36,7 @@
     "JSONStream": "^0.9.0",
     "accountdown": "^4.0.0",
     "accountdown-basic": "^1.0.0",
+    "accountdown-model": "^1.0.0",
     "accountdown-parser": "^0.1.2",
     "autocomplete-element": "^1.0.7",
     "body": "^4.5.0",
