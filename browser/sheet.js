@@ -11,7 +11,7 @@ var grid = require('data-grid')({
   height: window.innerHeight - 100
 })
 
-window.flatsheet = require('flatsheet-api-client')({ 
+var flatsheet = require('flatsheet-api-client')({ 
   host: window.location.origin
 })
 
@@ -35,7 +35,7 @@ function getSheet (err, sheet) {
   var rows = sheet.rows
   var length = rows.length
   var i = 0
-  console.log('schema', schema.schema)
+
   for (i; i<length; i++) {
     model.write(rows[i])
   }
@@ -43,9 +43,14 @@ function getSheet (err, sheet) {
   createEventListeners(sheet, schema)
 }
 
+grid.on('focus', function (e, property, row) {
+  console.log(e, property, row)
+})
+
 grid.on('input', function (e, property, row) {
-  flatsheet.sheets.updateRow(key, row.value, function (err, res) {
-    console.log(err, res)
+  console.log('input', row.key)
+  flatsheet.sheets.updateRow(key, row, function (err, res) {
+    //console.log(err, res)
   })
 })
 
@@ -81,10 +86,9 @@ function addColumn (property, sheet, schema) {
   else {
     addRow(sheet, schema)
   }
-  
+
   render(all)
   sheet.schema = schema.schema
-  console.log('schema', sheet.schema)
   flatsheet.sheets.update(sheet, function (err, res) {
     console.log('this is after updating with a new column', res)
   })
