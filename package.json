@@ -13,8 +13,7 @@
   "main": "lib/index.js",
   "scripts": {
     "flatsheet": "./bin/flatsheet",
-    "pretest": "node pretest",
-    "test": "tape \"tests/**/*.js\"",
+    "test": "tape tests/*.js | tap-spec",
     "bundle-css": "rework-npm browser/style.css | myth | cleancss -o public/style.css",
     "watch-css": "gazer -p 'browser/style.css' 'rework-npm browser/style.css | myth > public/style.css'",
     "watch-sheet-edit": "watchify -d browser/sheet.js -o public/sheet.js -g brfs",
@@ -125,6 +124,7 @@
     "myth": "^1.4.0",
     "request": "^2.40.0",
     "rework-npm-cli": "^0.1.1",
+    "tap-spec": "^4.0.0",
     "tape": "^2.14.0",
     "through2": "^0.6.1",
     "uglify-js": "^2.4.13",
