@@ -21,7 +21,7 @@ test('create organizations', function (t) {
   }
 })
 
-test('get and update and organization', function (t) {
+test('get and update an organization', function (t) {
   organizations.findOne('name', 'Code for Pizza', function (err, org) {
     t.notOk(err)
     t.ok(org)

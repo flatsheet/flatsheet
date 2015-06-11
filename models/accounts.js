@@ -20,6 +20,21 @@ module.exports = function (db) {
     indexKeys: ['username', 'email', 'profile']
   })
 
+  // TODO: create, update, and delete profiles along with accounts
+  var profiles = require('./profiles')(db)
+
+  accounts.on('create', function (account) {
+    console.log('create', account)
+  })
+
+  accounts.on('update', function (account) {
+    console.log('update', account)
+  })
+
+  accounts.on('delete', function (account) {
+    console.log('delete', account)
+  })
+
   return accounts
 }
 
