@@ -16,7 +16,7 @@ module.exports = function (db) {
       email: { type: 'string' },
       profile: { type: 'string' }
     },
-    required: ['username', 'email', 'profile'],
+    required: ['username', 'email'],
     indexKeys: ['username', 'email', 'profile']
   })
 
