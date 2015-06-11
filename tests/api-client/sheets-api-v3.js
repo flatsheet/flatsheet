@@ -11,7 +11,7 @@ var flatsheet = require('flatsheet-api-client')({
 
 
 test('create sheets', function (t) {
-  var data = require('./data/sheets.js')
+  var data = require('../fixtures/sheets.js')
   each(data, iterator, end)
 
   function iterator (sheet, i, done) {
