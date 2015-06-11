@@ -1,0 +1,133 @@
+html,
+body {
+  height: 100%;
+}
+
+body {
+  border-top: 3px solid var(--blue);
+}
+
+*,
+*:before,
+*:after {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+.hidden {
+  display: none;
+}
+
+.container {
+  margin: 0px 50px;
+}
+
+header {
+  padding: 5px;
+  background-color: #f6f6f5;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e2e2e0;
+}
+
+header h1.site-title {
+  font-size: 24px;
+  margin-top: 6px;
+  line-height: 1;
+  float: left;
+  font-weight: 400;
+  letter-spacing: -1px;
+}
+
+header h1.site-title a {
+  color: #535351;
+  text-decoration: none;
+}
+
+header h1.site-title a:hover {
+  color: #000;
+}
+
+header ul.main-nav {
+  margin: 0px;
+  padding: 0px;
+  text-align: right;
+  margin: 5px 0px 0px 0px;
+  height: 40px;
+}
+
+header ul.main-nav li {
+  display: inline-block;
+  margin-left: 15px;
+  vertical-align: top;
+  text-transform: lowercase;
+}
+
+
+.header-settings-toggle {
+  float: right;
+}
+
+.header-settings {
+  margin: 5px 0px 0px -9px;
+  padding: 0px;
+  position: absolute;
+  width: 150px;
+}
+
+.header-settings li {
+  display: block;
+  width: 100%;
+}
+
+.header-settings li button {
+  width: 100%;
+  text-align: left;
+}
+
+header li a {
+  height: 36px;
+  line-height: 36px;
+  display: inline-block;
+}
+
+header form.sign-out {
+
+}
+
+header form.sign-out input {
+  height: 36px;
+  line-height: 36px;
+  vertical-align: baseline;
+}
+
+header a.button {
+  display: block;
+  height: 36px;
+  line-height: 25px;
+}
+
+footer {
+  margin-top: 50px;
+  border-top: 1px solid #f2f2f0;
+  padding-top: 20px;
+}
+
+footer ul {
+  list-style-type: none;
+  margin: 0px;
+  padding: 0px;
+}
+
+footer ul li {
+  margin-bottom: 4px;
+}
+
+.invite-emails {
+  width: 100%;
+  max-width: 500px;
+  height: 300px;
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px solid #e2e2e0;
+}

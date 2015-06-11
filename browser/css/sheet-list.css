@@ -1,0 +1,45 @@
+.sheet-list h1 {
+  font-size: 20px;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+}
+
+.sheet-list .list-item {
+  height: 100px;
+}
+
+.sheet-list .list-item-info {
+  float: left;
+}
+
+.sheet-list .list-item-actions {
+  float: right;
+  line-height: 53px;
+}
+
+.sheet-list .list-item-actions .destroy-sheet {
+  margin-top: 11px;
+}
+
+.sheet-list .list-item > a {
+  border-left: 10px solid #f2f2f0;
+  padding: 10px 20px;
+  display: block;
+  margin-bottom: 20px;
+  height: 70px;
+}
+
+.sheet-list .list-item > a:hover {
+  border-left: 10px solid #d2d2d0;
+  background-color: #fcfcfa;
+}
+
+.sheet-list .list-item-description {
+  color: #999;
+}
+
+.sheet-list .list-item a:hover .list-item-description {
+  color: #424240;
+}

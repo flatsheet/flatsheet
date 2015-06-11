@@ -1,0 +1,32 @@
+
+.button, 
+.button:link, 
+.button:visited, 
+button, 
+input[type="submit"], 
+input[type="reset"], 
+input[type="button"] {
+  font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, arial, sans-serif;
+  letter-spacing: 0px;
+}
+
+header .button.small {
+  font-size: 16px;
+}
+
+fieldset {
+  padding: 0px;
+  margin: 0px 0px 5px 0px;
+}
+
+.settings.destroy {
+  color: #b3c2c7;
+  background-color: transparent;
+  border: 0;
+  letter-spacing: normal;
+  line-height: 19px;
+  margin: 0;
+  padding: 0 4px;
+  height: 18px;
+  font-size: 14px;
+}

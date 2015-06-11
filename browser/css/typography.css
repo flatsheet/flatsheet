@@ -1,0 +1,100 @@
+html,
+body,
+input,
+button,
+select,
+textarea {
+  font: 16px/1.2 'Source Sans Pro', 'Helvetica Neue', Helvetica, arial, sans-serif;
+  color: #444;
+  -webkit-font-smoothing: antialiased;
+  font-smoothing: antialiased;
+  font-weight: 300;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0px;
+  font-weight: 300;
+  line-height: 1.5;
+}
+
+a {
+  color: #2A8782;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #000;
+}
+
+a:active,
+a:focus {
+  color: #000;
+}
+
+a.button i.fa {
+  line-height: 30px;
+}
+
+b {
+  font-weight: 400;
+}
+
+pre,
+code {
+  font-family: Monaco, Menlo, monospace;
+  padding: 0px 4px;
+  background-color: #f8f8f8;
+  border: 1px solid #e2e2e2;
+  overflow: scroll;
+  font-size: 12px;
+}
+
+pre {
+  padding: 10px;
+}
+
+pre code {
+  background-color: transparent;
+  border: 0px;
+  padding: 0px;
+}
+
+hr {
+  border-top: 1px solid #e2e2e2;
+  border-right: none;
+  border-bottom: none;
+  border-left: none;
+  margin: 10px 0 30px 0;
+}
+
+.serif {
+  font-family: Baskerville, sans-serif;
+}
+
+
+
+h1.page-title {
+  margin-bottom: 20px;
+}
+
+
+#about {
+  height: 30px;
+  line-height: 30px;
+  margin-left: 20px;
+}
+
+.about .container {
+  max-width: 600px;
+  margin: 30px auto;
+}
+
+.about p {
+  font-size: 20px;
+  line-height: 1.5;
+}

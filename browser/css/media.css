@@ -1,0 +1,13 @@
+img {
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+
+img.headshot {
+  float: right;
+  width: 120px;
+  height: auto;
+  margin: 0px 0px 20px 20px;
+  border-radius: 90px;
+}

@@ -1,0 +1,21 @@
+#modal {
+  position: fixed;
+  top: 3px;
+  width: 100%;
+  background-color: #fff;
+  height: 100%;
+  padding: 50px;
+}
+
+#close-modal {
+  position: absolute;
+  top: 0;
+  right: 50px;
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+}
+
+#modal h1 {
+  border-bottom: 1px solid #f2f2f0;
+  margin-bottom: 10px;
+}
