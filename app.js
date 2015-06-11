@@ -6,8 +6,8 @@
 * instead of pulling and merging changes via git.
 */
 var fs = require('fs');
-var config = JSON.parse(fs.readFileSync('config.js', 'utf8'));
+var config = require('./config')
 
 var server = require('./lib/index')(config, function() {
-  server.listen();
-});
+  server.listen()
+})

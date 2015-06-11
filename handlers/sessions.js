@@ -19,6 +19,7 @@ Sessions.prototype.createSession = function (req, res) {
       var identifier = body.usernameOrEmail.trim()
       var creds = { password: body.password }
       self.accounts.findOne(identifier, function (err, account) {
+        if (err || account) 
         creds.key = account.key
         return self.verify(res, creds)
       })
@@ -41,7 +42,7 @@ Sessions.prototype.verify = function (res, creds) {
     if (!ok) return console.error(ok)
     // TODO: notify user about incorrect password, and offer reset password option (issue #47)
 
-    self.auth.login(res, {key: id}, function (loginerr, data) {
+    self.auth.login(res, { key: id }, function (loginerr, data) {
       if (loginerr) console.error(loginerr)
       redirect(res, '/')
     })

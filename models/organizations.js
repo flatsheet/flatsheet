@@ -10,12 +10,13 @@ function Organization (db, options) {
 
   options = extend(options, {
     modelName: 'Organization',
-    indexKeys: ['orgName'],
     properties: {
-      orgName: { type: 'string' },
-      website: { type: 'string' },
+      name: { type: 'string' },
+      description: { type: 'string' },
+      website: { type: 'string' }
     },
-    required: ['orgName']
+    indexKeys: ['name'],
+    required: ['name']
   })
 
   Model.call(this, db, options)

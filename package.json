@@ -1,7 +1,7 @@
 {
   "name": "flatsheet",
   "description": "a multi-user, realtime editor for tabular data",
-  "version": "0.10.0",
+  "version": "1.0.0",
   "repository": {
     "url": "git://github.com/flatsheet/flatsheet.git"
   },
@@ -78,12 +78,11 @@
     "level": "^0.18.0",
     "level-delete-range": "^0.1.0",
     "level-indexer": "^2.0.0",
-    "level-model": "^1.1.0",
+    "level-model": "^1.2.3",
     "level-party": "^2.0.0",
     "level-simple-indexes": "0.0.2",
     "lodash.debounce": "^3.0.3",
     "match-routes": "^1.1.1",
-    "memdown": "^1.0.0",
     "merge2": "^0.3.4",
     "minimist": "^1.1.0",
     "mkdirp": "^0.5.0",

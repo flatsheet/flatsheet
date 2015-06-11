@@ -1,13 +1,12 @@
 var test = require('tape')
-var level = require('level')
 var each = require('each-async')
 var JSONStream = require('JSONStream')
-
-var db = level(__dirname + '/../tmp/sheets', { valueEncoding: 'json' })
+var levelup = require('levelup')
+var db = levelup('db', { db: require('memdown') })
 var sheets = require('../models/sheets')(db)
 
 test('create sheets', function (t) {
-  var data = require('./data/sheets.js')
+  var data = require('./fixtures/sheets.js')
   each(data, iterator, end)
 
   function iterator (sheet, i, done) {
