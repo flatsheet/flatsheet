@@ -1,28 +1,28 @@
 #!/usr/bin/env node
 
-var Sheets = require('../models/sheets');
+var Sheets = require('../models/sheets')
 
-var fs = require('fs');
-var level = require('level');
-var sublevel = require('subleveldown');
-var minimist = require('minimist');
-var JSONStream = require('JSONStream');
-var accountdown = require('accountdown');
-var randomColor = require('random-color');
-var through = require('through2');
-var prompt = require('prompt');
-var uuid = require('uuid').v1;
-prompt.message = 'account';
+var fs = require('fs')
+var level = require('level')
+var sublevel = require('subleveldown')
+var minimist = require('minimist')
+var JSONStream = require('JSONStream')
+var accountdown = require('accountdown')
+var randomColor = require('random-color')
+var through = require('through2')
+var prompt = require('prompt')
+var uuid = require('uuid').v1
+prompt.message = 'account'
 
-var argv = minimist(process.argv.slice(2));
-var cmd = argv._[0];
-var sub = argv._[1];
+var argv = minimist(process.argv.slice(2))
+var cmd = argv._[0]
+var sub = argv._[1]
 
-var flatsheet = require('../lib/index')({}, ready);
+var flatsheet = require('../lib/index')({}, ready)
 
 function ready () {
-  if (cmd === 'accounts') return accounts();
-  else if (cmd === 'sheets') return sheets();
+  if (cmd === 'accounts') return accounts()
+  else if (cmd === 'sheets') return sheets()
   else {
     console.log('command not found')
     flatsheet.db.close()
@@ -35,17 +35,16 @@ function accounts () {
       { name: 'email' },
       { name: 'username' },
       { name: 'password', hidden: true }
-    ];
+    ]
 
-    prompt.start();
-    var key = uuid();
+    prompt.start()
+    var key = uuid()
     prompt.get(properties, function (err, result) {
-
 
       var opts = {
         login: {
           basic: {
-            uuid: key,
+            key: key,
             password: result.password
           }
         },
@@ -54,88 +53,84 @@ function accounts () {
           admin: true,
           email: result.email,
           username: result.username,
-          color: randomColor()
+          color: randomColor(),
+          profile: 'TODO'
         }
-      };
+      }
 
-      flatsheet.accountdown.create(opts.value.key, opts, function (err) {
-        if (err) console.error(err);
-        flatsheet.accountdown.get(opts.value.key, function (err, res) {
-          flatsheet.accountsIndexes.addIndexes(res, function () {
-            flatsheet.db.close();
-          });
-        });
-      });
-    });
-
+      flatsheet.accounts.create(opts.value.key, opts, function (err, account) {
+        if (err) return console.error(err)
+        console.log(account)
+      })
+    })
   }
 
   if (sub === 'list') {
-    var l = flatsheet.accountdown.list();
-    l.on('data', console.log);
-    l.on('end', function () { flatsheet.db.close(); });
+    var l = flatsheet.accounts.list()
+    l.on('data', console.log)
+    l.on('end', function () { flatsheet.db.close() })
   }
 
   if (sub === 'delete-all') {
-    flatsheet.accountdown.list().pipe(through.obj(write, end));
+    flatsheet.accounts.list().pipe(through.obj(write, end))
 
     function write (account, enc, next) {
-      flatsheet.accountdown.remove(account.key, function (err) {
-        if (err) return console.error('something went wrong');
-        console.log(account.key, ' removed');
-        next();
-      });
+      flatsheet.accounts.remove(account.key, function (err) {
+        if (err) return console.error('something went wrong')
+        console.log(account.key, ' removed')
+        next()
+      })
     }
 
     function end () {
-      console.log('All accounts deleted.');
-      flatsheet.db.close();
+      console.log('All accounts deleted.')
+      flatsheet.db.close()
     }
   }
 }
 
 function sheets () {
   if (sub === 'add') {
-    var file = fs.readFileSync(argv._[2], 'utf8');
+    var file = fs.readFileSync(argv._[2], 'utf8')
 
     flatsheet.sheets.create(JSON.parse(file), function (err) {
-      if (err) return console.log(err);
-      flatsheet.db.close();
-    });
+      if (err) return console.log(err)
+      flatsheet.db.close()
+    })
   }
 
   if (sub === 'list') {
-    var l = flatsheet.sheets.list();
-    l.on('data', console.log);
-    l.on('end', function () { flatsheet.db.close(); });
+    var l = flatsheet.sheets.list()
+    l.on('data', console.log)
+    l.on('end', function () { flatsheet.db.close() })
   }
 
   if (sub === 'fix-ids') {
     flatsheet.sheets.list({ keys:true, values:true }, function (err, results) {
       results.forEach(function (sheet) {
-        sheet.value.key = sheet.key;
+        sheet.value.key = sheet.key
         flatsheet.sheets.update(sheet.key, sheet.value, function (err) {
-          if (err) throw err;
-        });
-      });
-    });
+          if (err) throw err
+        })
+      })
+    })
   }
 
   if (sub === 'delete-all') {
     flatsheet.sheets.list({ keys:true, values:true }, function (err, results) {
       results.forEach(function (sheet) {
         flatsheet.sheets.destroy(sheet.key, function () {
-          console.log('destroyed ' + sheet.key);
-        });
-      });
-      flatsheet.db.close();
-    });
+          console.log('destroyed ' + sheet.key)
+        })
+      })
+      flatsheet.db.close()
+    })
   }
 
   if (sub === 'delete') {
     flatsheet.sheets.destroy(argv._[2], function () {
-      console.log('sheet deleted.');
-      flatsheet.db.close();
-    });
+      console.log('sheet deleted.')
+      flatsheet.db.close()
+    })
   }
 }

@@ -9,7 +9,7 @@ module.exports = function (db) {
     login: { basic: accountdownBasic }
   })
 
-  var accounts = require('accountdown-basic')(accountdown, { 
+  var accounts = require('accountdown-model')(accountdown, { 
     db: db,
     properties: {
       username: { type: 'string' },

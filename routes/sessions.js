@@ -1,7 +1,6 @@
 var Router = require('match-routes');
 
 module.exports = function (server, prefix) {
-
   var prefix = prefix || '/sessions';
   var router = Router();
   var handler = require('../handlers/sessions')(server);

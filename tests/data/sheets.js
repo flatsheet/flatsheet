@@ -2,7 +2,7 @@ module.exports = [
   {
     name: 'salad',
     description: 'a really great sheet about salad',
-    project: 'health',
+    organization: 'health',
     categories: ['healthy', 'food'],
     websites: ['http://example.com'],
     owners: { nutrionist: true },
@@ -17,7 +17,7 @@ module.exports = [
   {
     name: 'brisket',
     description: 'a really great sheet about brisket',
-    project: 'awesome',
+    organization: 'awesome',
     categories: ['grill', 'yum', 'food'],
     websites: ['http://example.com'],
     owners: { griller: true },
@@ -32,7 +32,7 @@ module.exports = [
   {
     name: 'pizza',
     description: 'a really great sheet with stuff',
-    project: 'awesome',
+    organization: 'awesome',
     categories: ['food', 'yum'],
     websites: ['http://example.com'],
     owners: { pizzamaker: true },
@@ -47,7 +47,7 @@ module.exports = [
   {
     name: 'popcorn',
     description: 'yum snack food',
-    project: 'snacks',
+    organization: 'snacks',
     categories: ['meh'],
     websites: ['http://example.com'],
     owners: { popcornpopper: true },
@@ -62,7 +62,7 @@ module.exports = [
   {
     name: 'coffee',
     description: 'liquid',
-    project: 'awesome',
+    organization: 'awesome',
     categories: ['drink'],
     websites: ['http://example.com'],
     owners: { barista: true },

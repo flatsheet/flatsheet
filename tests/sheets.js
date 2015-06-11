@@ -58,8 +58,8 @@ test('get sheets by categories index', function (t) {
   })
 })
 
-test('get sheets by project index', function (t) {
-  sheets.list({filter: {project: 'awesome'}}, function (err, list) {
+test('get sheets by organization index', function (t) {
+  sheets.list({filter: {organization: 'awesome'}}, function (err, list) {
     t.notOk(err)
     t.ok(list)
     t.equal(list.length, 3)

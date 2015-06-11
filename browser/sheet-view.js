@@ -21,7 +21,7 @@ on(document.body, '.row', 'click', function (e) {
     else item.style.backgroundColor = '#fff'
   })
 
-  var rect = row.getBoundingClientRect();
+  var rect = row.getBoundingClientRect()
   window.location.hash = row.id
   window.scrollBy(0, -header.scrollHeight)
 })

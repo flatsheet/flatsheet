@@ -1,26 +1,26 @@
-var level = require('level');
-var uuid = require('uuid').v1;
-var extend = require('extend');
-var indexer = require('level-indexer');
-var sublevel = require('subleveldown');
-var collect = require('stream-collector');
-var each = require('each-async');
-var isArray = require('isarray');
-var merge = require('merge2');
-var clone = require('clone');
+var level = require('level')
+var uuid = require('uuid').v1
+var extend = require('extend')
+var indexer = require('level-indexer')
+var sublevel = require('subleveldown')
+var collect = require('stream-collector')
+var each = require('each-async')
+var isArray = require('isarray')
+var merge = require('merge2')
+var clone = require('clone')
 
-var timestamp = require('../lib/timestamp');
-var Sheet = require('./sheet');
+var timestamp = require('../lib/timestamp')
+var Sheet = require('./sheet')
 
-module.exports = Sheets;
+module.exports = Sheets
 
 function Sheets (db, opts) {
-  if (!(this instanceof Sheets)) return new Sheets(db, opts);
+  if (!(this instanceof Sheets)) return new Sheets(db, opts)
   
   var self = this
-  this._db = db;
-  this.db = sublevel(db, 'sheets', { valueEncoding: 'json' });
-  this.indexDB = sublevel(db, 'sheet-indexes');
+  this._db = db
+  this.db = sublevel(db, 'sheets', { valueEncoding: 'json' })
+  this.indexDB = sublevel(db, 'sheet-indexes')
 
   var indexOpts = {
     keys: false, 
@@ -34,44 +34,45 @@ function Sheets (db, opts) {
 
   this.indexes = {
     categories: indexer(this.indexDB, ['categories'], indexOpts),
-    project: indexer(this.indexDB, ['project'], indexOpts),
+    organization: indexer(this.indexDB, ['organization'], indexOpts),
     private: indexer(this.indexDB, ['private'], indexOpts),
     editors: indexer(this.indexDB, ['editors'], indexOpts),
     owners: indexer(this.indexDB, ['owners'], indexOpts)
-  };
+  }
 }
 
 Sheets.prototype.create = function (data, cb) {
   var self = this
-  data.key = uuid();
+  data.key = uuid()
   
   if (data.rows) {
-    var rows = data.rows;
-    delete data.rows;
+    var rows = data.rows
+    delete data.rows
   }
   
   this.db.put(data.key, data, function (err) {
-    if (err) return cb(err);
+    if (err) return cb(err)
     self.addIndexes(data, function () {
-      var sheet = Sheet(self, data)
-      if (!rows) return cb(null, sheet)
-      sheet.addRows(rows, function () {
-        cb(null, sheet)
-      });
-    });
-  });
-};
+      Sheet(self, data, function (err, sheet) {
+        if (!rows) return cb(null, sheet)
+        sheet.addRows(rows, function () {
+          cb(null, sheet)
+        })
+      })
+    })
+  })
+}
 
 Sheets.prototype.get = function (key, cb) {
   var self = this
   this.db.get(key, function (err, data) {
-    if (err) return cb(err);
-    return cb(null, Sheet(self, data));
+    if (err) return cb(err)
+    Sheet(self, data, cb)
   })
-};
+}
 
 Sheets.prototype.update = function (key, data, cb) {
-  var self = this;
+  var self = this
   
   if (typeof key === 'object') {
     cb = data
@@ -79,11 +80,11 @@ Sheets.prototype.update = function (key, data, cb) {
     key = data.key
   }
 
-  data.updated = timestamp();
+  data.updated = timestamp()
   this.get(key, function (err, sheet) {
     var sheet = extend(sheet, data)
     self.updateIndexes(sheet, function () {
-      self.put(sheet, cb);
+      self.put(sheet, cb)
     })
   })
 }
@@ -97,13 +98,13 @@ Sheets.prototype.destroy = function (key, cb) {
 }
 
 Sheets.prototype.list = function (opts, cb) {
-  var defaultOpts = { keys: false, values: true };
+  var defaultOpts = { keys: false, values: true }
 
   if (typeof opts === 'function') {
-    cb = opts;
-    opts = defaultOpts;
+    cb = opts
+    opts = defaultOpts
   } else {
-    opts = extend(defaultOpts, opts);
+    opts = extend(defaultOpts, opts)
   }
 
   if (opts.filter) {
@@ -123,7 +124,7 @@ Sheets.prototype.list = function (opts, cb) {
     var stream = this.createReadStream(opts)
     return collect(stream, cb)
   }
-};
+}
 
 Sheets.prototype.createReadStream = function (opts) {
   return this.db.createReadStream(opts)

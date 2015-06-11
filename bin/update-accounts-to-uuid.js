@@ -24,7 +24,7 @@ function ready () {
   var self = this;
 
   deleteSessionsResetsAndIndexes();
-  updateAccountStream.bind(self)(flatsheet.accountdown.list(), function () {
+  updateAccountStream.bind(self)(flatsheet.accounts.list(), function () {
     console.log("\nBegin sheets updates...");
     updateSheetsStream.bind(self)(flatsheet.sheets.list());
   });
@@ -106,7 +106,7 @@ var migrateAccount = function (oldAccount, sendPasswordResetEmail, next) {
   if (!UUID_REGEX.test(oldAccount.key) || !oldAccount.value.key) {
     console.log("Migrating account:", oldAccount.key);
 
-    flatsheet.accountdown.get(oldAccount.key, function (err, accountValue) {
+    flatsheet.accounts.get(oldAccount.key, function (err, accountValue) {
       if (err) return console.log("error retrieving test account:", err);
       var newAccountKey = uuid();
       accountValue['key'] = newAccountKey;
@@ -121,10 +121,10 @@ var migrateAccount = function (oldAccount, sendPasswordResetEmail, next) {
         value: accountValue
       };
 
-      flatsheet.accountdown.remove(oldAccount.key, function (err) {
+      flatsheet.accounts.remove(oldAccount.key, function (err) {
         if (err) return console.log("err while deleting old account:", err);
         console.log("updates:migrateAccount: account removed:", oldAccount.key);
-        flatsheet.accountdown.create(newAccountKey, updatedAccount, function (err) {
+        flatsheet.accounts.create(newAccountKey, updatedAccount, function (err) {
           if (err) return console.log("err while putting in new account:", err);
           flatsheet.accountsIndexes.addIndexes(accountValue);
           sendPasswordResetEmail.bind(self)(updatedAccount, next);

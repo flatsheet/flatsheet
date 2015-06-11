@@ -35,8 +35,8 @@ function getSheet (err, sheet) {
   var rows = sheet.rows
   var length = rows.length
   var i = 0
-
-  for (i; i<=length; i++) {
+  console.log('schema', schema.schema)
+  for (i; i<length; i++) {
     model.write(rows[i])
   }
 
@@ -44,7 +44,7 @@ function getSheet (err, sheet) {
 }
 
 grid.on('input', function (e, property, row) {
-  flatsheet.sheets.updateRow(key, row, function (err, res) {
+  flatsheet.sheets.updateRow(key, row.value, function (err, res) {
     console.log(err, res)
   })
 })
@@ -55,14 +55,11 @@ function createEventListeners (sheet, schema) {
   })
 
   on(document.getElementById('add-column'), 'click', function (e) {
-    var property = schema.create({
-      name: 'weee a column'
-    })
     var name = prompt('new column name')
+    var property = schema.create({ name: name })
     addColumn(property, sheet, schema)
   })
 }
-
 
 function addRow (sheet, schema) {
   var row = schema.row()
@@ -75,9 +72,8 @@ function addRow (sheet, schema) {
 function addColumn (property, sheet, schema) {
   var length = all.length
   var i = 0
-
   if (length > 0) {
-    for (i; i<=length; i++) {
+    for (i; i<length; i++) {
       all[i].value = extend(all[i].value, schema.row())
     }
   }
@@ -85,9 +81,11 @@ function addColumn (property, sheet, schema) {
   else {
     addRow(sheet, schema)
   }
-
+  
+  render(all)
   sheet.schema = schema.schema
+  console.log('schema', sheet.schema)
   flatsheet.sheets.update(sheet, function (err, res) {
-    console.log(err, res)
+    console.log('this is after updating with a new column', res)
   })
 }

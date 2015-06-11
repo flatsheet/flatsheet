@@ -1,9 +1,9 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 
-var on = require('component-delegate').bind;
-var domify = require('domify');
-var dom = require('dom-tree');
-var Handlebars = require('handlebars');
+var on = require('component-delegate').bind
+var domify = require('domify')
+var dom = require('dom-tree')
+var Handlebars = require('handlebars')
 
 var templates = {
   modal: Handlebars.compile(
@@ -15,34 +15,34 @@ var templates = {
   newSheetFromCSV: Handlebars.compile(
     "<h1>Create sheet from CSV file</h1>\n<form action=\"/sheets/new/csv\" method=\"post\" enctype=\"multipart/form-data\">\n  <input type=\"text\" name=\"name\" placeholder=\"name of sheet\"><br>\n  <input type=\"text\" name=\"description\" placeholder=\"description\"><br>\n  <input type=\"file\" name=\"csv-file\"><br>\n  <br>\n  <input type=\"submit\" value=\"Create sheet\">\n</form>\n"
   )
-};
+}
 
 on(document.body, '#new-blank-sheet', 'click', function (e) {
   var modal = templates.modal({
     content: templates.newSheet()
-  });
+  })
 
-  dom.add(document.body, domify(modal));
-});
+  dom.add(document.body, domify(modal))
+})
 
 on(document.body, '#import-csv', 'click', function (e) {
   var modal = templates.modal({
     content: templates.newSheetFromCSV()
-  });
+  })
   
-  dom.add(document.body, domify(modal));
-});
+  dom.add(document.body, domify(modal))
+})
 
 on(document.body, '#close-modal', 'click', function (e) {
-  dom.remove('#modal');
-});
+  dom.remove('#modal')
+})
 
 on(document.body, '.destroy-sheet', 'click', function (e) {
-  e.preventDefault();
-  var form = e.target.parentNode;
+  e.preventDefault()
+  var form = e.target.parentNode
   var msg = "Wait. Do you really want to completely destroy all data in this sheet?"
-  if (window.confirm(msg)) form.submit();
-});
+  if (window.confirm(msg)) form.submit()
+})
 
 },{"component-delegate":5,"dom-tree":7,"domify":16,"handlebars":32}],2:[function(require,module,exports){
 var matches = require('matches-selector')

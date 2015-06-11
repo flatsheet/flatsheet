@@ -151,7 +151,7 @@ module.exports = function (server, prefix) {
               .pipe(JSONStream.stringify())
               .pipe(res);
           }
-          
+
           return response.json({ message: 'Not found', statusCode: 404 }).status(404).pipe(res);
         });
       })
@@ -165,6 +165,7 @@ module.exports = function (server, prefix) {
           server.sheets.get(opts.params.key, function (err, sheet) {
             if (permissions.sheetAccessible(sheet, account)) {
               sheet.addRow(body, function (err, row) {
+                console.log(err, row)
                 if (err) return response().json({ error: 'Error'}).status(500).pipe(res);
                 return response().json(row).pipe(res)
               })
@@ -242,7 +243,7 @@ module.exports = function (server, prefix) {
 
 function filterSheetDetails () {
   return through.obj(function iterator(chunk, enc, next) {
-    this.push(filter(chunk, ['*', '!editors', '!owners']));
+    this.push(filter(chunk, ['*']));
     next();
   });
 }

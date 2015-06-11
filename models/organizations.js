@@ -3,6 +3,7 @@ var inherits = require('inherits')
 var extend = require('extend')
 
 module.exports = Organization
+inherits(Organization, Model)
 
 function Organization (db, options) {
   if (!(this instanceof Organization)) return new Organization(db, options)
@@ -20,4 +21,3 @@ function Organization (db, options) {
   Model.call(this, db, options)
 }
 
-inherits(Organization, Model)
