@@ -105,6 +105,7 @@ Accounts.prototype.getListOfAccounts = function (req, res) {
           results.push(data)
         })
         .on('error', function (err) {
+          // TODO: Redirect and display an error message
           return console.log(err)
         })
         .on('end', function () {
@@ -119,6 +120,7 @@ Accounts.prototype.signIntoAccount = function (req, res) {
   var self = this
   if (req.method === 'GET') {
     this.server.getAccountBySession(req, function (err, account, session) {
+      // TODO: Redirect and display an error message
       if (err || !account) return console.log("signing in: retrieving account from session failed:", err)
       if (account) {
         res.writeHead(302, { 'Location': '/' })
@@ -144,6 +146,7 @@ Accounts.prototype.createAccountAsAdmin = function (req, res) {
     }
     if (req.method === 'POST') {
       self.forms2accounts.create(req, res, function(err, account) {
+        // TODO: Redirect and display an error message
         if (err) return console.log("createAccountAsAdmin: error creating account", err)
         res.writeHead(302, {'Location' : self.prefix})
         return res.end()
@@ -156,6 +159,7 @@ Accounts.prototype.createAccount = function (req, res) {
   var self = this
   if (req.method === 'GET') {
     this.server.getAccountBySession(req, function (err, account, session) {
+      // TODO: Redirect and display an error message
       if (error) return console.log(error)
       return response()
         .html(self.server.render('account-new'))
@@ -165,6 +169,7 @@ Accounts.prototype.createAccount = function (req, res) {
 
   if (req.method === 'POST') {
     this.forms2accounts.create(req, res, function (err, account) {
+      // TODO: Redirect and display an error message
       if (err) return console.log("Accounts.createAccount: error creating account:", err)
       res.writeHead(302, {'Location': '/'})
       return res.end()
@@ -175,11 +180,14 @@ Accounts.prototype.createAccount = function (req, res) {
 Accounts.prototype.deleteAccount = function (req, res, opts) {
   var self = this
   this.permissions.authorizeSession(req, res, function (error, user, session) {
+    // TODO: Redirect and display an error message
     if (error) return console.log(error)
     if (user.admin) {
       if (req.method === 'POST') {
-        // TODO: Remove account username from all sheet permissions
+        // TODO: Remove account key from all sheet permissions
+        // This is currently done in the sheet settings
         self.server.accounts.remove(opts.params.key, function (err) {
+          // TODO: Redirect and display an error message
           if (err) return console.log("Error removing account")
           res.writeHead(302, {'Location': self.prefix})
           return res.end()
@@ -199,12 +207,13 @@ Accounts.prototype.updateAccount = function (req, res, opts) {
     if (req.method === 'POST') {
       // check if we are updating the current account as a non-admin:
       if (account.key !== opts.params.key && !account.admin) {
-        // TODO: Flash notification (?)
+        // TODO: Flash message
         console.log("WARNING: You must be admin to update an account which is not yours")
         res.writeHead(302, {'Location': self.prefix })
         return res.end()
       }
       self.forms2accounts.update(req, res, opts.params.key, function (err, account) {
+        // TODO: Redirect and display an error message
         if (err) return console.log("Error updating account from form: ", err)
         res.writeHead(302, {'Location': self.prefix })
         return res.end()
@@ -391,6 +400,4 @@ Accounts.prototype.renderAccountUpdateForm = function (res, accountUuid, account
     response()
       .html(self.server.render('account-update', ctx)).pipe(res)
   })
-
-
 }
