@@ -12,7 +12,7 @@ function AccountsApiHandler (server) {
     return new AccountsApiHandler(server)
   }
   this.server = server
-  this.permissions = require('../lib/permissions')(server)
+  this.tokens = server.tokens
 }
 
 /*
@@ -21,18 +21,30 @@ function AccountsApiHandler (server) {
  */
 AccountsApiHandler.prototype.accounts = function (req, res) {
   var self = this
-  this.permissions.authorize(req, res, function (authError, authAccount, session) {
-    var notAuthorized = (authError || !authAccount)
+  // Verify that we have a permission token
+  console.log("AccountsApiHandler.accounts: getting verified")
+  this.tokens.verify(req, function(err, decoded) {
+    if (err) return response().status('401').json({error: 'Error verifying web token' + err}).pipe(res)
+    if (!decoded) return response().status('401').json({error: 'Not authorized'}).pipe(res)
+
+    /*
+     *  Get list of accounts
+     */
+
+    console.log("\n\nAccountsApiHandler.accounts: verfied!")
     if (req.method === 'GET') {
-      if (notAuthorized) return response().status('401').json({error: 'Not Authorized'}).pipe(res)
-      return self.server.accounts.list({keys: false})
-        .pipe(filterAccountDetails())
-        .pipe(JSONStream.stringify())
-        .pipe(res)
+        return self.server.accounts.list({keys: false})
+          .pipe(filterAccountDetails())
+          .pipe(JSONStream.stringify())
+          .pipe(res)
     }
-    else if (req.method === 'POST') {
-      if (notAuthorized) return response().status('401').json({error: 'Not Authorized'}).pipe(res)
-      if (!authAccount.admin) return response().status('401').json({error: 'Must be admin to create new accounts'}).pipe(res)
+
+     /*
+      *  Create a new account
+      */
+
+    if (req.method === 'POST') {
+      if (!decoded.admin) return response().status('401').json({error: 'Must be admin to create new accounts'}).pipe(res)
       jsonBody(req, res, function (err, body) {
         if (err) return response().status(500).json({ error: err }).pipe(res)
         var opts = {
@@ -63,6 +75,11 @@ AccountsApiHandler.prototype.accountFromUsername = function (req, res, opts) {
   var self = this
   this.permissions.authorize(req, res, function (authError, authAccount, session) {
     var notAuthorized = (authError || !authAccount)
+
+    /*
+     *  Get individual account
+     */
+
     if (req.method === 'GET') {
       self.server.accounts.get(opts.params.username, function (err, account) {
         if (err) return response().status('500').json({error: 'Could not retrieve the account'}).pipe(res)
@@ -72,6 +89,11 @@ AccountsApiHandler.prototype.accountFromUsername = function (req, res, opts) {
         return response().json(account).pipe(res)
       })
     }
+
+    /*
+     *  Update an account
+     */
+
     if (req.method === 'PUT') {
       if (notAuthorized) return response().status('401').json({error: 'Not Authorized'}).pipe(res)
       if (!authAccount.admin) return response().status('401').json({error: 'Must be admin to update accounts'}).pipe(res)
@@ -87,6 +109,11 @@ AccountsApiHandler.prototype.accountFromUsername = function (req, res, opts) {
         })
       })
     }
+
+    /*
+     *  Delete an account
+     */
+
     if (req.method === 'DELETE') {
       if (notAuthorized) return response().status('401').json({ error: 'Not Authorized'}).pipe(res)
       if (!authAccount.admin) return response().status('401').json({error: 'Must be admin to delete accounts'}).pipe(res)

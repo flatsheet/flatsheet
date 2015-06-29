@@ -8,6 +8,14 @@
 var fs = require('fs');
 var config = require('./config')
 
-var server = require('./lib/index')(config, function() {
-  server.listen()
-})
+/*
+* Create leveldb using level
+*/
+
+var dataDir = opts.dataDir || opts.db || path.join(__dirname, 'data')
+mkdirp.sync(dataDir)
+
+var db = level(path.join(dataDir, 'db'))
+
+var server = require('./lib/index')(db, config)
+server.listen()
