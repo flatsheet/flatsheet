@@ -2,10 +2,10 @@ var test = require('tape')
 var each = require('each-async')
 var levelup = require('levelup')
 var db = levelup('db', { db: require('memdown') })
-var accounts = require('../models/accounts')(db)
+var accounts = require('../../models/accounts')(db)
 
 test('create accounts', function (t) {
-  var data = require('./fixtures/accounts')
+  var data = require('./../fixtures/accounts')
   each(data, iterator, end)
 
   function iterator (account, i, done) {
