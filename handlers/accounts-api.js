@@ -21,17 +21,14 @@ function AccountsApiHandler (server) {
  */
 AccountsApiHandler.prototype.accounts = function (req, res) {
   var self = this
-  // Verify that we have a permission token
-  console.log("AccountsApiHandler.accounts: getting verified")
   this.tokens.verify(req, function(err, decoded) {
-    if (err) return response().status('401').json({error: 'Error verifying web token' + err}).pipe(res)
-    if (!decoded) return response().status('401').json({error: 'Not authorized'}).pipe(res)
+    if (err) return response().status(401).json({error: 'Error verifying web token' + err}).pipe(res)
+    if (!decoded) return response().status(401).json({error: 'Not authorized'}).pipe(res)
 
     /*
      *  Get list of accounts
      */
 
-    console.log("\n\nAccountsApiHandler.accounts: verfied!")
     if (req.method === 'GET') {
         return self.server.accounts.list({keys: false})
           .pipe(filterAccountDetails())
@@ -43,26 +40,27 @@ AccountsApiHandler.prototype.accounts = function (req, res) {
       *  Create a new account
       */
 
-    if (req.method === 'POST') {
-      if (!decoded.admin) return response().status('401').json({error: 'Must be admin to create new accounts'}).pipe(res)
+    else if (req.method === 'POST') {
+      if (!decoded.admin) return response().status(401).json({error: 'Must be admin to create new accounts'}).pipe(res)
       jsonBody(req, res, function (err, body) {
         if (err) return response().status(500).json({ error: err }).pipe(res)
         var opts = {
-          login: { basic: { username: body.username, password: body.password } },
+          login: { basic: { key: body.key, password: body.password } },
           value: filter(body, '!password')
         }
 
-        self.server.accounts.create(body.username, opts, function (err) {
-          if (err) return response().status(500).json({ error: 'Unable to create new user' }).pipe(res)
+        self.server.accounts.create(body.key, opts, function (err) {
+          if (err) return response().status(500).json({ error: 'Unable to create new user' + err }).pipe(res)
 
-          self.server.accounts.get(body.username, function (err, account) {
-            if (err) return response().status(500).json({ error: 'Server error' }).pipe(res)
+          self.server.accounts.get(body.key, function (err, account) {
+            if (err) return response().status(500).json({ error: 'Server error' + err }).pipe(res)
 
-            response().json(account).pipe(res)
+            return response().status(200).json(account).pipe(res)
           })
         })
       })
     }
+    else return response().status(405).json({ error:'request method not recognized: ' + req.method }).pipe(res)
   })
 }
 
@@ -71,22 +69,21 @@ AccountsApiHandler.prototype.accounts = function (req, res) {
  * PUT: update an account (admins only)
  * DELETE: remove an account (admins only)
  */
-AccountsApiHandler.prototype.accountFromUsername = function (req, res, opts) {
+AccountsApiHandler.prototype.account = function (req, res, opts) {
   var self = this
-  this.permissions.authorize(req, res, function (authError, authAccount, session) {
-    var notAuthorized = (authError || !authAccount)
+  this.tokens.verify(req, function(err, decoded) {
+    if (err) return response().status(401).json({error: 'Error verifying web token' + err}).pipe(res)
+    if (!decoded) return response().status(401).json({error: 'Not authorized'}).pipe(res)
 
     /*
      *  Get individual account
      */
 
     if (req.method === 'GET') {
-      self.server.accounts.get(opts.params.username, function (err, account) {
-        if (err) return response().status('500').json({error: 'Could not retrieve the account'}).pipe(res)
-        if (notAuthorized) {
-          account = filter(account, ['*', '!email', '!admin'])
-        }
-        return response().json(account).pipe(res)
+      self.server.accounts.get(opts.params.key, function (err, account) {
+        if (err) return response().status(500).json({error: 'Could not retrieve the account'}).pipe(res)
+        if (!decoded.admin) account = filter(account, ['*', '!email', '!admin'])
+        return response().status(200).json(account).pipe(res)
       })
     }
 
@@ -94,17 +91,16 @@ AccountsApiHandler.prototype.accountFromUsername = function (req, res, opts) {
      *  Update an account
      */
 
-    if (req.method === 'PUT') {
-      if (notAuthorized) return response().status('401').json({error: 'Not Authorized'}).pipe(res)
-      if (!authAccount.admin) return response().status('401').json({error: 'Must be admin to update accounts'}).pipe(res)
+    else if (req.method === 'PUT') {
+      if (!decoded.admin) return response().status(401).json({error: 'Must be admin to update accounts'}).pipe(res)
       jsonBody(req, res, opts, function (err, body) {
         if (err) return response().status(500).json({ error:'Could not parse the request\'s body' }).pipe(res)
-        self.server.accounts.get(opts.params.username, function (err, account){
-          if (err) return response().status(500).json({ error:'Username does not exist' }).pipe(res)
+        self.server.accounts.get(opts.params.key, function (err, account){
+          if (err) return response().status(500).json({ error:'Could not retrieve account:' + err }).pipe(res)
           account = extend(account, body)
-          self.server.accounts.put(opts.params.username, account, function (err) {
+          self.server.accounts.put(opts.params.key, account, function (err) {
             if (err) return response().status(500).json({ error:'Server error' }).pipe(res)
-            response().json(account).pipe(res)
+            response().status(200).json(account).pipe(res)
           })
         })
       })
@@ -114,14 +110,15 @@ AccountsApiHandler.prototype.accountFromUsername = function (req, res, opts) {
      *  Delete an account
      */
 
-    if (req.method === 'DELETE') {
-      if (notAuthorized) return response().status('401').json({ error: 'Not Authorized'}).pipe(res)
-      if (!authAccount.admin) return response().status('401').json({error: 'Must be admin to delete accounts'}).pipe(res)
-      self.server.accounts.remove(opts.params.username, function (err, account) {
-        if (err) return response().status(500).json({ error:'Username does not exist' }).pipe(res)
-        return response().json(account).pipe(res)
+    else if (req.method === 'DELETE') {
+      if (!decoded.admin) return response().status(401).json({error: 'Must be admin to delete accounts'}).pipe(res)
+      self.server.accounts.remove(opts.params.key, function (err) {
+        if (err) return response().status(500).json({ error:'Key does not exist' }).pipe(res)
+        return response().json(opts.params).pipe(res)
       })
     }
+
+    else return response().status(405).json({ error:'request method not recognized: ' + req.method }).pipe(res)
   })
 }
 
