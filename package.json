@@ -1,7 +1,7 @@
 {
   "name": "flatsheet",
   "description": "a multi-user, realtime editor for tabular data",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "license": "MIT",
   "homepage": "http://flatsheet.io/",
   "repository": {
